@@ -240,9 +240,9 @@ export function BookingDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && resetAndClose()}>
-      <DialogContent className="max-w-3xl w-[95vw] max-h-[92vh] overflow-hidden p-0 gap-0 rounded-3xl border-eswen-lavender bg-white">
+      <DialogContent className="flex flex-col overflow-hidden p-0 gap-0 rounded-none sm:rounded-3xl border-eswen-lavender bg-white h-[100dvh] sm:h-auto w-full sm:w-[95vw] max-w-none sm:max-w-3xl max-h-[100dvh] sm:max-h-[90vh]">
         {/* Header with stepper */}
-        <div className="bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white px-5 sm:px-7 py-4">
+        <div className="shrink-0 bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white px-5 sm:px-7 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur shrink-0">
@@ -296,8 +296,8 @@ export function BookingDialog() {
           </div>
         </div>
 
-        {/* Body */}
-        <div className="overflow-y-auto scrollbar-eswen px-5 sm:px-7 py-6 min-h-[280px] max-h-[calc(92vh-180px)] bg-eswen-gradient-soft">
+        {/* Body — flex-1 fills remaining space between fixed header & footer; min-h-0 enables proper scrolling */}
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen px-5 sm:px-7 py-6 bg-eswen-gradient-soft">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -640,7 +640,7 @@ export function BookingDialog() {
 
         {/* Footer with Back / Next */}
         {step < 5 && (
-          <div className="border-t border-eswen-lavender bg-white px-5 sm:px-7 py-4 flex items-center justify-between gap-3">
+          <div className="shrink-0 border-t border-eswen-lavender bg-white px-5 sm:px-7 py-4 flex items-center justify-between gap-3">
             <Button
               onClick={handleBack}
               disabled={step === 0 || submitting || paying}

@@ -200,3 +200,25 @@ Work Log:
 
 Stage Summary:
 - Radix accessibility warning fully resolved; booking dialog now announces title + description to screen readers
+
+---
+Task ID: 8
+Agent: Main (Z.ai Code)
+Task: Make booking dialog more flexible/spacious (user: "pop up kurang presisi, tidak ada space untuk mengeser layanan/dokter")
+
+Work Log:
+- Diagnosis: the booking dialog body used a rigid `max-h-[calc(92vh-180px)]` calc and the DialogContent used the default centered/max-w-lg layout → cramped, hard to scroll the 6-service list and doctor list, especially on mobile
+- Redesigned the dialog as a proper flex column with responsive full-screen-on-mobile behavior:
+  - DialogContent: `flex flex-col overflow-hidden` + `h-[100dvh] sm:h-auto` (full viewport height on mobile, auto on desktop) + `w-full sm:w-[95vw]` + `max-w-none sm:max-w-3xl` (overrides default max-w-[calc(100%-2rem)]) + `max-h-[100dvh] sm:max-h-[90vh]` + `rounded-none sm:rounded-3xl`
+  - Header: added `shrink-0` (stays pinned at top)
+  - Body: replaced rigid calc with `flex-1 min-h-0 overflow-y-auto` (fills remaining space, scrolls properly; min-h-0 is the key flexbox trick that lets the child shrink below content size)
+  - Footer: added `shrink-0` (stays pinned at bottom)
+
+Verification (via Agent Browser):
+- Mobile (iPhone 14, 390×844): dialog is full-screen (844×390, edge-to-edge), body scrollHeight 931 > clientHeight 661 → canScroll true ✓; fixed header + footer bracket the scrollable service list ✓
+- Desktop (1440×900): dialog 767×700px (max-w-3xl), centered (336/337px margins), all 6 services visible without scrolling (bodyScrollH 516 == clientH 516, canScroll false), 2-col grid ✓
+- Lint: 0 errors, 0 warnings
+
+Stage Summary:
+- Booking dialog is now genuinely flexible: full-screen on mobile with proper scroll, spacious centered modal on desktop showing all content
+- Header + footer stay pinned; only the content area scrolls
