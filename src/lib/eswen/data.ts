@@ -84,6 +84,7 @@ export type Service = {
   name: Bi;
   description: Bi;
   startingPrice: string;
+  deposit: number; // deposit amount in IDR (required to confirm booking)
   icon: LucideIcon;
   image: string;
   brand: "medical" | "aesthetic";
@@ -99,6 +100,7 @@ export const services: Service[] = [
       "Konsultasi praktik umum terpadu, skrining kesehatan, dan layanan medis primer oleh dokter berpengalaman berstandar internasional."
     ),
     startingPrice: "IDR 350.000",
+    deposit: 100000,
     icon: Stethoscope,
     image: "/images/service-medical.png",
     brand: "medical",
@@ -112,6 +114,7 @@ export const services: Service[] = [
       "Rejuvenasi wajah, dermal fillers, perawatan anti-kerut, dan prosedur estetika lanjutan oleh dokter estetika bersertifikat."
     ),
     startingPrice: "IDR 1.500.000",
+    deposit: 250000,
     icon: Sparkles,
     image: "/images/service-aesthetic.png",
     brand: "aesthetic",
@@ -125,6 +128,7 @@ export const services: Service[] = [
       "Facial premium, perawatan jerawat, rejuvenasi kulit, dan perawatan kecantikan personal untuk kulit sehat dan berseri."
     ),
     startingPrice: "IDR 450.000",
+    deposit: 100000,
     icon: Flower2,
     image: "/images/service-skin.png",
     brand: "aesthetic",
@@ -138,6 +142,7 @@ export const services: Service[] = [
       "Program wellness holistik, terapi IV, booster vitamin, dan konsultasi gaya hidup untuk meningkatkan kesejahteraan menyeluruh."
     ),
     startingPrice: "IDR 750.000",
+    deposit: 150000,
     icon: HeartPulse,
     image: "/images/service-medical.png",
     brand: "medical",
@@ -151,6 +156,7 @@ export const services: Service[] = [
       "Konsultasi personal dengan dokter dan beautician kami untuk merancang rencana perawatan yang tepat bagi kebutuhan dan tujuan Anda."
     ),
     startingPrice: "IDR 250.000",
+    deposit: 75000,
     icon: ClipboardList,
     image: "/images/service-aesthetic.png",
     brand: "medical",
@@ -164,6 +170,7 @@ export const services: Service[] = [
       "Paket medical check-up, skrining deteksi dini, dan program perawatan preventif untuk menjaga Anda tetap sehat dan percaya diri."
     ),
     startingPrice: "IDR 950.000",
+    deposit: 200000,
     icon: ShieldPlus,
     image: "/images/service-medical.png",
     brand: "medical",

@@ -11,6 +11,7 @@ import { LocationSection } from "@/components/eswen/location-section";
 import { Footer } from "@/components/eswen/footer";
 import { AIAssistant } from "@/components/eswen/ai-assistant";
 import { WhatsAppButton } from "@/components/eswen/whatsapp-button";
+import { BookingDialog } from "@/components/eswen/booking-dialog";
 
 export default function Home() {
   return (
@@ -31,6 +32,7 @@ export default function Home() {
       <Footer />
       <AIAssistant />
       <WhatsAppButton />
+      <BookingDialog />
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT, tr } from "@/lib/eswen/i18n";
 import type { Lang } from "@/lib/eswen/language-store";
+import { useBookingDialog } from "@/lib/eswen/booking-store";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -37,6 +38,7 @@ const SUGGESTIONS: Record<Lang, string[]> = {
 export function AIAssistant() {
   const { lang, setLang } = useLanguage();
   const t = useT();
+  const { openDialog } = useBookingDialog();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -125,7 +127,7 @@ export function AIAssistant() {
 
   const bookConsultation = () => {
     setOpen(false);
-    document.querySelector("#booking")?.scrollIntoView({ behavior: "smooth" });
+    openDialog();
   };
 
   return (

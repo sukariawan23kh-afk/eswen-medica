@@ -7,11 +7,13 @@ import { SectionHeading } from "./section-heading";
 import { services } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT } from "@/lib/eswen/i18n";
+import { useBookingDialog } from "@/lib/eswen/booking-store";
 import { cn } from "@/lib/utils";
 
 export function ServicesSection() {
   const { lang } = useLanguage();
   const t = useT();
+  const { openDialog } = useBookingDialog();
   const scrollTo = (href: string) =>
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -73,7 +75,7 @@ export function ServicesSection() {
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => scrollTo("#booking")}
+                    onClick={() => openDialog(service.id)}
                     className={cn(
                       "rounded-full h-9 px-4 text-xs font-semibold transition-all",
                       "bg-eswen-light-lavender text-eswen-deep hover:bg-eswen-deep hover:text-white"
@@ -90,7 +92,7 @@ export function ServicesSection() {
 
         <div className="mt-12 flex justify-center">
           <Button
-            onClick={() => scrollTo("#booking")}
+            onClick={() => openDialog()}
             className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-card hover:shadow-eswen-elevated hover:-translate-y-0.5 transition-all px-6 h-12"
           >
             {t("services_book")}

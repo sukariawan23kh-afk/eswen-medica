@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { heroTrustPoints } from "@/lib/eswen/data";
 import { useT } from "@/lib/eswen/i18n";
 import type { TranslationKey } from "@/lib/eswen/i18n";
+import { useBookingDialog } from "@/lib/eswen/booking-store";
 
 export function HeroSection() {
   const t = useT();
+  const { openDialog } = useBookingDialog();
   const scrollTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -71,7 +73,7 @@ export function HeroSection() {
               className="mt-8 flex flex-col sm:flex-row gap-3"
             >
               <Button
-                onClick={() => scrollTo("#booking")}
+                onClick={() => openDialog()}
                 className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-card hover:shadow-eswen-elevated hover:-translate-y-0.5 transition-all px-6 h-12 text-sm font-semibold"
               >
                 <CalendarHeart className="h-4 w-4" />

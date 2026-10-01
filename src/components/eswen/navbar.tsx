@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useMounted } from "@/hooks/use-mounted";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT } from "@/lib/eswen/i18n";
+import { useBookingDialog } from "@/lib/eswen/booking-store";
 import { navLinks } from "@/lib/eswen/data";
 
 export function Navbar() {
@@ -16,6 +17,7 @@ export function Navbar() {
   const mounted = useMounted();
   const { lang, setLang } = useLanguage();
   const t = useT();
+  const { openDialog } = useBookingDialog();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -95,7 +97,7 @@ export function Navbar() {
             </div>
 
             <Button
-              onClick={() => handleNav("#booking")}
+              onClick={() => openDialog()}
               className="hidden sm:inline-flex rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft hover:shadow-eswen-card hover:-translate-y-0.5 transition-all px-5 text-sm h-10"
             >
               <CalendarHeart className="h-4 w-4" />
@@ -152,7 +154,7 @@ export function Navbar() {
                       </div>
                     </div>
                     <Button
-                      onClick={() => handleNav("#booking")}
+                      onClick={() => openDialog()}
                       className="mt-4 w-full rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11"
                     >
                       <CalendarHeart className="h-4 w-4" />

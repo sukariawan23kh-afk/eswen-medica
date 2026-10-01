@@ -30,3 +30,31 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Booking — central appointment record for Eswen Medica + Aesthetic Eswen.
+// Status flow: NEW → WAITING_PAYMENT → CONFIRMED → (CHECKED IN → IN TREATMENT → COMPLETED)
+//              or → PAYMENT_FAILED / CANCELLED / NO SHOW
+model Booking {
+  id            String   @id @default(cuid())
+  refCode       String   @unique // human-friendly, e.g. ESM-AB12CD
+  serviceId     String   // references a service in the catalog (data.ts)
+  serviceName   String   // snapshot of service name (EN) for records
+  doctorId      String   // references a doctor/beautician in the catalog
+  doctorName    String   // snapshot of doctor name
+  brand         String   // "medical" | "aesthetic"
+  bookingDate   String   // ISO date: YYYY-MM-DD
+  bookingTime   String   // HH:mm (24h)
+  status        String   @default("WAITING_PAYMENT")
+  patientName   String
+  patientEmail  String
+  patientPhone  String
+  patientNotes  String?
+  depositAmount Int      @default(0) // in IDR
+  paymentMethod String?  // Credit Card | Virtual Account | E-Wallet | QRIS | Bank Transfer
+  paymentGateway String? // Midtrans | Xendit | Stripe
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([doctorId, bookingDate, bookingTime])
+  @@index([status])
+}
