@@ -19,7 +19,7 @@ import {
   PartyPopper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 import { useLanguage } from "@/lib/eswen/language-store";
@@ -249,10 +249,14 @@ export function BookingDialog() {
                 <CalendarHeart className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <h2 className="font-bold text-base leading-tight truncate">{t("bk_title")}</h2>
-                <p className="text-[11px] text-white/80">
-                  {t("bk_step")} {step + 1} {t("bk_of")} {STEPS.length}
-                </p>
+                <DialogTitle asChild>
+                  <h2 className="font-bold text-base leading-tight truncate">{t("bk_title")}</h2>
+                </DialogTitle>
+                <DialogDescription asChild>
+                  <p className="text-[11px] text-white/80">
+                    {t("bk_step")} {step + 1} {t("bk_of")} {STEPS.length}
+                  </p>
+                </DialogDescription>
               </div>
             </div>
             <button

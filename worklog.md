@@ -186,3 +186,17 @@ Stage Summary:
 - Deposit payment simulation with Midtrans/Xendit/Stripe + 5 payment methods
 - Booking reference codes (ESM-XXXXXX) for lookup
 - Production-ready.
+
+---
+Task ID: 7
+Agent: Main (Z.ai Code)
+Task: Fix Radix DialogContent accessibility warning (requires DialogTitle)
+
+Work Log:
+- Diagnosis: The BookingDialog used a custom header with a plain <h2> but never wrapped it in Radix's DialogTitle, so Radix couldn't announce the dialog to screen readers → threw the "DialogContent requires a DialogTitle" console error
+- Fix: imported DialogTitle + DialogDescription from @/components/ui/dialog and wrapped the existing <h2> (Book an Appointment) in <DialogTitle asChild> and the step-counter <p> in <DialogDescription asChild>. Using `asChild` keeps my custom styling while satisfying Radix's a11y requirement (aria-labelledby + aria-describedby)
+- Verification: cleared console + page errors, reloaded, opened the booking dialog → DOM has data-slot="dialog-title" (text "Book an Appointment") AND data-slot="dialog-description"; grep of console for "DialogTitle|accessible|requires" returns empty → no more warning
+- Lint: 0 errors, 0 warnings
+
+Stage Summary:
+- Radix accessibility warning fully resolved; booking dialog now announces title + description to screen readers
