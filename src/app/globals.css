@@ -1,0 +1,231 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  /* Eswen brand palette */
+  --color-eswen-lavender: var(--eswen-lavender);
+  --color-eswen-lavender-soft: var(--eswen-lavender-soft);
+  --color-eswen-soft-purple: var(--eswen-soft-purple);
+  --color-eswen-purple: var(--eswen-purple);
+  --color-eswen-deep: var(--eswen-deep);
+  --color-eswen-offwhite: var(--eswen-offwhite);
+  --color-eswen-light-lavender: var(--eswen-light-lavender);
+}
+
+:root {
+  --radius: 0.875rem;
+  /* Eswen Brand Palette */
+  --eswen-offwhite: #FAF8FF;
+  --eswen-light-lavender: #F4EEFF;
+  --eswen-lavender: #E9DDFF;
+  --eswen-lavender-soft: #B99AE8;
+  --eswen-soft-purple: #8B5CC7;
+  --eswen-purple: #7149B5;
+  --eswen-deep: #5B3A91;
+
+  --background: #FFFFFF;
+  --foreground: #2A2438;
+  --card: #FFFFFF;
+  --card-foreground: #2A2438;
+  --popover: #FFFFFF;
+  --popover-foreground: #2A2438;
+  --primary: #5B3A91;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F4EEFF;
+  --secondary-foreground: #5B3A91;
+  --muted: #FAF8FF;
+  --muted-foreground: #6B6577;
+  --accent: #F4EEFF;
+  --accent-foreground: #5B3A91;
+  --destructive: #B91C5C;
+  --border: #E9DDFF;
+  --input: #E9DDFF;
+  --ring: #B99AE8;
+  --chart-1: #8B5CC7;
+  --chart-2: #B99AE8;
+  --chart-3: #E9DDFF;
+  --chart-4: #5B3A91;
+  --chart-5: #7149B5;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #2A2438;
+  --sidebar-primary: #5B3A91;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F4EEFF;
+  --sidebar-accent-foreground: #5B3A91;
+  --sidebar-border: #E9DDFF;
+  --sidebar-ring: #B99AE8;
+}
+
+.dark {
+  --background: #1A1426;
+  --foreground: #F4EEFF;
+  --card: #221A33;
+  --card-foreground: #F4EEFF;
+  --popover: #221A33;
+  --popover-foreground: #F4EEFF;
+  --primary: #B99AE8;
+  --primary-foreground: #1A1426;
+  --secondary: #2D2142;
+  --secondary-foreground: #E9DDFF;
+  --muted: #2D2142;
+  --muted-foreground: #B99AE8;
+  --accent: #2D2142;
+  --accent-foreground: #E9DDFF;
+  --destructive: #F4729C;
+  --border: #3D2F58;
+  --input: #3D2F58;
+  --ring: #8B5CC7;
+  --sidebar: #221A33;
+  --sidebar-foreground: #F4EEFF;
+  --sidebar-primary: #B99AE8;
+  --sidebar-primary-foreground: #1A1426;
+  --sidebar-accent: #2D2142;
+  --sidebar-accent-foreground: #E9DDFF;
+  --sidebar-border: #3D2F58;
+  --sidebar-ring: #8B5CC7;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Premium soft gradients */
+  .bg-eswen-gradient {
+    background-image: linear-gradient(135deg, #FFFFFF 0%, #FAF8FF 35%, #F4EEFF 70%, #E9DDFF 100%);
+  }
+  .bg-eswen-gradient-soft {
+    background-image: linear-gradient(180deg, #FFFFFF 0%, #FAF8FF 50%, #F4EEFF 100%);
+  }
+  .bg-eswen-gradient-radial {
+    background-image: radial-gradient(circle at 30% 20%, #F4EEFF 0%, #FFFFFF 60%);
+  }
+  .bg-eswen-footer {
+    background-image: linear-gradient(180deg, #F4EEFF 0%, #E9DDFF 40%, #B99AE8 100%);
+  }
+  .text-eswen-gradient {
+    background-image: linear-gradient(120deg, #5B3A91 0%, #8B5CC7 60%, #B99AE8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Premium soft shadow */
+  .shadow-eswen-soft {
+    box-shadow: 0 4px 24px -8px rgba(91, 58, 145, 0.12), 0 2px 8px -4px rgba(139, 92, 199, 0.08);
+  }
+  .shadow-eswen-card {
+    box-shadow: 0 10px 40px -12px rgba(91, 58, 145, 0.15), 0 4px 12px -6px rgba(139, 92, 199, 0.08);
+  }
+  .shadow-eswen-elevated {
+    box-shadow: 0 20px 60px -15px rgba(91, 58, 145, 0.22), 0 8px 20px -8px rgba(139, 92, 199, 0.12);
+  }
+  /* Glass effect */
+  .glass-eswen {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+  /* Premium scrollbar */
+  .scrollbar-eswen::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-eswen::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-eswen::-webkit-scrollbar-thumb {
+    background: #B99AE8;
+    border-radius: 999px;
+  }
+  .scrollbar-eswen::-webkit-scrollbar-thumb:hover {
+    background: #8B5CC7;
+  }
+  /* Soft animations */
+  @keyframes eswen-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+  }
+  .animate-eswen-float {
+    animation: eswen-float 6s ease-in-out infinite;
+  }
+  @keyframes eswen-pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(139, 92, 199, 0.4); }
+    70% { box-shadow: 0 0 0 16px rgba(139, 92, 199, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(139, 92, 199, 0); }
+  }
+  .animate-eswen-pulse-ring {
+    animation: eswen-pulse-ring 2.5s infinite;
+  }
+  @keyframes eswen-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .animate-eswen-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(185, 154, 232, 0.3), transparent);
+    background-size: 200% 100%;
+    animation: eswen-shimmer 2s infinite;
+  }
+  @keyframes eswen-blob {
+    0%, 100% { border-radius: 50% 50% 50% 50%; }
+    33% { border-radius: 60% 40% 50% 50%; }
+    66% { border-radius: 50% 60% 40% 50%; }
+  }
+  .animate-eswen-blob {
+    animation: eswen-blob 12s ease-in-out infinite;
+  }
+}
