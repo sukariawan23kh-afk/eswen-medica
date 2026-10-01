@@ -16,9 +16,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
 import { bookingSteps, paymentMethods, paymentGateways, bookingStatuses } from "@/lib/eswen/data";
+import { useLanguage } from "@/lib/eswen/language-store";
+import { useT } from "@/lib/eswen/i18n";
 import { cn } from "@/lib/utils";
 
 export function SmartBookingSection() {
+  const { lang } = useLanguage();
+  const t = useT();
   const scrollTo = (href: string) =>
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -27,13 +31,13 @@ export function SmartBookingSection() {
       <div className="pointer-events-none absolute top-0 right-0 h-80 w-80 rounded-full bg-eswen-light-lavender/60 blur-3xl" />
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <SectionHeading
-          eyebrow="Smart Booking"
+          eyebrow={t("booking_eyebrow")}
           title={
             <>
-              Smart Booking. <span className="text-eswen-gradient">Simple Experience.</span>
+              {t("booking_title_1")} <span className="text-eswen-gradient">{t("booking_title_2")}</span>
             </>
           }
-          description="A guided, real-time appointment flow designed for international guests — secure your slot in minutes with no double bookings."
+          description={t("booking_desc")}
         />
 
         {/* Booking steps */}
@@ -54,8 +58,8 @@ export function SmartBookingSection() {
                   0{s.step}
                 </span>
               </div>
-              <h3 className="text-base font-bold text-eswen-deep">{s.title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+              <h3 className="text-base font-bold text-eswen-deep">{s.title[lang]}</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{s.description[lang]}</p>
 
               {/* Connector arrow */}
               {idx < bookingSteps.length - 1 && (
@@ -82,22 +86,17 @@ export function SmartBookingSection() {
             <div className="relative">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur px-3 py-1 text-xs font-semibold mb-4">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Secure Deposit Payment
+                {t("booking_deposit_badge")}
               </span>
               <h3 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">
-                Your appointment is secured after deposit payment.
+                {t("booking_deposit_title")}
               </h3>
               <p className="mt-3 text-sm text-white/80 max-w-lg leading-relaxed">
-                A required deposit reduces no-shows, prevents fake bookings, locks your schedule, and protects clinic resources — so every slot is honored.
+                {t("booking_deposit_desc")}
               </p>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
-                {[
-                  "Reduce no-show",
-                  "Avoid fake bookings",
-                  "Lock your schedule",
-                  "Protect clinic revenue",
-                ].map((item) => (
+                {[t("booking_reduce_noshow"), t("booking_avoid_fake"), t("booking_lock"), t("booking_protect")].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-eswen-lavender-soft" />
                     {item}
@@ -108,7 +107,7 @@ export function SmartBookingSection() {
               {/* Payment methods */}
               <div className="mt-7">
                 <p className="text-xs font-semibold uppercase tracking-wider text-white/70 mb-3">
-                  Accepted Payment Methods
+                  {t("booking_methods")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {paymentMethods.map((m) => {
@@ -136,7 +135,7 @@ export function SmartBookingSection() {
               {/* Gateways */}
               <div className="mt-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-white/70 mb-2">
-                  Payment Gateway Integrations
+                  {t("booking_gateways")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {paymentGateways.map((g) => (
@@ -155,7 +154,7 @@ export function SmartBookingSection() {
                 className="mt-7 rounded-full bg-white text-eswen-deep hover:bg-eswen-light-lavender h-11 px-6 text-sm font-bold shadow-lg"
               >
                 <CalendarHeart className="h-4 w-4" />
-                Book & Pay Deposit
+                {t("booking_cta")}
               </Button>
             </div>
           </motion.div>
@@ -167,31 +166,31 @@ export function SmartBookingSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="rounded-[1.75rem] border border-eswen-lavender bg-white p-7 sm:p-8 shadow-eswen-soft"
           >
-            <h3 className="text-xl font-bold text-eswen-deep">Booking Status Flow</h3>
+            <h3 className="text-xl font-bold text-eswen-deep">{t("booking_status_title")}</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Transparent status tracking from booking to completion.
+              {t("booking_status_desc")}
             </p>
 
             <div className="mt-6 space-y-3">
-              <StatusRow icon={<Clock className="h-4 w-4" />} label="PENDING PAYMENT" desc="Booking created, awaiting deposit." color="bg-amber-100 text-amber-700" />
-              <StatusRow icon={<CheckCircle2 className="h-4 w-4" />} label="CONFIRMED" desc="Deposit verified — appointment locked." color="bg-green-100 text-green-700" />
-              <StatusRow icon={<AlertCircle className="h-4 w-4" />} label="PAYMENT FAILED" desc="Deposit unsuccessful — slot released." color="bg-rose-100 text-rose-700" />
+              <StatusRow icon={<Clock className="h-4 w-4" />} label={t("booking_pending")} desc={t("booking_pending_desc")} color="bg-amber-100 text-amber-700" />
+              <StatusRow icon={<CheckCircle2 className="h-4 w-4" />} label={t("booking_confirmed")} desc={t("booking_confirmed_desc")} color="bg-green-100 text-green-700" />
+              <StatusRow icon={<AlertCircle className="h-4 w-4" />} label={t("booking_failed")} desc={t("booking_failed_desc")} color="bg-rose-100 text-rose-700" />
             </div>
 
             <div className="mt-6 pt-5 border-t border-eswen-lavender/60">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                All Booking Statuses
+                {t("booking_all_statuses")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {bookingStatuses.map((s) => (
                   <span
-                    key={s.label}
+                    key={s.label.en}
                     className={cn(
                       "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide",
                       s.color
                     )}
                   >
-                    {s.label}
+                    {s.label[lang]}
                   </span>
                 ))}
               </div>
@@ -199,7 +198,7 @@ export function SmartBookingSection() {
 
             <div className="mt-6 rounded-2xl bg-eswen-light-lavender/50 p-4 text-xs text-muted-foreground leading-relaxed">
               <ShieldCheck className="inline h-4 w-4 text-eswen-soft-purple mb-1 mr-1" />
-              Booking is never set to <strong className="text-eswen-deep">CONFIRMED</strong> until payment is verified via gateway callback.
+              {t("booking_secure_note")}
             </div>
           </motion.div>
         </div>

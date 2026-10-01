@@ -103,3 +103,39 @@ Stage Summary:
 - Hydration mismatch fully resolved using the React 19-idiomatic useSyncExternalStore pattern
 - Mobile menu functionality preserved
 - Site remains production-ready
+
+---
+Task ID: 5
+Agent: Main (Z.ai Code)
+Task: Implement functional EN/ID language switching (ID button now translates the entire site)
+
+Work Log:
+- Created Zustand language store (src/lib/eswen/language-store.ts) with persist middleware → language survives reloads via localStorage
+- Created comprehensive i18n dictionary (src/lib/eswen/i18n.ts) with ~120 UI strings in EN + ID (navbar, hero, brands, services, booking, journey, doctors, about, why, blog, location, footer, AI assistant)
+- Created `useT()` hook (returns t(key) function bound to current lang) and `tr(lang, key)` non-hook helper for use in effects
+- Refactored data.ts to be fully bilingual: services (category/name/description), doctors (role/specialty/experience), booking steps (title/description), patient journey (title), about highlights, why-choose-us, blog posts (title/excerpt/category/readTime), contact hours, booking statuses — all as `{ en, id }` objects accessed via `[lang]`
+- Made doctor filters bilingual: All→Semua, Doctor→Dokter, Aesthetic→Estetika, Beauty→Kecantikan, Wellness→Wellness (with stable `key` field for filtering)
+- Updated ALL 12 section components + navbar + footer + AI assistant to use `useT()` for UI strings and `useLanguage()` for bilingual data access
+- Updated AI Triage API (src/app/api/ai-triage/route.ts): added `lang` param, split system prompt into SYSTEM_PROMPT_EN + SYSTEM_PROMPT_ID — AI now responds in the selected language
+- Created LangSync component (src/components/eswen/lang-sync.tsx) — updates `<html lang>` attribute when language changes (SEO/accessibility); added to layout.tsx
+- Fixed critical bug: AI assistant's welcome-reset useEffect was depending on `t` (recreated every render) which wiped messages on every render → switched to `tr(lang, "ai_welcome")` (stable string) so effect only runs when lang actually changes
+- Polish fixes from QA: "puang"→"puas" typo, blog eyebrow "Blog & Insight"→"Blog & Wawasan"
+
+Verification (all via Agent Browser, ID mode):
+- Hero: "Kesehatan Anda, Prioritas Kami. Kecantikan Anda, Keahlian Kami." ✓
+- Nav: Beranda, Brand Kami, Layanan, Dokter, Tentang Kami, Blog, Kontak ✓
+- All 11 section headings translated ✓
+- CTAs: "Buat Janji", "Lihat Detail", "Booking & Bayar Deposit" ✓
+- Doctor roles: DOKTER, DOKTER ESTETIKA, BEAUTICIAN, PERAWAT/TERAPIS ✓
+- Booking statuses: MENUNGGU BAYAR, DIKONFIRMASI, PEMBAYARAN GAGAL ✓
+- Doctor filters translated AND functional (Estetika → only Dr. Marcus Tan) ✓
+- AI assistant: sent "Saya punya jerawat..." → AI replied in Indonesian, recommended Aesthetic Eswen + "Buat Konsultasi" CTA + Indonesian disclaimer ✓
+- Switch back to EN works bidirectionally ✓
+- `<html lang="id">` updates via LangSync ✓
+- Language persists across reload (Zustand persist) ✓
+- Lint: 0 errors, 0 warnings ✓
+
+Stage Summary:
+- The EN/ID language switch is now fully functional across the entire site (UI + data + AI assistant + html lang attr)
+- Bidirectional, persisted, accessible
+- Production-ready

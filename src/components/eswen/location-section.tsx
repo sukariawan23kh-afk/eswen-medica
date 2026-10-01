@@ -5,19 +5,24 @@ import { MapPin, Clock, MessageCircle, Phone, Mail, Navigation } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
 import { contactInfo } from "@/lib/eswen/data";
+import { useLanguage } from "@/lib/eswen/language-store";
+import { useT } from "@/lib/eswen/i18n";
 
 export function LocationSection() {
+  const { lang } = useLanguage();
+  const t = useT();
+
   return (
     <section id="contact" className="relative py-20 sm:py-28 bg-eswen-gradient-soft">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Visit Us"
+          eyebrow={t("location_eyebrow")}
           title={
             <>
-              Visit <span className="text-eswen-gradient">Eswen Medica</span>
+              {t("location_title_1")} <span className="text-eswen-gradient">{t("location_title_2")}</span>
             </>
           }
-          description="Centrally located in Kuta, Bali — easy to reach from Seminyak, Canggu, and the airport."
+          description={t("location_desc")}
         />
 
         <div className="mt-14 grid lg:grid-cols-[1.3fr_1fr] gap-6 lg:gap-8">
@@ -47,13 +52,13 @@ export function LocationSection() {
             className="flex flex-col gap-4"
           >
             <div className="rounded-[1.5rem] bg-white border border-eswen-lavender p-6 shadow-eswen-soft">
-              <h3 className="text-lg font-bold text-eswen-deep mb-4">Contact Information</h3>
+              <h3 className="text-lg font-bold text-eswen-deep mb-4">{t("location_contact_title")}</h3>
               <ul className="space-y-3.5 text-sm">
-                <ContactRow icon={<MapPin className="h-4 w-4" />} label="Address" value={contactInfo.address} />
-                <ContactRow icon={<Clock className="h-4 w-4" />} label="Opening Hours" value={contactInfo.hours} />
-                <ContactRow icon={<MessageCircle className="h-4 w-4" />} label="WhatsApp" value={contactInfo.whatsapp} />
-                <ContactRow icon={<Phone className="h-4 w-4" />} label="Phone" value={contactInfo.phone} />
-                <ContactRow icon={<Mail className="h-4 w-4" />} label="Email" value={contactInfo.email} />
+                <ContactRow icon={<MapPin className="h-4 w-4" />} label={t("location_address")} value={contactInfo.address} />
+                <ContactRow icon={<Clock className="h-4 w-4" />} label={t("location_hours")} value={contactInfo.hours[lang]} />
+                <ContactRow icon={<MessageCircle className="h-4 w-4" />} label={t("location_whatsapp")} value={contactInfo.whatsapp} />
+                <ContactRow icon={<Phone className="h-4 w-4" />} label={t("location_phone")} value={contactInfo.phone} />
+                <ContactRow icon={<Mail className="h-4 w-4" />} label={t("location_email")} value={contactInfo.email} />
               </ul>
 
               <div className="mt-5 flex flex-col sm:flex-row gap-2">
@@ -63,7 +68,7 @@ export function LocationSection() {
                 >
                   <a href={contactInfo.directions} target="_blank" rel="noopener noreferrer">
                     <Navigation className="h-4 w-4" />
-                    Get Directions
+                    {t("location_directions")}
                   </a>
                 </Button>
                 <Button
@@ -77,18 +82,18 @@ export function LocationSection() {
                     rel="noopener noreferrer"
                   >
                     <MessageCircle className="h-4 w-4" />
-                    WhatsApp Us
+                    {t("location_wa")}
                   </a>
                 </Button>
               </div>
             </div>
 
             <div className="rounded-[1.5rem] bg-gradient-to-br from-eswen-deep to-eswen-soft-purple p-6 text-white shadow-eswen-card">
-              <h4 className="font-bold text-base">Walk-ins Welcome</h4>
+              <h4 className="font-bold text-base">{t("location_walkins_title")}</h4>
               <p className="mt-1.5 text-sm text-white/85 leading-relaxed">
-                Prefer to visit without an appointment? Our front desk team will help you find the next available slot.
+                {t("location_walkins_desc")}
               </p>
-              <p className="mt-3 text-xs text-white/70">Avg. wait time: under 15 minutes during off-peak hours.</p>
+              <p className="mt-3 text-xs text-white/70">{t("location_walkins_note")}</p>
             </div>
           </motion.div>
         </div>

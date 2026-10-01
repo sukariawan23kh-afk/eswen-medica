@@ -13,30 +13,48 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/eswen/language-store";
+import { useT, tr } from "@/lib/eswen/i18n";
+import type { Lang } from "@/lib/eswen/language-store";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const SUGGESTIONS = [
-  "I have acne and oily skin. What treatment is suitable?",
-  "What aesthetic treatments do you offer in Bali?",
-  "I'm an expat — can I book a general check-up?",
-  "Saya ingin konsultasi kecantikan di Bali",
-];
-
-const WELCOME: Msg = {
-  role: "assistant",
-  content:
-    "Halo! 👋 I'm the **Eswen AI Assistant**. I can help guide you to the right medical or aesthetic service in Bali.\n\nWhat concern can I help you with today?",
+const SUGGESTIONS: Record<Lang, string[]> = {
+  en: [
+    "I have acne and oily skin. What treatment is suitable?",
+    "What aesthetic treatments do you offer in Bali?",
+    "I'm an expat — can I book a general check-up?",
+    "What payment methods do you accept?",
+  ],
+  id: [
+    "Saya punya jerawat dan kulit berminyak. Perawatan apa yang cocok?",
+    "Perawatan estetika apa yang tersedia di Bali?",
+    "Saya ekspat — bisakah saya booking check-up umum?",
+    "Metode pembayaran apa saja yang diterima?",
+  ],
 };
 
 export function AIAssistant() {
+  const { lang, setLang } = useLanguage();
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([WELCOME]);
+  const [messages, setMessages] = useState<Msg[]>([
+    { role: "assistant", content: t("ai_welcome") },
+  ]);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset the conversation to a localized welcome when the language changes.
+  // Uses `tr` (non-hook) so the effect only re-runs when `lang` actually changes —
+  // depending on `t` (recreated every render) would wipe messages on every render.
+  const welcomeMsg = tr(lang, "ai_welcome");
+  useEffect(() => {
+    setMessages([{ role: "assistant", content: welcomeMsg }]);
+    setError(null);
+  }, [lang, welcomeMsg]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -59,8 +77,7 @@ export function AIAssistant() {
       if (!trimmed || loading) return;
 
       const userMsg: Msg = { role: "user", content: trimmed };
-      const nextHistory = [...messages, userMsg];
-      setMessages(nextHistory);
+      setMessages((cur) => [...cur, userMsg]);
       setInput("");
       setError(null);
       setLoading(true);
@@ -71,8 +88,10 @@ export function AIAssistant() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message: trimmed,
+            lang,
+            // Exclude the welcome message from history sent to the model
             history: messages
-              .filter((m) => m.content !== WELCOME.content)
+              .filter((m) => m.content !== welcomeMsg)
               .map((m) => ({ role: m.role, content: m.content })),
           }),
         });
@@ -90,17 +109,13 @@ export function AIAssistant() {
         setError(msg);
         setMessages((cur) => [
           ...cur,
-          {
-            role: "assistant",
-            content:
-              "I'm having trouble connecting right now. Please try again, or reach us on WhatsApp for immediate help. 🙏",
-          },
+          { role: "assistant", content: t("ai_error") },
         ]);
       } finally {
         setLoading(false);
       }
     },
-    [loading, messages]
+    [loading, messages, lang, welcomeMsg]
   );
 
   const onSubmit = (e: React.FormEvent) => {
@@ -157,8 +172,24 @@ export function AIAssistant() {
                 <p className="font-bold text-sm leading-tight">Eswen AI Assistant</p>
                 <p className="text-[11px] text-white/80 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
-                  Online · Triage & service guidance
+                  {t("ai_online")}
                 </p>
+              </div>
+              {/* Mini language toggle inside the chat */}
+              <div className="flex items-center rounded-full bg-white/15 backdrop-blur p-0.5 text-[10px] font-bold">
+                {(["en", "id"] as const).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => setLang(l)}
+                    className={cn(
+                      "px-2 py-0.5 rounded-full uppercase transition-all",
+                      lang === l ? "bg-white text-eswen-deep" : "text-white/80 hover:text-white"
+                    )}
+                    aria-label={`Switch AI to ${l === "en" ? "English" : "Indonesian"}`}
+                  >
+                    {l}
+                  </button>
+                ))}
               </div>
               <button
                 onClick={() => setOpen(false)}
@@ -183,7 +214,7 @@ export function AIAssistant() {
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-eswen-lavender">
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-eswen-soft-purple" />
                   </span>
-                  Eswen AI is thinking...
+                  {t("ai_thinking")}
                 </div>
               )}
 
@@ -198,10 +229,10 @@ export function AIAssistant() {
               {messages.length === 1 && !loading && (
                 <div className="pt-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                    Quick questions
+                    {t("ai_quick")}
                   </p>
                   <div className="flex flex-col gap-1.5">
-                    {SUGGESTIONS.map((s) => (
+                    {SUGGESTIONS[lang].map((s) => (
                       <button
                         key={s}
                         onClick={() => send(s)}
@@ -222,11 +253,11 @@ export function AIAssistant() {
                 className="w-full rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-10 text-sm font-semibold shadow-eswen-soft"
               >
                 <CalendarHeart className="h-4 w-4" />
-                Book Consultation
+                {t("ai_book")}
               </Button>
               <p className="text-[10px] text-muted-foreground text-center leading-relaxed flex items-start gap-1 px-1">
                 <MessageSquareText className="h-3 w-3 mt-0.5 shrink-0 text-eswen-lavender-soft" />
-                This AI assistant provides general information only and does not replace professional medical diagnosis or consultation.
+                {t("ai_disclaimer")}
               </p>
             </div>
 
@@ -236,11 +267,11 @@ export function AIAssistant() {
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about your concern..."
+                placeholder={t("ai_placeholder")}
                 maxLength={800}
                 disabled={loading}
                 className="flex-1 h-11 rounded-full bg-eswen-light-lavender/60 border border-eswen-lavender px-4 text-sm text-eswen-deep placeholder:text-muted-foreground/70 focus:outline-none focus:border-eswen-soft-purple focus:bg-white transition-colors disabled:opacity-60"
-                aria-label="Type your message"
+                aria-label={t("ai_placeholder")}
               />
               <Button
                 type="submit"

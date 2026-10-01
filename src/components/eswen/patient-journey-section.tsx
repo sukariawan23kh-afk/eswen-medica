@@ -4,20 +4,25 @@ import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { SectionHeading } from "./section-heading";
 import { patientJourney } from "@/lib/eswen/data";
+import { useLanguage } from "@/lib/eswen/language-store";
+import { useT } from "@/lib/eswen/i18n";
 
 export function PatientJourneySection() {
+  const { lang } = useLanguage();
+  const t = useT();
+
   return (
     <section className="relative py-20 sm:py-28 bg-eswen-gradient-soft overflow-hidden">
       <div className="pointer-events-none absolute -bottom-20 left-1/2 -translate-x-1/2 h-72 w-[80%] rounded-full bg-eswen-lavender/40 blur-3xl" />
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <SectionHeading
-          eyebrow="Patient Journey"
+          eyebrow={t("journey_eyebrow")}
           title={
             <>
-              From Discovery to <span className="text-eswen-gradient">Follow-up</span>
+              {t("journey_title_1")} <span className="text-eswen-gradient">{t("journey_title_2")}</span>
             </>
           }
-          description="A smooth, guided experience — from your first symptom check with our AI assistant to post-treatment follow-up."
+          description={t("journey_desc")}
         />
 
         {/* Desktop horizontal flow */}
@@ -29,7 +34,7 @@ export function PatientJourneySection() {
             <div className="grid grid-cols-9 gap-2">
               {patientJourney.map((step, idx) => (
                 <motion.div
-                  key={step.title}
+                  key={step.title.en}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: idx * 0.08 }}
@@ -41,7 +46,7 @@ export function PatientJourneySection() {
                       {idx + 1}
                     </span>
                   </div>
-                  <p className="mt-3 text-xs font-semibold text-eswen-deep">{step.title}</p>
+                  <p className="mt-3 text-xs font-semibold text-eswen-deep">{step.title[lang]}</p>
                 </motion.div>
               ))}
             </div>
@@ -54,7 +59,7 @@ export function PatientJourneySection() {
             <div className="absolute top-2 bottom-2 left-[2.75rem] w-0.5 bg-gradient-to-b from-eswen-lavender-soft/40 to-transparent" />
             {patientJourney.map((step, idx) => (
               <motion.div
-                key={step.title}
+                key={step.title.en}
                 initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
@@ -67,7 +72,7 @@ export function PatientJourneySection() {
                   </span>
                 </div>
                 <div className="flex-1 rounded-2xl bg-white border border-eswen-lavender/60 px-4 py-3 shadow-eswen-soft">
-                  <p className="text-sm font-semibold text-eswen-deep">{step.title}</p>
+                  <p className="text-sm font-semibold text-eswen-deep">{step.title[lang]}</p>
                 </div>
                 {idx < patientJourney.length - 1 && (
                   <ChevronRight className="absolute -bottom-3 left-[1.85rem] h-4 w-4 text-eswen-lavender-soft rotate-90" />

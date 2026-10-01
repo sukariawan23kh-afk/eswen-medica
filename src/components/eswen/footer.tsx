@@ -11,8 +11,13 @@ import {
   MapPin,
 } from "lucide-react";
 import { navLinks, contactInfo } from "@/lib/eswen/data";
+import { useLanguage } from "@/lib/eswen/language-store";
+import { useT } from "@/lib/eswen/i18n";
+import type { TranslationKey } from "@/lib/eswen/i18n";
 
 export function Footer() {
+  const { lang } = useLanguage();
+  const t = useT();
   const scrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
   const handleNav = (href: string) =>
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -33,12 +38,12 @@ export function Footer() {
                   ESWEN <span className="text-eswen-purple">MEDICA</span>
                 </span>
                 <span className="text-[10px] tracking-[0.2em] text-eswen-purple/80 font-medium uppercase mt-0.5">
-                  Health • Beauty • Confidence
+                  {t("nav_tagline")}
                 </span>
               </div>
             </div>
             <p className="mt-4 text-sm text-eswen-deep/70 leading-relaxed max-w-xs">
-              Premium medical and aesthetic care in Bali — two brands, one connected ecosystem of health, beauty, and confidence.
+              {t("footer_desc")}
             </p>
             <div className="mt-5 flex items-center gap-2">
               {[
@@ -61,7 +66,7 @@ export function Footer() {
           {/* Quick Links */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-eswen-deep mb-4">
-              Quick Links
+              {t("footer_quick")}
             </h4>
             <ul className="space-y-2.5 text-sm">
               {navLinks.map((link) => (
@@ -70,7 +75,7 @@ export function Footer() {
                     onClick={() => handleNav(link.href)}
                     className="text-eswen-deep/70 hover:text-eswen-deep hover:translate-x-0.5 inline-flex items-center gap-1.5 transition-all"
                   >
-                    {link.label}
+                    {t(link.labelKey as TranslationKey)}
                   </button>
                 </li>
               ))}
@@ -80,28 +85,28 @@ export function Footer() {
           {/* Our Brands */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-eswen-deep mb-4">
-              Our Brands
+              {t("footer_brands")}
             </h4>
             <ul className="space-y-3">
               <li>
                 <p className="text-sm font-bold text-eswen-deep">Eswen Medica</p>
-                <p className="text-xs text-eswen-deep/60">Health • Wellness • Clinic</p>
+                <p className="text-xs text-eswen-deep/60">{t("footer_medical")}</p>
               </li>
               <li>
                 <p className="text-sm font-bold text-eswen-purple">Aesthetic Eswen</p>
-                <p className="text-xs text-eswen-deep/60">Beauty • Skin • Aesthetic</p>
+                <p className="text-xs text-eswen-deep/60">{t("footer_aesthetic")}</p>
               </li>
             </ul>
             <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-eswen-deep">
               <ShieldPlus className="h-3 w-3" />
-              Two Brands · One Care
+              {t("footer_two_brands")}
             </div>
           </div>
 
           {/* Contact */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-eswen-deep mb-4">
-              Contact
+              {t("footer_contact")}
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li className="flex items-start gap-2 text-eswen-deep/70">
@@ -123,18 +128,18 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-eswen-deep/15 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-eswen-deep/70">
-            <span>© 2026 Eswen Medica. All Rights Reserved.</span>
+            <span>{t("footer_copyright")}</span>
             <span className="hidden sm:inline h-1 w-1 rounded-full bg-eswen-deep/30" />
-            <button className="hover:text-eswen-deep transition-colors">Privacy Policy</button>
-            <button className="hover:text-eswen-deep transition-colors">Terms & Conditions</button>
+            <button className="hover:text-eswen-deep transition-colors">{t("footer_privacy")}</button>
+            <button className="hover:text-eswen-deep transition-colors">{t("footer_terms")}</button>
           </div>
           <button
             onClick={scrollTop}
             className="inline-flex items-center gap-2 rounded-full bg-white/70 hover:bg-eswen-deep hover:text-white text-eswen-deep px-4 py-2 text-xs font-semibold transition-all shadow-sm"
-            aria-label="Back to top"
+            aria-label={t("footer_back")}
           >
             <ArrowUp className="h-3.5 w-3.5" />
-            Back to top
+            {t("footer_back")}
           </button>
         </div>
       </div>

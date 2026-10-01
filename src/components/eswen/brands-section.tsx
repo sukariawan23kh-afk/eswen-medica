@@ -5,9 +5,14 @@ import { ArrowRight, Activity, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
 import { brands } from "@/lib/eswen/data";
+import { useLanguage } from "@/lib/eswen/language-store";
+import { useT } from "@/lib/eswen/i18n";
+import type { TranslationKey } from "@/lib/eswen/i18n";
 import { cn } from "@/lib/utils";
 
 export function BrandsSection() {
+  const { lang } = useLanguage();
+  const t = useT();
   const scrollTo = (href: string) =>
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -15,13 +20,13 @@ export function BrandsSection() {
     <section id="brands" className="relative py-20 sm:py-28 bg-white">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Our Brands"
+          eyebrow={t("brands_eyebrow")}
           title={
             <>
-              Two Brands. <span className="text-eswen-gradient">One Care.</span>
+              {t("brands_title_1")} <span className="text-eswen-gradient">{t("brands_title_2")}</span>
             </>
           }
-          description="Eswen Medica and Aesthetic Eswen operate as one connected ecosystem — sharing booking, payments, and your patient records — while keeping their distinct focus on health and beauty."
+          description={t("brands_desc")}
         />
 
         <div className="mt-14 grid lg:grid-cols-2 gap-6 lg:gap-8 relative">
@@ -75,7 +80,7 @@ export function BrandsSection() {
                       {isMedical ? <Activity className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
                     </span>
                     <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-eswen-deep/80 bg-white/70 backdrop-blur px-2.5 py-1 rounded-full">
-                      {isMedical ? "Medical" : "Aesthetic"}
+                      {isMedical ? t("brands_medical_tag") : t("brands_aesthetic_tag")}
                     </span>
                   </div>
                 </div>
@@ -85,23 +90,23 @@ export function BrandsSection() {
                     {brand.name}
                   </h3>
                   <p className="mt-1 text-sm font-semibold text-eswen-soft-purple tracking-wide">
-                    {brand.tagline}
+                    {t(brand.taglineKey as TranslationKey)}
                   </p>
                   <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-                    {brand.description}
+                    {t(brand.descriptionKey as TranslationKey)}
                   </p>
 
                   <ul className="mt-5 grid grid-cols-2 gap-y-2 gap-x-3">
                     {brand.highlights.map((h) => (
-                      <li key={h} className="flex items-center gap-1.5 text-xs font-medium text-foreground/80">
+                      <li key={h.en} className="flex items-center gap-1.5 text-xs font-medium text-foreground/80">
                         <Check className="h-3.5 w-3.5 text-eswen-soft-purple" />
-                        {h}
+                        {h[lang]}
                       </li>
                     ))}
                   </ul>
 
                   <Button
-                    onClick={() => scrollTo(isMedical ? "#services" : "#services")}
+                    onClick={() => scrollTo("#services")}
                     className={cn(
                       "mt-7 w-full rounded-full h-11 text-sm font-semibold transition-all group/btn",
                       isMedical
@@ -109,7 +114,7 @@ export function BrandsSection() {
                         : "bg-gradient-to-r from-eswen-soft-purple to-eswen-lavender-soft text-white hover:shadow-eswen-card"
                     )}
                   >
-                    {brand.cta}
+                    {t(brand.ctaKey as TranslationKey)}
                     <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
                   </Button>
                 </div>

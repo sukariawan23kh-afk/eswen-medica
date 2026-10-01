@@ -4,8 +4,11 @@ import { motion } from "framer-motion";
 import { CalendarHeart, ArrowRight, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { heroTrustPoints } from "@/lib/eswen/data";
+import { useT } from "@/lib/eswen/i18n";
+import type { TranslationKey } from "@/lib/eswen/i18n";
 
 export function HeroSection() {
+  const t = useT();
   const scrollTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -34,7 +37,7 @@ export function HeroSection() {
                 <span className="absolute inline-flex h-full w-full rounded-full bg-eswen-soft-purple opacity-75 animate-ping" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-eswen-deep" />
               </span>
-              Premium Clinic in Bali · International Standard
+              {t("hero_badge")}
             </motion.div>
 
             <motion.h1
@@ -43,13 +46,13 @@ export function HeroSection() {
               transition={{ duration: 0.7, delay: 0.05 }}
               className="font-extrabold leading-[1.05] tracking-tight text-[2.5rem] sm:text-6xl lg:text-[4.25rem] text-eswen-deep"
             >
-              Your Health,
+              {t("hero_h1_l1")}
               <br />
-              <span className="text-eswen-gradient">Our Priority.</span>
+              <span className="text-eswen-gradient">{t("hero_h1_l2")}</span>
               <br />
-              Your Beauty,
+              {t("hero_h1_l3")}
               <br />
-              <span className="text-eswen-gradient">Our Expertise.</span>
+              <span className="text-eswen-gradient">{t("hero_h1_l4")}</span>
             </motion.h1>
 
             <motion.p
@@ -58,7 +61,7 @@ export function HeroSection() {
               transition={{ duration: 0.7, delay: 0.15 }}
               className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed"
             >
-              Comprehensive medical and aesthetic care in Bali, delivered by trusted professionals with modern technology and international standards.
+              {t("hero_sub")}
             </motion.p>
 
             <motion.div
@@ -72,14 +75,14 @@ export function HeroSection() {
                 className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-card hover:shadow-eswen-elevated hover:-translate-y-0.5 transition-all px-6 h-12 text-sm font-semibold"
               >
                 <CalendarHeart className="h-4 w-4" />
-                Book Appointment
+                {t("hero_cta_book")}
               </Button>
               <Button
                 onClick={() => scrollTo("#services")}
                 variant="outline"
                 className="rounded-full border-eswen-lavender-soft text-eswen-deep bg-white/70 hover:bg-eswen-light-lavender hover:border-eswen-soft-purple h-12 px-6 text-sm font-semibold"
               >
-                Explore Our Services
+                {t("hero_cta_explore")}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -92,11 +95,11 @@ export function HeroSection() {
               className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 max-w-xl"
             >
               {heroTrustPoints.map((point) => (
-                <li key={point.label} className="flex items-center gap-2.5 text-sm font-medium text-foreground/80">
+                <li key={point.labelKey} className="flex items-center gap-2.5 text-sm font-medium text-foreground/80">
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-eswen-light-lavender text-eswen-deep">
                     <point.icon className="h-4 w-4" />
                   </span>
-                  {point.label}
+                  {t(point.labelKey as TranslationKey)}
                 </li>
               ))}
             </motion.ul>
@@ -134,8 +137,8 @@ export function HeroSection() {
                     <ShieldCheck className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-eswen-deep leading-tight">Secure Deposit</p>
-                    <p className="text-[11px] text-muted-foreground">Booking guaranteed</p>
+                    <p className="text-xs font-bold text-eswen-deep leading-tight">{t("hero_card_deposit")}</p>
+                    <p className="text-[11px] text-muted-foreground">{t("hero_card_deposit_sub")}</p>
                   </div>
                 </div>
               </motion.div>
@@ -151,8 +154,8 @@ export function HeroSection() {
                     <Star key={i} className="h-3.5 w-3.5 fill-current" />
                   ))}
                 </div>
-                <p className="text-xs font-bold text-eswen-deep leading-tight">Trusted by 5,000+ guests</p>
-                <p className="text-[11px] text-muted-foreground">Expats & tourists in Bali</p>
+                <p className="text-xs font-bold text-eswen-deep leading-tight">{t("hero_card_trusted")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("hero_card_trusted_sub")}</p>
               </motion.div>
 
               <motion.div
@@ -162,7 +165,7 @@ export function HeroSection() {
                 className="absolute -bottom-5 left-1/2 -translate-x-1/2 glass-eswen rounded-full px-4 py-2 shadow-eswen-card border border-white/60 flex items-center gap-2 whitespace-nowrap"
               >
                 <Sparkles className="h-4 w-4 text-eswen-soft-purple" />
-                <span className="text-xs font-semibold text-eswen-deep">Two Brands · One Care</span>
+                <span className="text-xs font-semibold text-eswen-deep">{t("hero_pill")}</span>
               </motion.div>
             </div>
           </motion.div>

@@ -6,44 +6,48 @@ import { ArrowRight, Globe, Award, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
 import { doctors, doctorFilters } from "@/lib/eswen/data";
+import { useLanguage } from "@/lib/eswen/language-store";
+import { useT } from "@/lib/eswen/i18n";
 import { cn } from "@/lib/utils";
 
 export function DoctorsSection() {
-  const [filter, setFilter] = useState<string>("All");
+  const { lang } = useLanguage();
+  const t = useT();
+  const [filter, setFilter] = useState<string>("all");
 
   const filtered =
-    filter === "All"
+    filter === "all"
       ? doctors
-      : doctors.filter((d) => d.category === filter.toLowerCase());
+      : doctors.filter((d) => d.category === filter);
 
   return (
     <section id="doctors" className="relative py-20 sm:py-28 bg-white">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Our Professionals"
+          eyebrow={t("doctors_eyebrow")}
           title={
             <>
-              Meet Our <span className="text-eswen-gradient">Professionals</span>
+              {t("doctors_title_1")} <span className="text-eswen-gradient">{t("doctors_title_2")}</span>
             </>
           }
-          description="A trusted, multilingual team of doctors, aesthetic doctors, beauticians, and nurses — certified and experienced in international-standard care."
+          description={t("doctors_desc")}
         />
 
         {/* Filters */}
         <div className="mt-10 flex flex-wrap justify-center gap-2">
           {doctorFilters.map((f) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
+              key={f.key}
+              onClick={() => setFilter(f.key)}
               className={cn(
                 "rounded-full px-5 py-2 text-sm font-semibold transition-all",
-                filter === f
+                filter === f.key
                   ? "bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft"
                   : "bg-eswen-light-lavender text-eswen-deep hover:bg-eswen-lavender"
               )}
-              aria-pressed={filter === f}
+              aria-pressed={filter === f.key}
             >
-              {f}
+              {f.label[lang]}
             </button>
           ))}
         </div>
@@ -65,14 +69,14 @@ export function DoctorsSection() {
                 <div className="relative h-72 overflow-hidden bg-gradient-to-b from-eswen-light-lavender to-white">
                   <img
                     src={doc.image}
-                    alt={`${doc.name}, ${doc.role} at Eswen Medica Bali`}
+                    alt={`${doc.name}, ${doc.role[lang]} at Eswen Medica Bali`}
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-eswen-deep/70 via-transparent to-transparent" />
                   <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-eswen-deep">
                     <Award className="h-3 w-3" />
-                    {doc.role}
+                    {doc.role[lang]}
                   </span>
 
                   {/* Name overlay */}
@@ -80,7 +84,7 @@ export function DoctorsSection() {
                     <h3 className="text-lg font-bold tracking-tight leading-tight">
                       {doc.name}
                     </h3>
-                    <p className="text-xs text-white/80">{doc.specialty}</p>
+                    <p className="text-xs text-white/80">{doc.specialty[lang]}</p>
                   </div>
                 </div>
 
@@ -89,7 +93,7 @@ export function DoctorsSection() {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
                     <span className="inline-flex items-center gap-1">
                       <Award className="h-3.5 w-3.5 text-eswen-soft-purple" />
-                      {doc.experience}
+                      {doc.experience[lang]}
                     </span>
                     <span className="h-1 w-1 rounded-full bg-eswen-lavender-soft" />
                     <span className="inline-flex items-center gap-1">
@@ -103,7 +107,7 @@ export function DoctorsSection() {
                     variant="ghost"
                     className="w-full rounded-full bg-eswen-light-lavender text-eswen-deep hover:bg-eswen-deep hover:text-white h-9 text-xs font-semibold group/btn"
                   >
-                    View Profile
+                    {t("doctors_view_profile")}
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
                   </Button>
                 </div>
@@ -114,12 +118,12 @@ export function DoctorsSection() {
 
         {/* Bottom note */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
-          <span>Want to join our team of trusted professionals?</span>
+          <span>{t("doctors_join_note")}</span>
           <button
             onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })}
             className="inline-flex items-center gap-1 font-semibold text-eswen-deep hover:text-eswen-soft-purple"
           >
-            Contact us <ChevronRight className="h-3.5 w-3.5" />
+            {t("doctors_contact")} <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

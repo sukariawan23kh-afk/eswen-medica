@@ -5,19 +5,24 @@ import { ArrowRight, Clock, Tag, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
 import { blogPosts } from "@/lib/eswen/data";
+import { useLanguage } from "@/lib/eswen/language-store";
+import { useT } from "@/lib/eswen/i18n";
 
 export function BlogSection() {
+  const { lang } = useLanguage();
+  const t = useT();
+
   return (
     <section id="blog" className="relative py-20 sm:py-28 bg-white">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Blog & Insights"
+          eyebrow={t("blog_eyebrow")}
           title={
             <>
-              Guides for <span className="text-eswen-gradient">Beauty, Skin & Wellness</span> in Bali
+              {t("blog_title_1")} <span className="text-eswen-gradient">{t("blog_title_2")}</span>
             </>
           }
-          description="Helpful, trusted content for expats, tourists, and locals — in English and Indonesian."
+          description={t("blog_desc")}
         />
 
         <div className="mt-14 grid lg:grid-cols-3 gap-6">
@@ -32,14 +37,14 @@ export function BlogSection() {
               <div className="relative h-48 overflow-hidden bg-eswen-light-lavender">
                 <img
                   src={post.image}
-                  alt={post.title}
+                  alt={post.title[lang]}
                   className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-eswen-deep/20 to-transparent" />
                 <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-eswen-deep">
                   <Tag className="h-3 w-3" />
-                  {post.category}
+                  {post.category[lang]}
                 </span>
                 <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-eswen-deep/80 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
                   <Globe className="h-3 w-3" />
@@ -53,20 +58,20 @@ export function BlogSection() {
                   <span className="h-1 w-1 rounded-full bg-eswen-lavender-soft" />
                   <span className="inline-flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {post.readTime}
+                    {post.readTime[lang]}
                   </span>
                 </div>
                 <h3 className="text-base font-bold text-eswen-deep leading-snug group-hover:text-eswen-soft-purple transition-colors">
-                  {post.title}
+                  {post.title[lang]}
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed flex-1">
-                  {post.excerpt}
+                  {post.excerpt[lang]}
                 </p>
                 <button
                   className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-eswen-deep hover:text-eswen-soft-purple transition-colors self-start"
-                  aria-label={`Read more about ${post.title}`}
+                  aria-label={`${t("blog_read")} - ${post.title[lang]}`}
                 >
-                  Read Article
+                  {t("blog_read")}
                   <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
@@ -79,7 +84,7 @@ export function BlogSection() {
             variant="outline"
             className="rounded-full border-eswen-lavender-soft text-eswen-deep bg-white hover:bg-eswen-light-lavender hover:border-eswen-soft-purple h-11 px-6 text-sm font-semibold"
           >
-            View All Articles
+            {t("blog_view_all")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
