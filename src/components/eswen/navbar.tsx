@@ -5,12 +5,14 @@ import { Menu, X, CalendarHeart, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useMounted } from "@/hooks/use-mounted";
 import { navLinks } from "@/lib/eswen/data";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [lang, setLang] = useState<"EN" | "ID">("EN");
+  const mounted = useMounted();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -96,19 +98,20 @@ export function Navbar() {
               Book Appointment
             </Button>
 
-            {/* Mobile hamburger */}
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="lg:hidden rounded-full h-10 w-10 border border-eswen-lavender bg-white/70"
-                  aria-label="Open menu"
-                >
-                  <Menu className="h-5 w-5 text-eswen-deep" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 bg-eswen-gradient-soft">
+            {/* Mobile hamburger — gated behind `mounted` to avoid Radix ID hydration mismatch */}
+            {mounted ? (
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="lg:hidden rounded-full h-10 w-10 border border-eswen-lavender bg-white/70"
+                    aria-label="Open menu"
+                  >
+                    <Menu className="h-5 w-5 text-eswen-deep" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 bg-eswen-gradient-soft">
                 <SheetHeader className="p-6 pb-4 border-b border-eswen-lavender/60">
                   <SheetTitle className="flex items-center gap-2.5">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white">
@@ -154,6 +157,17 @@ export function Navbar() {
                 </nav>
               </SheetContent>
             </Sheet>
+            ) : (
+              // Static placeholder matching server render (no Radix IDs) to prevent hydration mismatch
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden rounded-full h-10 w-10 border border-eswen-lavender bg-white/70"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5 text-eswen-deep" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

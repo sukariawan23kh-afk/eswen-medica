@@ -83,3 +83,23 @@ Stage Summary:
 - Colors strictly soft purple/lavender (no blue/indigo leakage)
 - Sticky footer with soft purple gradient at bottom
 - Production-ready. Task complete.
+
+---
+Task ID: 4
+Agent: Main (Z.ai Code)
+Task: Fix Radix Sheet hydration mismatch error (aria-controls ID differs server vs client)
+
+Work Log:
+- Diagnosed the hydration mismatch: Radix Dialog/Sheet generates an `aria-controls` ID via React `useId` AFTER mount, causing server (`radix-_R_f6atmlb_`) ≠ client (`radix-_R_1uatmlb_`) attribute mismatch on the mobile hamburger Sheet trigger
+- First attempt: gated Sheet behind a `mounted` useState + `setMounted(true)` in useEffect — caused a NEW lint error (React 19 rule: "Calling setState synchronously within an effect can trigger cascading renders")
+- Final fix: created lint-clean `useMounted()` hook at src/hooks/use-mounted.ts using `React.useSyncExternalStore(noopSubscribe, () => true, () => false)` — returns false on SSR + first client render (matching server), then true after hydration, with NO setState-in-effect
+- Updated navbar.tsx to use `useMounted()` and render a static placeholder Button (no Radix IDs) until mounted, then swap in the full Sheet — guarantees server/first-client-render HTML match
+- Verification:
+  - Lint: 0 errors, 0 warnings ✓
+  - agent-browser: no hydration errors in console, no page errors ✓
+  - Mobile hamburger menu: click opens Sheet with all 7 nav links + Book Appointment CTA ✓
+
+Stage Summary:
+- Hydration mismatch fully resolved using the React 19-idiomatic useSyncExternalStore pattern
+- Mobile menu functionality preserved
+- Site remains production-ready
