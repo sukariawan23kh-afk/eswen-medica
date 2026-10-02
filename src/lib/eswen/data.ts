@@ -2,7 +2,6 @@ import {
   Stethoscope,
   Sparkles,
   HeartPulse,
-  Flower2,
   ClipboardList,
   ShieldPlus,
   CalendarCheck,
@@ -29,7 +28,6 @@ const bi = (en: string, id: string): Bi => ({ en, id });
 export type NavLink = { labelKey: string; href: string };
 export const navLinks: NavLink[] = [
   { labelKey: "nav_home", href: "#home" },
-  { labelKey: "nav_brands", href: "#brands" },
   { labelKey: "nav_services", href: "#services" },
   { labelKey: "nav_doctors", href: "#doctors" },
   { labelKey: "nav_about", href: "#about" },
@@ -45,37 +43,7 @@ export const heroTrustPoints: { icon: LucideIcon; labelKey: string }[] = [
   { icon: Building2, labelKey: "hero_trust_4" },
 ];
 
-/* ---------- Brands ---------- */
-export const brands = [
-  {
-    name: "Eswen Medica",
-    taglineKey: "brand_medical_tagline",
-    descriptionKey: "brand_medical_desc",
-    ctaKey: "brand_medical_cta",
-    accent: "medical" as const,
-    highlights: [
-      bi("General Practice", "Praktik Umum"),
-      bi("Preventive Care", "Perawatan Preventif"),
-      bi("Wellness Programs", "Program Wellness"),
-      bi("Medical Tourism", "Turis Medis"),
-    ],
-    image: "/images/brand-medical.png",
-  },
-  {
-    name: "Aesthetic Eswen",
-    taglineKey: "brand_aesthetic_tagline",
-    descriptionKey: "brand_aesthetic_desc",
-    ctaKey: "brand_aesthetic_cta",
-    accent: "aesthetic" as const,
-    highlights: [
-      bi("Facial Treatments", "Perawatan Wajah"),
-      bi("Skin Rejuvenation", "Rejuvenasi Kulit"),
-      bi("Injectables", "Injectables"),
-      bi("Acne Care", "Perawatan Jerawat"),
-    ],
-    image: "/images/brand-aesthetic.png",
-  },
-];
+/* (Brands section removed — the site now focuses on Eswen Medica only.) */
 
 /* ---------- Services ---------- */
 export type Service = {
@@ -87,7 +55,7 @@ export type Service = {
   deposit: number; // deposit amount in IDR (required to confirm booking)
   icon: LucideIcon;
   image: string;
-  brand: "medical" | "aesthetic";
+  brand: "medical"; // Eswen Medica is a single medical brand now
 };
 
 export const services: Service[] = [
@@ -106,32 +74,18 @@ export const services: Service[] = [
     brand: "medical",
   },
   {
-    id: "aesthetic-treatments",
-    category: bi("Aesthetic Treatments", "Perawatan Estetika"),
-    name: bi("Aesthetic & Injectable Treatments", "Perawatan Estetika & Injectable"),
+    id: "dermatology",
+    category: bi("Dermatology", "Dermatologi"),
+    name: bi("Dermatology & Skin Health", "Dermatologi & Kesehatan Kulit"),
     description: bi(
-      "Facial rejuvenation, dermal fillers, anti-wrinkle treatments, and advanced aesthetic procedures performed by certified aesthetic doctors.",
-      "Rejuvenasi wajah, dermal fillers, perawatan anti-kerut, dan prosedur estetika lanjutan oleh dokter estetika bersertifikat."
+      "Medical-grade diagnosis and treatment of skin conditions — acne, eczema, pigmentation, and skin infections — by board-certified dermatologists.",
+      "Diagnosis dan perawatan medis untuk masalah kulit — jerawat, eksem, pigmentasi, dan infeksi kulit — oleh dokter kulit bersertifikat."
     ),
-    startingPrice: "IDR 1.500.000",
-    deposit: 250000,
-    icon: Sparkles,
-    image: "/images/service-aesthetic.png",
-    brand: "aesthetic",
-  },
-  {
-    id: "skin-beauty",
-    category: bi("Skin & Beauty Care", "Perawatan Kulit & Kecantikan"),
-    name: bi("Skin & Beauty Treatment", "Perawatan Kulit & Kecantikan"),
-    description: bi(
-      "Premium facials, acne treatment, skin rejuvenation, and personalized beauty care designed for healthy, glowing skin.",
-      "Facial premium, perawatan jerawat, rejuvenasi kulit, dan perawatan kecantikan personal untuk kulit sehat dan berseri."
-    ),
-    startingPrice: "IDR 450.000",
-    deposit: 100000,
-    icon: Flower2,
-    image: "/images/service-skin.png",
-    brand: "aesthetic",
+    startingPrice: "IDR 500.000",
+    deposit: 120000,
+    icon: Microscope,
+    image: "/images/service-medical.png",
+    brand: "medical",
   },
   {
     id: "wellness-program",
@@ -152,13 +106,13 @@ export const services: Service[] = [
     category: bi("Consultation", "Konsultasi"),
     name: bi("Specialist Consultation", "Konsultasi Spesialis"),
     description: bi(
-      "Personalized consultations with our doctors and beauticians to design the right treatment plan for your needs and goals.",
-      "Konsultasi personal dengan dokter dan beautician kami untuk merancang rencana perawatan yang tepat bagi kebutuhan dan tujuan Anda."
+      "Personalized consultations with our specialists to design the right medical treatment plan for your needs and health goals.",
+      "Konsultasi personal dengan spesialis kami untuk merancang rencana perawatan medis yang tepat bagi kebutuhan dan tujuan kesehatan Anda."
     ),
     startingPrice: "IDR 250.000",
     deposit: 75000,
     icon: ClipboardList,
-    image: "/images/service-aesthetic.png",
+    image: "/images/service-medical.png",
     brand: "medical",
   },
   {
@@ -172,6 +126,20 @@ export const services: Service[] = [
     startingPrice: "IDR 950.000",
     deposit: 200000,
     icon: ShieldPlus,
+    image: "/images/service-medical.png",
+    brand: "medical",
+  },
+  {
+    id: "travel-medicine",
+    category: bi("Travel Medicine", "Medis Perjalanan"),
+    name: bi("Travel Medicine & Medical Check-up", "Medis Perjalanan & Medical Check-up"),
+    description: bi(
+      "Vaccinations, travel health advice, pre-travel check-ups, and medical clearances tailored for expats and international visitors in Bali.",
+      "Vaksinasi, konsultasi kesehatan perjalanan, check-up sebelum bepergian, dan surat keterangan medis khusus untuk ekspat dan tamu internasional di Bali."
+    ),
+    startingPrice: "IDR 600.000",
+    deposit: 120000,
+    icon: Activity,
     image: "/images/service-medical.png",
     brand: "medical",
   },
@@ -258,7 +226,7 @@ export type Doctor = {
   id: string;
   name: string;
   role: Bi;
-  category: "doctor" | "aesthetic" | "beauty" | "wellness";
+  category: "doctor" | "wellness";
   specialty: Bi;
   experience: Bi;
   languages: string[];
@@ -270,7 +238,7 @@ export const doctors: Doctor[] = [
   {
     id: "dr-anastasia",
     name: "Dr. Anastasia Putri",
-    role: bi("Doctor", "Dokter"),
+    role: bi("General Practitioner", "Dokter Umum"),
     category: "doctor",
     specialty: bi("General Practice & Preventive Medicine", "Praktik Umum & Kedokteran Preventif"),
     experience: bi("12+ years", "12+ tahun"),
@@ -281,20 +249,20 @@ export const doctors: Doctor[] = [
   {
     id: "dr-marcus",
     name: "Dr. Marcus Tan",
-    role: bi("Aesthetic Doctor", "Dokter Estetika"),
-    category: "aesthetic",
-    specialty: bi("Aesthetic Medicine & Injectables", "Kedokteran Estetika & Injectable"),
+    role: bi("Dermatologist", "Dokter Kulit"),
+    category: "doctor",
+    specialty: bi("Dermatology & Skin Health", "Dermatologi & Kesehatan Kulit"),
     experience: bi("15+ years", "15+ tahun"),
     languages: ["EN", "Chinese", "ID"],
     image: "/images/doctor-2.png",
     initials: "MT",
   },
   {
-    id: "lina-beautician",
-    name: "Lina Saraswati",
-    role: bi("Beautician", "Beautician"),
-    category: "beauty",
-    specialty: bi("Facial & Skin Therapy", "Terapi Wajah & Kulit"),
+    id: "lina-therapist",
+    name: "Lina Saraswati, RN",
+    role: bi("Skin Care Therapist", "Terapis Perawatan Kulit"),
+    category: "wellness",
+    specialty: bi("Medical Skin Therapy & Wellness", "Terapi Kulit Medis & Wellness"),
     experience: bi("9+ years", "9+ tahun"),
     languages: ["EN", "ID", "Korean"],
     image: "/images/doctor-3.png",
@@ -316,8 +284,6 @@ export const doctors: Doctor[] = [
 export const doctorFilters: { key: string; label: Bi }[] = [
   { key: "all", label: bi("All", "Semua") },
   { key: "doctor", label: bi("Doctor", "Dokter") },
-  { key: "aesthetic", label: bi("Aesthetic", "Estetika") },
-  { key: "beauty", label: bi("Beauty", "Kecantikan") },
   { key: "wellness", label: bi("Wellness", "Wellness") },
 ];
 
@@ -416,35 +382,35 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
-    slug: "best-aesthetic-treatment-bali",
+    slug: "medical-clinic-bali-expats",
     title: bi(
-      "The Best Aesthetic Treatments in Bali: A 2026 Guide for Expats & Tourists",
-      "Perawatan Estetika Terbaik di Bali: Panduan 2026 untuk Ekspat & Turis"
+      "Medical Clinic Bali: A 2026 Guide for Expats & Tourists",
+      "Klinik Medis Bali: Panduan 2026 untuk Ekspat & Turis"
     ),
     excerpt: bi(
-      "From advanced facials to aesthetic injectables, discover Bali's most trusted aesthetic treatments — and why Eswen Medica is the clinic international guests choose.",
-      "Dari facial lanjutan hingga injectable estetika, temukan perawatan estetika tepercaya di Bali — dan mengapa Eswen Medica adalah pilihan klinik tamu internasional."
+      "Looking for a trusted medical clinic in Bali? Here's what expats and international visitors should know — from general practice to travel medicine at Eswen Medica.",
+      "Mencari klinik medis tepercaya di Bali? Inilah yang perlu diketahui ekspat dan tamu internasional — dari praktik umum hingga medis perjalanan di Eswen Medica."
     ),
-    category: bi("Aesthetic", "Estetika"),
+    category: bi("Medical", "Medis"),
     readTime: bi("6 min read", "6 menit baca"),
     date: "12 Feb 2026",
     image: "/images/blog-1.png",
     language: "EN",
   },
   {
-    slug: "acne-treatment-bali",
+    slug: "skin-health-bali-dermatology",
     title: bi(
-      "Acne Treatment in Bali: A Dermatologist-Approved Skincare Path",
-      "Perawatan Jerawat di Bali: Panduan Skincare Disetujui Dokter Kulit"
+      "Skin Health in Bali: A Dermatologist's Guide to the Tropical Climate",
+      "Kesehatan Kulit di Bali: Panduan Dermatologi untuk Iklim Tropis"
     ),
     excerpt: bi(
-      "Struggling with acne in Bali's tropical climate? Learn how our aesthetic doctors design personalized acne treatment plans that work.",
-      "Kesulitan jerawat di iklim tropis Bali? Pelajari bagaimana dokter estetika kami merancang rencana perawatan jerawat personal yang efektif."
+      "Acne, sun damage, and tropical-climate skin issues? Learn how our dermatologists at Eswen Medica diagnose and treat common skin conditions in Bali.",
+      "Jerawat, kerusakan akibat matahari, dan masalah kulit iklim tropis? Pelajari bagaimana dokter kulit kami di Eswen Medica mendiagnosis dan merawat kondisi kulit umum di Bali."
     ),
-    category: bi("Skin Care", "Perawatan Kulit"),
+    category: bi("Dermatology", "Dermatologi"),
     readTime: bi("5 min read", "5 menit baca"),
     date: "5 Feb 2026",
-    image: "/images/service-skin.png",
+    image: "/images/service-medical.png",
     language: "EN",
   },
   {
@@ -454,8 +420,8 @@ export const blogPosts: BlogPost[] = [
       "Turis Medis di Bali: Yang Perlu Diketahui Tamu Internasional"
     ),
     excerpt: bi(
-      "Bali is fast becoming a medical tourism destination. Here's how Eswen Medica makes healthcare and aesthetic care seamless for visitors.",
-      "Bali cepat menjadi destinasi turis medis. Inilah cara Eswen Medica membuat layanan kesehatan dan estetika mudah bagi pengunjung."
+      "Bali is fast becoming a medical tourism destination. Here's how Eswen Medica makes healthcare and preventive care seamless for international visitors.",
+      "Bali cepat menjadi destinasi turis medis. Inilah cara Eswen Medica membuat layanan kesehatan dan perawatan preventif mudah bagi tamu internasional."
     ),
     category: bi("Medical Tourism", "Turis Medis"),
     readTime: bi("7 min read", "7 menit baca"),

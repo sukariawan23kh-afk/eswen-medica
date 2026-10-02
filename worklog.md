@@ -222,3 +222,36 @@ Verification (via Agent Browser):
 Stage Summary:
 - Booking dialog is now genuinely flexible: full-screen on mobile with proper scroll, spacious centered modal on desktop showing all content
 - Header + footer stay pinned; only the content area scrolls
+
+---
+Task ID: 9
+Agent: Main (Z.ai Code)
+Task: Remove the Aesthetic brand entirely; focus the site on ESWEN MEDICA (medical) only
+
+Work Log:
+- data.ts: removed the `brands` array + nav_brands link; rewrote the 6 services to all-medical (replaced "Aesthetic Treatments" + "Skin & Beauty Care" with "Dermatology & Skin Health" + "Travel Medicine & Medical Check-up"); changed Service.brand type to `"medical"` only; rewrote doctors — Dr. Marcus now "Dermatologist" (was "Aesthetic Doctor"), Lina now "Skin Care Therapist" RN (was "Beautician"); Doctor.category union reduced to `"doctor" | "wellness"`; doctor filters reduced to All/Doctor/Wellness; rewrote blog posts to medical topics (Medical Clinic Bali, Skin Health/Dermatology, Medical Tourism); removed unused Flower2 import
+- booking.ts: simplified servicesForDoctor + doctorsForService to return all services/doctors (all medical now); removed dead aesthetic/beauty branches
+- api/bookings/route.ts: simplified brand validation (single medical check)
+- api/ai-triage/route.ts: rewrote both EN + ID system prompts — removed Aesthetic Eswen brand references, updated service categories to the new medical list
+- i18n.ts: hero headline "Beauty" → "Wellbeing" (EN) / "Kesejahteraan" (ID); hero_pill "Two Brands · One Care" → "Eswen Medica · Complete Care" (EN) / "Layanan Medis Lengkap" (ID); hero_sub removed "aesthetic"; tagline "Health • Beauty • Confidence" → "Health • Wellness • Confidence"; about title "Healthcare & Beauty" → "Healthcare"; footer_desc/footer_two_brands/footer_brands/footer_aesthetic rewritten; AI welcome mentions "medical or wellness service at Eswen Medica"
+- Deleted src/components/eswen/brands-section.tsx + removed from page.tsx
+- navbar: nav_brands link gone (nav is now Home/Services/Doctors/About/Blog/Contact)
+- services-section: removed the "Medical"/"Aesthetic" brand-tag badge (all medical now)
+- footer: replaced "Aesthetic Eswen" entry with "Dermatology"; badge now "Eswen Medica · Health & Wellness"
+- ai-assistant: suggestions updated (removed "aesthetic treatments" question)
+- layout.tsx: title/description/keywords/OG/twitter + JSON-LD all de-aestheticized (removed "Beauty", "Aesthetic Eswen" alternateName, AestheticMedicine specialty; added Dermatology/PublicHealth/Physician specialties, Travel Medicine keywords)
+
+Verification (Agent Browser, both EN + ID):
+- #brands section removed ✓; "Our Brands"/"Brand Kami" nav link gone ✓
+- Hero H1 EN: "Your Health, Our Priority. Your Wellbeing, Our Expertise." ✓ / ID: "Kesehatan Anda, ... Kesejahteraan Anda, Keahlian Kami." ✓
+- Hero pill: "Eswen Medica · Complete Care" (EN) / "Layanan Medis Lengkap" (ID) ✓
+- 6 services all medical: General Medical Consultation, Dermatology & Skin Health, Wellness & Vitality, Specialist Consultation, Preventive Care & Screening, Travel Medicine & Medical Check-up ✓
+- Doctor roles all medical: General Practitioner, Dermatologist, Skin Care Therapist (RN), Nurse/Therapist ✓ (no "Aesthetic Doctor"/"Beautician")
+- Filters: All/Doctor/Wellness (EN) / Semua/Dokter/Wellness (ID) ✓ (no Aesthetic/Beauty filters)
+- Footer: no "Aesthetic Eswen" ✓; second line now "Dermatology/Dermatologi"
+- Lint: 0 errors, 0 warnings. No console errors.
+
+Stage Summary:
+- The Aesthetic brand is fully removed; the site now focuses exclusively on ESWEN MEDICA as a single premium medical clinic
+- All copy, services, doctors, filters, footer, AI prompts, SEO metadata, and schema.org are de-aestheticized and bilingual (EN/ID)
+- Booking system still fully functional (all services/medical professionals eligible)

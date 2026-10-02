@@ -1,6 +1,5 @@
 import { Navbar } from "@/components/eswen/navbar";
 import { HeroSection } from "@/components/eswen/hero-section";
-import { BrandsSection } from "@/components/eswen/brands-section";
 import { ServicesSection } from "@/components/eswen/services-section";
 import { SmartBookingSection } from "@/components/eswen/smart-booking-section";
 import { PatientJourneySection } from "@/components/eswen/patient-journey-section";
@@ -19,7 +18,6 @@ export default function Home() {
       <Navbar />
       <main className="flex-1 flex flex-col">
         <HeroSection />
-        <BrandsSection />
         <ServicesSection />
         <SmartBookingSection />
         <PatientJourneySection />

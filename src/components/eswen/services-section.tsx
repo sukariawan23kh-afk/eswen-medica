@@ -48,9 +48,6 @@ export function ServicesSection() {
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent" />
-                <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-eswen-deep shadow-sm">
-                  {service.brand === "medical" ? t("brands_medical_tag") : t("brands_aesthetic_tag")}
-                </span>
                 <span className="absolute -bottom-5 left-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-card border-2 border-white">
                   <service.icon className="h-5 w-5" />
                 </span>

@@ -120,7 +120,7 @@ export function HeroSection() {
               <div className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-eswen-elevated border-4 border-white animate-eswen-float">
                 <img
                   src="/images/hero-model.png"
-                  alt="Premium natural beauty portrait at Eswen Medica clinic in Bali"
+                  alt="Premium portrait at Eswen Medica medical clinic in Bali"
                   className="w-full h-[420px] sm:h-[500px] lg:h-[560px] object-cover"
                   loading="eager"
                 />

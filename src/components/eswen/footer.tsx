@@ -82,7 +82,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Our Brands */}
+          {/* Eswen Medica */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-eswen-deep mb-4">
               {t("footer_brands")}
@@ -93,7 +93,7 @@ export function Footer() {
                 <p className="text-xs text-eswen-deep/60">{t("footer_medical")}</p>
               </li>
               <li>
-                <p className="text-sm font-bold text-eswen-purple">Aesthetic Eswen</p>
+                <p className="text-sm font-bold text-eswen-purple">Dermatology</p>
                 <p className="text-xs text-eswen-deep/60">{t("footer_aesthetic")}</p>
               </li>
             </ul>

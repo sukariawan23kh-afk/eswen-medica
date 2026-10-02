@@ -23,13 +23,13 @@ type Msg = { role: "user" | "assistant"; content: string };
 const SUGGESTIONS: Record<Lang, string[]> = {
   en: [
     "I have acne and oily skin. What treatment is suitable?",
-    "What aesthetic treatments do you offer in Bali?",
+    "What medical services do you offer in Bali?",
     "I'm an expat — can I book a general check-up?",
     "What payment methods do you accept?",
   ],
   id: [
     "Saya punya jerawat dan kulit berminyak. Perawatan apa yang cocok?",
-    "Perawatan estetika apa yang tersedia di Bali?",
+    "Layanan medis apa yang tersedia di Bali?",
     "Saya ekspat — bisakah saya booking check-up umum?",
     "Metode pembayaran apa saja yang diterima?",
   ],

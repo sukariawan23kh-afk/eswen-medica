@@ -14,16 +14,16 @@ export const translations = {
     nav_blog: "Blog",
     nav_contact: "Contact",
     nav_book: "Book Appointment",
-    nav_tagline: "Health • Beauty • Confidence",
+    nav_tagline: "Health • Wellness • Confidence",
 
     // Hero
     hero_badge: "Premium Clinic in Bali · International Standard",
     hero_h1_l1: "Your Health,",
     hero_h1_l2: "Our Priority.",
-    hero_h1_l3: "Your Beauty,",
+    hero_h1_l3: "Your Wellbeing,",
     hero_h1_l4: "Our Expertise.",
     hero_sub:
-      "Comprehensive medical and aesthetic care in Bali, delivered by trusted professionals with modern technology and international standards.",
+      "Comprehensive medical and wellness care in Bali, delivered by trusted professionals with modern technology and international standards.",
     hero_cta_book: "Book Appointment",
     hero_cta_explore: "Explore Our Services",
     hero_trust_1: "Trusted Doctors & Specialists",
@@ -34,7 +34,7 @@ export const translations = {
     hero_card_deposit_sub: "Booking guaranteed",
     hero_card_trusted: "Trusted by 5,000+ guests",
     hero_card_trusted_sub: "Expats & tourists in Bali",
-    hero_pill: "Two Brands · One Care",
+    hero_pill: "Eswen Medica · Complete Care",
 
     // Brands
     brands_eyebrow: "Our Brands",
@@ -112,7 +112,7 @@ export const translations = {
 
     // About
     about_eyebrow: "About Eswen",
-    about_title_1: "Healthcare & Beauty,",
+    about_title_1: "Healthcare,",
     about_title_2: "Designed Around You.",
     about_desc:
       "Eswen Medica is committed to delivering a professional, comfortable, modern, and accessible care experience — purpose-built for Bali's international community.",
@@ -157,13 +157,13 @@ export const translations = {
 
     // Footer
     footer_desc:
-      "Premium medical and aesthetic care in Bali — two brands, one connected ecosystem of health, beauty, and confidence.",
+      "Premium medical and wellness care in Bali — Eswen Medica delivers trusted, international-standard healthcare for expats, tourists, and locals.",
     footer_quick: "Quick Links",
-    footer_brands: "Our Brands",
+    footer_brands: "Eswen Medica",
     footer_contact: "Contact",
     footer_medical: "Health • Wellness • Clinic",
-    footer_aesthetic: "Beauty • Skin • Aesthetic",
-    footer_two_brands: "Two Brands · One Care",
+    footer_aesthetic: "Dermatology • Skin Health",
+    footer_two_brands: "Eswen Medica · Health & Wellness",
     footer_copyright: "© 2026 Eswen Medica. All Rights Reserved.",
     footer_privacy: "Privacy Policy",
     footer_terms: "Terms & Conditions",
@@ -171,7 +171,7 @@ export const translations = {
 
     // AI Assistant
     ai_welcome:
-      "Halo! 👋 I'm the **Eswen AI Assistant**. I can help guide you to the right medical or aesthetic service in Bali.\n\nWhat concern can I help you with today?",
+      "Halo! 👋 I'm the **Eswen AI Assistant**. I can help guide you to the right medical or wellness service at Eswen Medica in Bali.\n\nWhat concern can I help you with today?",
     ai_online: "Online · Triage & service guidance",
     ai_thinking: "Eswen AI is thinking...",
     ai_quick: "Quick questions",
@@ -257,16 +257,16 @@ export const translations = {
     nav_blog: "Blog",
     nav_contact: "Kontak",
     nav_book: "Buat Janji",
-    nav_tagline: "Kesehatan • Kecantikan • Kepercayaan",
+    nav_tagline: "Kesehatan • Wellness • Kepercayaan",
 
     // Hero
     hero_badge: "Klinik Premium di Bali · Standar Internasional",
     hero_h1_l1: "Kesehatan Anda,",
     hero_h1_l2: "Prioritas Kami.",
-    hero_h1_l3: "Kecantikan Anda,",
+    hero_h1_l3: "Kesejahteraan Anda,",
     hero_h1_l4: "Keahlian Kami.",
     hero_sub:
-      "Layanan medis dan estetika terpadu di Bali, diberikan oleh profesional tepercaya dengan teknologi modern dan standar internasional.",
+      "Layanan medis dan kesejahteraan terpadu di Bali, diberikan oleh profesional tepercaya dengan teknologi modern dan standar internasional.",
     hero_cta_book: "Buat Janji",
     hero_cta_explore: "Jelajahi Layanan Kami",
     hero_trust_1: "Dokter & Spesialis Terpercaya",
@@ -277,7 +277,7 @@ export const translations = {
     hero_card_deposit_sub: "Janji terjamin",
     hero_card_trusted: "Dipercaya 5.000+ tamu",
     hero_card_trusted_sub: "Ekspat & turis di Bali",
-    hero_pill: "Dua Brand · Satu Layanan",
+    hero_pill: "Eswen Medica · Layanan Medis Lengkap",
 
     // Brands
     brands_eyebrow: "Brand Kami",
@@ -356,7 +356,7 @@ export const translations = {
 
     // About
     about_eyebrow: "Tentang Eswen",
-    about_title_1: "Kesehatan & Kecantikan,",
+    about_title_1: "Kesehatan,",
     about_title_2: "Dirancang untuk Anda.",
     about_desc:
       "Eswen Medica berkomitmen memberikan pengalaman layanan yang profesional, nyaman, modern, dan mudah diakses — khusus untuk komunitas internasional di Bali.",
@@ -401,13 +401,13 @@ export const translations = {
 
     // Footer
     footer_desc:
-      "Layanan medis dan estetika premium di Bali — dua brand, satu ekosistem terhubung untuk kesehatan, kecantikan, dan kepercayaan.",
+      "Layanan medis dan wellness premium di Bali — Eswen Medica memberikan layanan kesehatan berstandar internasional yang tepercaya untuk ekspat, turis, dan masyarakat lokal.",
     footer_quick: "Tautan Cepat",
-    footer_brands: "Brand Kami",
+    footer_brands: "Eswen Medica",
     footer_contact: "Kontak",
     footer_medical: "Kesehatan • Wellness • Klinik",
-    footer_aesthetic: "Kecantikan • Kulit • Estetika",
-    footer_two_brands: "Dua Brand · Satu Layanan",
+    footer_aesthetic: "Dermatologi • Kesehatan Kulit",
+    footer_two_brands: "Eswen Medica · Kesehatan & Wellness",
     footer_copyright: "© 2026 Eswen Medica. Hak Cipta Dilindungi.",
     footer_privacy: "Kebijakan Privasi",
     footer_terms: "Syarat & Ketentuan",
@@ -415,7 +415,7 @@ export const translations = {
 
     // AI Assistant
     ai_welcome:
-      "Halo! 👋 Saya **Eswen AI Assistant**. Saya dapat membantu memandu Anda ke layanan medis atau estetika yang tepat di Bali.\n\nKeluhan apa yang bisa saya bantu hari ini?",
+      "Halo! 👋 Saya **Eswen AI Assistant**. Saya dapat membantu memandu Anda ke layanan medis atau wellness yang tepat di Eswen Medica Bali.\n\nKeluhan apa yang bisa saya bantu hari ini?",
     ai_online: "Online · Triase & panduan layanan",
     ai_thinking: "Eswen AI sedang berpikir...",
     ai_quick: "Pertanyaan cepat",

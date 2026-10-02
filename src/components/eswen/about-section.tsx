@@ -26,7 +26,7 @@ export function AboutSection() {
             <div className="relative rounded-[1.75rem] overflow-hidden border-4 border-white shadow-eswen-elevated">
               <img
                 src="/images/clinic-interior.png"
-                alt="Premium interior of Eswen Medica medical and aesthetic clinic in Bali"
+                alt="Premium interior of Eswen Medica medical clinic in Bali"
                 className="w-full h-[440px] object-cover"
                 loading="lazy"
               />

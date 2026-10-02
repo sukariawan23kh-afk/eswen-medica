@@ -57,21 +57,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Validate the service/doctor combo is allowed (brand match)
-  if (service.brand === "medical") {
-    if (doctor.category !== "doctor" && doctor.category !== "wellness") {
-      return NextResponse.json(
-        { ok: false, error: "Selected doctor does not perform this medical service." },
-        { status: 400 }
-      );
-    }
-  } else {
-    if (doctor.category !== "aesthetic" && doctor.category !== "beauty") {
-      return NextResponse.json(
-        { ok: false, error: "Selected doctor does not perform this aesthetic service." },
-        { status: 400 }
-      );
-    }
+  // All services are medical; doctors must be medical professionals
+  // (category "doctor" or "wellness"). The "aesthetic"/"beauty" categories
+  // were removed when the site focused on Eswen Medica only.
+  if (doctor.category !== "doctor" && doctor.category !== "wellness") {
+    return NextResponse.json(
+      { ok: false, error: "Selected professional is not available for this service." },
+      { status: 400 }
+    );
   }
 
   if (!isValidBookingDate(data.bookingDate)) {

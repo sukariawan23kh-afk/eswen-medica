@@ -17,26 +17,15 @@ export const TIME_SLOTS = [
 
 export type TimeSlot = (typeof TIME_SLOTS)[number];
 
-/** Services that a given doctor/beautician can perform (by category match). */
-export function servicesForDoctor(doctor: Doctor): Service[] {
-  // Map doctor category → service brand filter
-  if (doctor.category === "doctor" || doctor.category === "wellness") {
-    return services.filter((s) => s.brand === "medical");
-  }
-  // aesthetic + beauty → aesthetic brand
-  return services.filter((s) => s.brand === "aesthetic");
+/** Services offered at the clinic. All services are medical (single brand). */
+export function servicesForDoctor(_doctor: Doctor): Service[] {
+  return services;
 }
 
-/** Doctors who can perform a given service (by brand match). */
-export function doctorsForService(service: Service): Doctor[] {
-  if (service.brand === "medical") {
-    return doctors.filter(
-      (d) => d.category === "doctor" || d.category === "wellness"
-    );
-  }
-  return doctors.filter(
-    (d) => d.category === "aesthetic" || d.category === "beauty"
-  );
+/** Doctors who can perform a given service. All doctors are medical
+ *  professionals and can be assigned to any medical service at the clinic. */
+export function doctorsForService(_service: Service): Doctor[] {
+  return doctors;
 }
 
 export function getServiceById(id: string): Service | undefined {

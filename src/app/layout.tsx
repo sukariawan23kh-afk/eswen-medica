@@ -16,25 +16,23 @@ const siteUrl = "https://eswenmedica.id";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Eswen Medica — Health • Beauty • Confidence | Premium Clinic in Bali",
+    default: "Eswen Medica — Health • Wellness • Confidence | Premium Medical Clinic in Bali",
     template: "%s | Eswen Medica",
   },
   description:
-    "Eswen Medica is a premium medical and aesthetic clinic in Bali offering comprehensive healthcare, beauty, and skin treatments for international guests, expats, and locals. Smart booking, secure deposit, AI triage assistant, and trusted specialists.",
+    "Eswen Medica is a premium medical clinic in Bali offering comprehensive healthcare, dermatology, wellness, and preventive care for international guests, expats, and locals. Smart booking, secure deposit, AI triage assistant, and trusted specialists.",
   keywords: [
-    "Beauty Clinic Bali",
-    "Aesthetic Clinic Bali",
-    "Best Aesthetic Treatment Bali",
-    "Skin Clinic Bali",
     "Medical Clinic Bali",
-    "Beauty Treatment Bali",
-    "Facial Bali",
-    "Acne Treatment Bali",
-    "Aesthetic Doctor Bali",
+    "Health Clinic Bali",
+    "Dermatology Bali",
+    "Skin Clinic Bali",
+    "Medical Check-up Bali",
+    "Travel Medicine Bali",
+    "Doctor Bali",
+    "General Practitioner Bali",
+    "Preventive Care Bali",
     "Medical Tourism Bali",
     "Eswen Medica",
-    "Aesthetic Eswen",
-    "Health Clinic Bali",
     "Bali expat clinic",
   ],
   authors: [{ name: "Eswen Medica" }],
@@ -48,9 +46,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Eswen Medica — Health • Beauty • Confidence",
+    title: "Eswen Medica — Health • Wellness • Confidence",
     description:
-      "Premium medical and aesthetic care in Bali, delivered by trusted professionals with modern technology and international standards.",
+      "Premium medical and wellness care in Bali, delivered by trusted professionals with modern technology and international standards.",
     url: siteUrl,
     siteName: "Eswen Medica",
     locale: "en_US",
@@ -59,9 +57,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Eswen Medica — Health • Beauty • Confidence",
+    title: "Eswen Medica — Health • Wellness • Confidence",
     description:
-      "Premium medical and aesthetic care in Bali, delivered by trusted professionals with international standards.",
+      "Premium medical and wellness care in Bali, delivered by trusted professionals with international standards.",
   },
   robots: {
     index: true,
@@ -96,9 +94,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "MedicalClinic",
               name: "Eswen Medica",
-              alternateName: "Aesthetic Eswen",
               description:
-                "Premium medical and aesthetic clinic in Bali offering comprehensive healthcare, beauty, and skin treatments for international guests and locals.",
+                "Premium medical clinic in Bali offering comprehensive healthcare, dermatology, wellness, and preventive care for international guests and locals.",
               url: siteUrl,
               telephone: "+62-361-XXX-XXXX",
               email: "hello@eswenmedica.id",
@@ -125,7 +122,7 @@ export default function RootLayout({
               ],
               priceRange: "$$",
               areaServed: ["Bali", "Indonesia"],
-              medicalSpecialty: ["GeneralPractice", "Dermatology", "AestheticMedicine"],
+              medicalSpecialty: ["GeneralPractice", "Dermatology", "PublicHealth", "Physician"],
             }),
           }}
         />
