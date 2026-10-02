@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { cn } from "@/lib/utils";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT, useServices, useDoctors } from "@/lib/eswen/site-config-context";
+import { useT, useServices, useDoctors, usePayment } from "@/lib/eswen/site-config-context";
 import { tr } from "@/lib/eswen/i18n";
 import {
   services as staticServices,
@@ -49,6 +49,8 @@ type CreatedBooking = {
 };
 type PayResult = {
   paymentOk: boolean;
+  manual?: boolean;
+  message?: string;
   booking: CreatedBooking;
 };
 
@@ -61,6 +63,7 @@ export function BookingDialog() {
   const t = useT();
   const services = useServices(staticServices);
   const doctors = useDoctors(staticDoctors);
+  const payment = usePayment();
 
   const [step, setStep] = useState(0); // 0..5
   const [serviceId, setServiceId] = useState<string | null>(null);
@@ -578,6 +581,24 @@ export function BookingDialog() {
                     <ShieldCheck className="h-3.5 w-3.5 text-eswen-soft-purple mt-0.5 shrink-0" />
                     {t("bk_secure_note")}
                   </div>
+
+                  {/* Bank details shown when Bank Transfer is selected (manual flow) */}
+                  {paymentMethod === "Bank Transfer" && (
+                    <div className="mt-4 rounded-2xl border border-eswen-soft-purple/40 bg-white p-4">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-eswen-deep mb-2 flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-eswen-soft-purple" /> {lang === "id" ? "Rekening Tujuan (Transfer Bank)" : "Destination Account (Bank Transfer)"}
+                      </p>
+                      <div className="rounded-xl bg-eswen-light-lavender/50 p-3 space-y-1 text-sm">
+                        <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Bank" : "Bank"}</span><span className="font-semibold text-eswen-deep">{payment.bankName}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-muted-foreground text-xs">{lang === "id" ? "No. Rekening" : "Account No."}</span><span className="font-mono font-bold text-eswen-deep text-base tracking-wider">{payment.accountNumber}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Atas Nama" : "Account Holder"}</span><span className="font-semibold text-eswen-deep">{payment.accountHolder}</span></div>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{lang === "id" ? payment.instructionsId : payment.instructionsEn}</p>
+                      <p className="text-[11px] text-eswen-soft-purple mt-2 font-semibold">
+                        {lang === "id" ? "💰 Transfer sejumlah " : "💰 Transfer "}<span className="font-bold text-eswen-deep">{created.depositFormatted}</span>{lang === "id" ? " lalu klik tombol di bawah. Booking Anda akan dikonfirmasi admin setelah transfer diterima." : " then click the button below. Your booking will be confirmed by our admin once we receive your transfer."}
+                      </p>
+                    </div>
+                  )}
                 </StepWrap>
               )}
 
@@ -602,6 +623,33 @@ export function BookingDialog() {
                         <div className="flex justify-between items-center pt-1">
                           <span>{t("bk_status_label")}</span>
                           <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2.5 py-0.5 text-[10px] font-bold">{payResult.booking.status}</span>
+                        </div>
+                      </div>
+                      <Button onClick={resetAndClose} className="mt-6 rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11 px-6">
+                        {t("bk_close")}
+                      </Button>
+                    </>
+                  ) : payResult.manual ? (
+                    <>
+                      {/* Manual bank-transfer flow: awaiting admin confirmation */}
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600 mb-4">
+                        <Clock className="h-8 w-8" />
+                      </div>
+                      <h3 className="text-xl font-extrabold text-eswen-deep">{lang === "id" ? "Menunggu Konfirmasi Pembayaran" : "Awaiting Payment Confirmation"}</h3>
+                      <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
+                        {lang === "id" ? "Permintaan transfer Anda tercatat. Booking Anda menunggu konfirmasi — admin kami akan mengkonfirmasi setelah transfer Anda diterima di rekening klinik (biasanya dalam beberapa jam pada jam buka 08:00–20:00 WITA)." : "Your transfer request is recorded. Your booking is awaiting confirmation — our admin will confirm once your transfer is received in the clinic's account (usually within a few hours during 08:00–20:00 WITA)."}
+                      </p>
+                      <div className="mt-5 inline-block rounded-2xl border border-eswen-lavender bg-white px-5 py-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("bk_ref_code")}</p>
+                        <p className="text-lg font-extrabold text-eswen-deep tracking-wider">{payResult.booking.refCode}</p>
+                      </div>
+                      <div className="mt-4 text-xs text-muted-foreground space-y-1 max-w-sm mx-auto text-left">
+                        <div className="flex justify-between"><span>{t("bk_service")}</span><span className="font-medium text-eswen-deep">{payResult.booking.serviceName}</span></div>
+                        <div className="flex justify-between"><span>{t("bk_with")}</span><span className="font-medium text-eswen-deep">{payResult.booking.doctorName}</span></div>
+                        <div className="flex justify-between"><span>{t("bk_when")}</span><span className="font-medium text-eswen-deep">{payResult.booking.bookingDate} · {payResult.booking.bookingTime}</span></div>
+                        <div className="flex justify-between items-center pt-1">
+                          <span>{t("bk_status_label")}</span>
+                          <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-[10px] font-bold">{payResult.booking.status}</span>
                         </div>
                       </div>
                       <Button onClick={resetAndClose} className="mt-6 rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11 px-6">
@@ -663,7 +711,13 @@ export function BookingDialog() {
               className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-10 px-5"
             >
               {(submitting || paying) && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? t("bk_processing") : paying ? t("bk_processing") : step === 4 ? t("bk_pay_now") : t("bk_next")}
+              {submitting
+                ? t("bk_processing")
+                : paying
+                ? t("bk_processing")
+                : step === 4
+                ? (paymentMethod === "Bank Transfer" ? (lang === "id" ? "Saya Sudah Transfer" : "I've Made the Transfer") : t("bk_pay_now"))
+                : t("bk_next")}
               {!submitting && !paying && step !== 4 && <ArrowRight className="h-4 w-4" />}
             </Button>
           </div>

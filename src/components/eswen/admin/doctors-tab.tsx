@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Loader2, Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ImageUpload } from "@/components/eswen/admin/image-upload";
 
 type Doc = {
   id: string; name: string; roleEn: string; roleId: string; category: "doctor" | "wellness";
@@ -130,7 +131,15 @@ function DocEditor({ doc, onClose, onSave }: { doc: Doc; onClose: () => void; on
               </select>
             </F>
             <F label="Order"><input type="number" value={f.order} onChange={(e) => set("order", e.target.value)} className="ainput" /></F>
-            <F label="Photo URL"><input value={f.image} onChange={(e) => set("image", e.target.value)} className="ainput" /></F>
+            <F label="Photo URL">
+              <ImageUpload
+                value={f.image}
+                onChange={(v) => set("image", v)}
+                placeholder="/images/..."
+                recommendedSize="600×800px (portrait 3:4)"
+                previewClass="h-16 w-16"
+              />
+            </F>
           </div>
           <label className="flex items-center gap-2.5 cursor-pointer rounded-xl border border-eswen-lavender bg-white px-3 py-2.5">
             <input type="checkbox" checked={f.published} onChange={(e) => set("published", e.target.checked)} className="h-4 w-4 accent-[#5B3A91]" />

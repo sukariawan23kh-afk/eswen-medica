@@ -5,6 +5,7 @@ import { Loader2, Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getLucideIcon, VALID_ICON_NAMES } from "@/lib/eswen/icons";
+import { ImageUpload } from "@/components/eswen/admin/image-upload";
 
 type Svc = {
   id: string; categoryEn: string; categoryId: string;
@@ -148,7 +149,15 @@ function SvcEditor({ svc, onClose, onSave }: { svc: Svc; onClose: () => void; on
               <input list="icon-list" value={f.icon} onChange={(e) => set("icon", e.target.value)} className="ainput" />
               <datalist id="icon-list">{VALID_ICON_NAMES.map((n) => <option key={n} value={n} />)}</datalist>
             </F>
-            <F label="Image URL"><input value={f.image} onChange={(e) => set("image", e.target.value)} className="ainput" /></F>
+            <F label="Image URL">
+              <ImageUpload
+                value={f.image}
+                onChange={(v) => set("image", v)}
+                placeholder="/images/..."
+                recommendedSize="800×600px (landscape 4:3)"
+                previewClass="h-16 w-24"
+              />
+            </F>
           </div>
           <label className="flex items-center gap-2.5 cursor-pointer rounded-xl border border-eswen-lavender bg-white px-3 py-2.5">
             <input type="checkbox" checked={f.published} onChange={(e) => set("published", e.target.checked)} className="h-4 w-4 accent-[#5B3A91]" />

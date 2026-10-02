@@ -51,7 +51,9 @@ model Booking {
   patientNotes  String?
   depositAmount Int      @default(0) // in IDR
   paymentMethod String?  // Credit Card | Virtual Account | E-Wallet | QRIS | Bank Transfer
-  paymentGateway String? // Midtrans | Xendit | Stripe
+  paymentGateway String? // Midtrans | Xendit | Stripe | Manual
+  paymentNote   String?  // admin note when confirming a manual/bank-transfer payment (e.g. bank ref, date received)
+  confirmedAt   DateTime? // when an admin manually confirmed the deposit was received
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -110,6 +112,31 @@ model Service {
   updatedAt     DateTime @updatedAt
 
   @@index([published])
+}
+
+// SpecialOffer — admin-editable promo cards shown on the public site
+// (PromoSection + OfferPopup). Each offer is bilingual (EN + ID), has a
+// type (daily/weekly/monthly/onetime), optional badge, image, CTA, and
+// active/scheduling fields. Edited from the admin "Offers" tab.
+model SpecialOffer {
+  id          String   @id @default(cuid())
+  titleEn     String
+  titleId     String
+  descEn      String
+  descId      String
+  offerType   String   @default("weekly")
+  badge       String?
+  imageUrl    String?
+  ctaTextEn   String?
+  ctaTextId   String?
+  ctaLink     String?
+  active      Boolean  @default(true)
+  priority    Int      @default(0)
+  startAt     DateTime?
+  endAt       DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([active])
 }
 
 // Doctor — admin-editable professionals (replaces static data.ts doctors).

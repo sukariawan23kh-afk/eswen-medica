@@ -18,6 +18,8 @@ import {
   Users,
   AlertCircle,
   ExternalLink,
+  Gift,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,9 @@ import type { Lang } from "@/lib/eswen/language-store";
 import { SiteSettingsTab } from "@/components/eswen/admin/site-settings-tab";
 import { ServicesTab } from "@/components/eswen/admin/services-tab";
 import { DoctorsTab } from "@/components/eswen/admin/doctors-tab";
+import { OffersTab } from "@/components/eswen/admin/offers-tab";
+import { ImageUpload } from "@/components/eswen/admin/image-upload";
+import { usePayment } from "@/lib/eswen/site-config-context";
 
 /* ---------- types ---------- */
 type Article = {
@@ -56,6 +61,16 @@ type Booking = {
   depositFormatted: string;
   paymentMethod: string;
   paymentGateway: string;
+  paymentNote: string;
+  confirmedAt: string;
+  createdAt: string;
+};
+
+type Notif = {
+  kind: "booking" | "article";
+  id: string;
+  title: string;
+  detail: string;
   createdAt: string;
 };
 
@@ -200,11 +215,16 @@ export function AdminPanel() {
   const T = A(lang);
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState<boolean | null>(null); // null = checking
-  const [tab, setTab] = useState<"settings" | "services" | "doctors" | "articles" | "bookings">("settings");
+  const [tab, setTab] = useState<"settings" | "services" | "doctors" | "articles" | "bookings" | "offers">("settings");
   const [articles, setArticles] = useState<Article[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [editing, setEditing] = useState<Article | "new" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // notification bell state
+  const [notifs, setNotifs] = useState<Notif[]>([]);
+  const [unread, setUnread] = useState(0);
+  const [bellOpen, setBellOpen] = useState(false);
 
   // login form
   const [pw, setPw] = useState("");
@@ -246,6 +266,38 @@ export function AdminPanel() {
     if (d?.ok) setBookings(d.bookings);
   }, []);
 
+  // Notification bell: load the recent activity feed + compute the unread count
+  // based on the last time the admin opened the bell (persisted in localStorage).
+  const loadNotifs = useCallback(async () => {
+    try {
+      let since = "";
+      try {
+        since = window.localStorage.getItem("eswen_admin_last_seen") || "";
+      } catch {
+        /* ignore */
+      }
+      const url = since ? `/api/admin/notifications?since=${encodeURIComponent(since)}` : "/api/admin/notifications";
+      const r = await fetch(url, { cache: "no-store" });
+      const d = await r.json();
+      if (d?.ok) {
+        setNotifs(d.notifications || []);
+        setUnread(Number(d.unread) || 0);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const markNotifsSeen = useCallback(() => {
+    const nowIso = new Date().toISOString();
+    try {
+      window.localStorage.setItem("eswen_admin_last_seen", nowIso);
+    } catch {
+      /* ignore */
+    }
+    setUnread(0);
+  }, []);
+
   // when authed, load the active tab's data (settings/services/doctors tabs
   // load their own data internally, so only articles + bookings are handled here)
   useEffect(() => {
@@ -253,6 +305,14 @@ export function AdminPanel() {
     if (tab === "articles") loadArticles();
     else if (tab === "bookings") loadBookings();
   }, [open, authed, tab, loadArticles, loadBookings]);
+
+  // notification bell: load on auth, refresh every 30s while authed + open
+  useEffect(() => {
+    if (!open || !authed) return;
+    loadNotifs();
+    const timer = setInterval(loadNotifs, 30000);
+    return () => clearInterval(timer);
+  }, [open, authed, loadNotifs]);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -335,6 +395,36 @@ export function AdminPanel() {
     }
   };
 
+  // Manual payment confirmation: admin verified the deposit arrived in the
+  // clinic's bank account and is approving the booking → CONFIRMED.
+  const approvePayment = async (id: string, note: string) => {
+    const r = await fetch(`/api/admin/bookings/${id}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: note || undefined }),
+    });
+    const d = await r.json();
+    if (r.ok && d?.ok) {
+      const b = d.booking;
+      setBookings((cur) =>
+        cur.map((x) =>
+          x.id === id
+            ? {
+                ...x,
+                status: b.status,
+                paymentGateway: b.paymentGateway,
+                paymentNote: b.paymentNote ?? "",
+                confirmedAt: b.confirmedAt ?? "",
+              }
+            : x
+        )
+      );
+      showToast("Payment approved — booking CONFIRMED");
+    } else {
+      showToast(d?.error || "Approve failed");
+    }
+  };
+
   if (!open) return null;
 
   return (
@@ -351,6 +441,64 @@ export function AdminPanel() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {authed && (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setBellOpen((v) => !v);
+                  if (!bellOpen) markNotifsSeen();
+                }}
+                aria-label="Notifications"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition-colors"
+              >
+                <Bell className="h-4 w-4" />
+                {unread > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-bold border border-white">
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                )}
+              </button>
+              {bellOpen && (
+                <div className="absolute right-0 top-11 w-80 max-h-96 overflow-y-auto scrollbar-eswen rounded-2xl bg-white border border-eswen-lavender shadow-eswen-elevated z-50 p-2">
+                  <div className="flex items-center justify-between px-2 py-1.5 mb-1 border-b border-eswen-lavender/60">
+                    <span className="text-xs font-bold text-eswen-deep">Recent activity</span>
+                    <button onClick={() => setBellOpen(false)} className="text-muted-foreground hover:text-eswen-deep">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  {notifs.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground text-center py-6">No recent activity.</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {notifs.map((n) => (
+                        <li key={n.kind + "-" + n.id} className="rounded-xl px-2.5 py-2 hover:bg-eswen-light-lavender/60">
+                          <div className="flex items-start gap-2">
+                            <span
+                              className={cn(
+                                "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold",
+                                n.kind === "booking"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-eswen-light-lavender text-eswen-deep"
+                              )}
+                            >
+                              {n.kind === "booking" ? <CalendarClock className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[11px] font-semibold text-eswen-deep truncate">{n.title}</p>
+                              <p className="text-[10px] text-muted-foreground line-clamp-2">{n.detail}</p>
+                              <p className="text-[9px] text-muted-foreground/60 mt-0.5">
+                                {new Date(n.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           {authed && (
             <button
               onClick={logout}
@@ -403,6 +551,9 @@ export function AdminPanel() {
               <TabBtn active={tab === "doctors"} onClick={() => setTab("doctors")} icon={<Users className="h-4 w-4" />}>
                 Doctors
               </TabBtn>
+              <TabBtn active={tab === "offers"} onClick={() => setTab("offers")} icon={<Gift className="h-4 w-4" />}>
+                Offers
+              </TabBtn>
               <TabBtn active={tab === "articles"} onClick={() => setTab("articles")} icon={<FileText className="h-4 w-4" />}>
                 {T.tabArticles}
                 <span className="ml-1.5 rounded-full bg-eswen-light-lavender text-eswen-deep text-[10px] font-bold px-1.5 py-0.5">
@@ -420,6 +571,7 @@ export function AdminPanel() {
             {tab === "settings" && <SiteSettingsTab showToast={showToast} />}
             {tab === "services" && <ServicesTab showToast={showToast} />}
             {tab === "doctors" && <DoctorsTab showToast={showToast} />}
+            {tab === "offers" && <OffersTab showToast={showToast} />}
             {tab === "articles" && (
               <ArticlesTab
                 T={T}
@@ -430,7 +582,7 @@ export function AdminPanel() {
               />
             )}
             {tab === "bookings" && (
-              <BookingsTab T={T} bookings={bookings} onUpdateStatus={updateBookingStatus} />
+              <BookingsTab T={T} bookings={bookings} onUpdateStatus={updateBookingStatus} onApprove={approvePayment} />
             )}
           </div>
         )}
@@ -620,41 +772,74 @@ function ArticlesTab({ T, articles, onNew, onEdit, onDelete }: any) {
 }
 
 /* ---------- bookings tab ---------- */
-function BookingsTab({ T, bookings, onUpdateStatus }: any) {
+function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
+  const payment = usePayment();
+  const [approving, setApproving] = useState<Booking | null>(null);
+  const [note, setNote] = useState("");
+  const [approvingLoading, setApprovingLoading] = useState(false);
+
+  const doApprove = async () => {
+    if (!approving) return;
+    setApprovingLoading(true);
+    await onApprove(approving.id, note);
+    setApprovingLoading(false);
+    setApproving(null);
+    setNote("");
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-extrabold text-eswen-deep">{T.tabBookings}</h3>
         <span className="text-xs text-muted-foreground">{T.total}: {bookings.length}</span>
       </div>
+
+      {/* Payment-flow guide banner */}
+      <div className="mb-4 rounded-2xl border border-eswen-soft-purple/30 bg-eswen-light-lavender/50 p-4 text-xs text-eswen-deep/80 leading-relaxed">
+        <p className="font-bold text-eswen-deep mb-1">💳 How payment works (real-world)</p>
+        <p>• <strong>Bank Transfer</strong> (manual): the client transfers to <strong>{payment.bankName} — {payment.accountNumber} ({payment.accountHolder})</strong>. You verify the money arrived in your account, then click <strong>"Approve Payment"</strong> below → status becomes CONFIRMED. Edit your bank details in <em>Site Settings → Payment / Bank Account</em>.</p>
+        <p className="mt-1">• <strong>Credit Card / QRIS / E-Wallet</strong> (gateway): currently simulated. For real automatic payments, integrate <strong>Midtrans / Xendit / Stripe</strong> (money lands in your account, gateway callback auto-confirms). Requires business registration with the gateway.</p>
+      </div>
+
       {bookings.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-10">{T.noBookings}</p>
       ) : (
         <div className="rounded-2xl border border-eswen-lavender bg-white overflow-x-auto">
-          <table className="w-full text-sm min-w-[640px]">
+          <table className="w-full text-sm min-w-[860px]">
             <thead className="bg-eswen-light-lavender/50 text-[10px] uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="text-left px-3 py-2.5 font-semibold">{T.colRef}</th>
                 <th className="text-left px-3 py-2.5 font-semibold">{T.colService}</th>
-                <th className="text-left px-3 py-2.5 font-semibold">{T.colDoctor}</th>
-                <th className="text-left px-3 py-2.5 font-semibold">{T.colWhen}</th>
                 <th className="text-left px-3 py-2.5 font-semibold">{T.colPatient}</th>
                 <th className="text-left px-3 py-2.5 font-semibold">{T.colDeposit}</th>
+                <th className="text-left px-3 py-2.5 font-semibold">Payment</th>
                 <th className="text-left px-3 py-2.5 font-semibold">{T.colStatus}</th>
+                <th className="text-left px-3 py-2.5 font-semibold">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-eswen-lavender/60">
               {bookings.map((b: Booking) => (
-                <tr key={b.id} className="hover:bg-eswen-light-lavender/30">
-                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-eswen-deep">{b.refCode}</td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{b.serviceName}</td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{b.doctorName}</td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{b.bookingDate} {b.bookingTime}</td>
+                <tr key={b.id} className="hover:bg-eswen-light-lavender/30 align-top">
+                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-eswen-deep whitespace-nowrap">
+                    {b.refCode}
+                    <div className="text-[9px] text-muted-foreground font-sans font-normal mt-0.5">{b.bookingDate} {b.bookingTime}</div>
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground">
+                    <div className="font-medium text-eswen-deep">{b.serviceName}</div>
+                    <div className="text-[10px]">{b.doctorName}</div>
+                  </td>
                   <td className="px-3 py-2.5 text-xs">
                     <div className="font-medium text-eswen-deep">{b.patientName}</div>
                     <div className="text-[10px] text-muted-foreground">{b.patientPhone}</div>
+                    {b.patientNotes && <div className="text-[10px] text-muted-foreground italic mt-1 max-w-[160px]">“{b.patientNotes}”</div>}
                   </td>
-                  <td className="px-3 py-2.5 text-xs font-bold text-eswen-deep">{b.depositFormatted}</td>
+                  <td className="px-3 py-2.5 text-xs font-bold text-eswen-deep whitespace-nowrap">{b.depositFormatted}</td>
+                  <td className="px-3 py-2.5 text-[10px] text-muted-foreground whitespace-nowrap">
+                    {b.paymentMethod || "—"}<br />
+                    <span className="text-muted-foreground/70">via {b.paymentGateway || "—"}</span>
+                    {b.paymentNote && <div className="mt-0.5 italic text-eswen-soft-purple max-w-[140px]">“{b.paymentNote}”</div>}
+                    {b.confirmedAt && <div className="mt-0.5 text-green-600">✓ {new Date(b.confirmedAt).toLocaleString()}</div>}
+                  </td>
                   <td className="px-3 py-2.5">
                     <select
                       value={b.status}
@@ -666,10 +851,66 @@ function BookingsTab({ T, bookings, onUpdateStatus }: any) {
                       ))}
                     </select>
                   </td>
+                  <td className="px-3 py-2.5">
+                    {(b.status === "WAITING_PAYMENT" || b.status === "PAYMENT_FAILED") && (
+                      <button
+                        onClick={() => { setApproving(b); setNote(b.paymentNote || ""); }}
+                        className="inline-flex items-center gap-1 rounded-full bg-green-600 text-white px-2.5 py-1 text-[11px] font-bold hover:bg-green-700 transition-colors whitespace-nowrap"
+                      >
+                        <Check className="h-3 w-3" /> Approve Payment
+                      </button>
+                    )}
+                    {b.status === "CONFIRMED" && <span className="text-[10px] text-green-600 font-bold">✓ Confirmed</span>}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Approve payment modal */}
+      {approving && (
+        <div className="fixed inset-0 z-[105] flex items-center justify-center bg-eswen-deep/40 backdrop-blur-sm p-4" onClick={() => setApproving(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl bg-white border border-eswen-lavender shadow-eswen-elevated overflow-hidden">
+            <div className="px-5 py-3.5 bg-gradient-to-r from-green-600 to-green-700 text-white flex items-center justify-between">
+              <h3 className="font-bold text-sm">Approve Payment — Confirm Deposit Received</h3>
+              <button onClick={() => setApproving(null)} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/15"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="rounded-xl bg-eswen-light-lavender/50 p-3 text-xs space-y-1">
+                <div className="flex justify-between"><span className="text-muted-foreground">Ref</span><span className="font-mono font-bold text-eswen-deep">{approving.refCode}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Patient</span><span className="font-medium text-eswen-deep">{approving.patientName}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Service</span><span className="font-medium text-eswen-deep text-right max-w-[180px]">{approving.serviceName}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">When</span><span className="font-medium text-eswen-deep">{approving.bookingDate} {approving.bookingTime}</span></div>
+                <div className="flex justify-between border-t border-eswen-lavender/60 pt-1 mt-1"><span className="text-muted-foreground">Deposit to receive</span><span className="font-bold text-eswen-deep text-sm">{approving.depositFormatted}</span></div>
+              </div>
+              <div className="rounded-xl border border-eswen-soft-purple/40 p-3 text-[11px]">
+                <p className="font-bold text-eswen-deep mb-1">Bank account (where money should arrive):</p>
+                <p className="text-muted-foreground">{payment.bankName}</p>
+                <p className="font-mono font-bold text-eswen-deep text-base tracking-wider">{payment.accountNumber}</p>
+                <p className="text-muted-foreground">{payment.accountHolder}</p>
+              </div>
+              <label className="block">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Confirmation note (optional — for audit)</span>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. Transfer received 2026-10-02, bank ref TRX12345, amount IDR 250.000"
+                  maxLength={500}
+                  className="w-full rounded-xl border border-eswen-lavender bg-white px-3 py-2 text-xs text-eswen-deep focus:outline-none focus:border-eswen-soft-purple min-h-[60px] resize-none"
+                />
+              </label>
+              <p className="text-[10px] text-muted-foreground">Clicking confirm sets the booking to <strong>CONFIRMED</strong> and records your note + timestamp. Only do this after verifying the deposit arrived in the clinic account.</p>
+              <div className="flex justify-end gap-2 pt-1">
+                <Button type="button" onClick={() => setApproving(null)} variant="ghost" className="rounded-full h-9 text-eswen-deep">Cancel</Button>
+                <Button type="button" onClick={doApprove} disabled={approvingLoading} className="rounded-full bg-green-600 hover:bg-green-700 text-white h-9 px-5">
+                  {approvingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {approvingLoading ? "Confirming..." : "Confirm Payment Received"}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -773,7 +1014,13 @@ function ArticleEditor({ T, article, onClose, onSave }: any) {
               </select>
             </Field>
             <Field label={T.fImage}>
-              <input value={form.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} placeholder="/images/..." className="ainput" />
+              <ImageUpload
+                value={form.imageUrl}
+                onChange={(v) => set("imageUrl", v)}
+                placeholder="/images/..."
+                recommendedSize="800×500px (landscape)"
+                previewClass="h-16 w-24"
+              />
             </Field>
           </div>
           <label className="flex items-center gap-2.5 cursor-pointer select-none rounded-xl border border-eswen-lavender bg-white px-3 py-2.5">

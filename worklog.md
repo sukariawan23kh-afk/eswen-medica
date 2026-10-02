@@ -333,3 +333,33 @@ Stage Summary:
 - Admin access: http://localhost:3000/#admin (or footer "Admin" link), password: eswen2026
 - 5 admin tabs: Site Settings (logo + all text + contact + social), Services (CRUD), Doctors (CRUD), Articles (CRUD), Bookings (view + status)
 - Production-ready full CMS.
+
+---
+Task ID: 12
+Agent: Main (Z.ai Code)
+Task: Real payment flow — where money goes + admin manual approval (booking → DP → admin approve → CONFIRMED)
+
+Work Log:
+- DB: added `paymentNote` (String?) + `confirmedAt` (DateTime?) to Booking model (audit trail for manual confirmation) + db:push
+- SiteConfig: added `payment` field (bankName, accountNumber, accountHolder, instructionsEn, instructionsId) to DEFAULT_CONFIG + seed; both public + admin site-config GET endpoints MERGE defaults so old configs backfill the new `payment` key (fixed a crash where the admin editor accessed config.payment on a pre-payment config)
+- New hook usePayment() in site-config-context (returns live clinic bank details)
+- Pay API branching: `/api/bookings/[id]/pay` now treats **Bank Transfer** as MANUAL (records paymentMethod + paymentGateway="Manual", status STAYS WAITING_PAYMENT, returns {manual:true, message}) — no auto-confirm. Gateway methods (Credit Card/QRIS/E-Wallet/VA) remain simulated (auto CONFIRMED/PAYMENT_FAILED) — ready for real Midtrans/Xendit/Stripe integration.
+- New admin endpoint: POST /api/admin/bookings/[id]/approve { note } → sets status=CONFIRMED, paymentGateway=Manual, paymentNote=note, confirmedAt=now() (the "I received the money, approve" action). Guards against double-approve + invalid states.
+- Booking dialog: when client picks **Bank Transfer**, shows the clinic's bank account (bank name, account no, holder) + instructions + deposit amount; button label becomes "I've Made the Transfer"; on submit → "Awaiting Payment Confirmation" screen (amber, WAITING_PAYMENT) instead of confirmed
+- Admin Bookings tab: added "Approve Payment" button (green) on WAITING_PAYMENT/PAYMENT_FAILED rows → modal showing deposit amount + clinic bank account (for verification) + optional audit note field → "Confirm Payment Received" → CONFIRMED. Also added a "💳 How payment works" guide banner + payment method/note/confirmedAt columns in the table
+- Admin Site Settings: added "Payment / Bank Account (where deposits go)" card (bank name, account no, holder, instructions EN/ID) — editable
+- Booking system: seeded doctors/services with STABLE IDs (dr-anastasia, general-medical, etc.) matching data.ts, so the booking dialog works whether the live config is loaded or not (fixed slots API 404s from cuid/static ID mismatch)
+
+Verification (Agent Browser, end-to-end):
+- Created booking with Bank Transfer → dialog showed clinic bank account (BCA, 1234567890, PT Eswen Medica Sehat) + "Awaiting Payment Confirmation" screen (status WAITING_PAYMENT) ✓
+- Admin → Bookings tab → 2 rows + "How payment works" guide + "Approve Payment" button ✓
+- Clicked Approve → modal showed deposit + bank account + note field → added note "Transfer received 2026-10-03, verified in mobile banking" → "Confirm Payment Received" ✓
+- Toast: "Payment approved — booking CONFIRMED"; status flipped to CONFIRMED; "✓ Confirmed" badge ✓
+- DB record: ref ESM-79WWXA, status CONFIRMED, paymentMethod=Bank Transfer, gateway=Manual, paymentNote recorded, confirmedAt timestamp ✓
+- Lint: 0 errors. Main site renders fine; admin opens cleanly.
+
+Stage Summary:
+- Real-world payment flow now works:
+  • MANUAL (Bank Transfer): client books → sees clinic bank account → transfers → admin verifies money arrived → clicks "Approve Payment" → CONFIRMED. Editable bank details in Site Settings → Payment.
+  • GATEWAY (Credit Card/QRIS/E-Wallet): currently simulated; ready to wire real Midtrans/Xendit/Stripe (money lands in clinic account, callback auto-confirms).
+- Audit trail: every manual approval records the admin's note + timestamp.

@@ -29,6 +29,7 @@ export type NavLink = { labelKey: string; href: string };
 export const navLinks: NavLink[] = [
   { labelKey: "nav_home", href: "#home" },
   { labelKey: "nav_services", href: "#services" },
+  { labelKey: "nav_promo", href: "#promo" },
   { labelKey: "nav_doctors", href: "#doctors" },
   { labelKey: "nav_about", href: "#about" },
   { labelKey: "nav_blog", href: "#blog" },

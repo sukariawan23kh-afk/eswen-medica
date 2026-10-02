@@ -59,10 +59,41 @@ export async function POST(
       );
     }
 
-    // Simulate gateway processing latency (300–900ms)
-    await new Promise((r) => setTimeout(r, 300 + Math.floor(Math.random() * 600)));
+    // ── Manual flow: Bank Transfer ──────────────────────────────────────────
+    // The client transfers offline to the clinic's bank account. We do NOT
+    // auto-confirm — the booking stays WAITING_PAYMENT until an admin verifies
+    // the deposit arrived in the company account and clicks "Approve Payment".
+    if (paymentMethod === "Bank Transfer") {
+      const updated = await db.booking.update({
+        where: { id },
+        data: { paymentMethod, paymentGateway: "Manual" },
+      });
+      return NextResponse.json({
+        ok: true,
+        paymentOk: false, // not yet — awaiting admin confirmation
+        manual: true,
+        message:
+          "Transfer request recorded. Your booking is awaiting payment confirmation — our admin will confirm once your transfer is received.",
+        booking: {
+          id: updated.id,
+          refCode: updated.refCode,
+          status: updated.status,
+          serviceName: updated.serviceName,
+          doctorName: updated.doctorName,
+          bookingDate: updated.bookingDate,
+          bookingTime: updated.bookingTime,
+          depositAmount: updated.depositAmount,
+          depositFormatted: formatIDR(updated.depositAmount),
+          paymentMethod: updated.paymentMethod,
+          paymentGateway: updated.paymentGateway,
+        },
+      });
+    }
 
-    // Simulated gateway verdict. ~5% natural failure chance, or forced via simulateFail.
+    // ── Gateway flow: Credit Card / VA / E-Wallet / QRIS ───────────────────
+    // (Currently simulated — for real money flow, integrate Midtrans/Xendit/
+    //  Stripe here. See the payment guide in the admin Bookings tab.)
+    await new Promise((r) => setTimeout(r, 300 + Math.floor(Math.random() * 600)));
     const gatewayOk = !simulateFail && Math.random() > 0.05;
 
     const updated = await db.booking.update({
@@ -71,6 +102,7 @@ export async function POST(
         status: gatewayOk ? "CONFIRMED" : "PAYMENT_FAILED",
         paymentMethod,
         paymentGateway,
+        confirmedAt: gatewayOk ? new Date() : null,
       },
     });
 

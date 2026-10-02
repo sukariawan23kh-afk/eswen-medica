@@ -1,0 +1,933 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState, useCallback } from "react";
+     4→import { motion, AnimatePresence } from "framer-motion";
+     5→import {
+     6→  X,
+     7→  Lock,
+     8→  LogOut,
+     9→  Plus,
+    10→  Pencil,
+    11→  Trash2,
+    12→  FileText,
+    13→  CalendarClock,
+    14→  Loader2,
+    15→  Check,
+    16→  Settings,
+    17→  Stethoscope,
+    18→  Users,
+    19→  AlertCircle,
+    20→  ExternalLink,
+    21→} from "lucide-react";
+    22→import { Button } from "@/components/ui/button";
+    23→import { cn } from "@/lib/utils";
+    24→import { useLanguage } from "@/lib/eswen/language-store";
+    25→import type { Lang } from "@/lib/eswen/language-store";
+    26→import { SiteSettingsTab } from "@/components/eswen/admin/site-settings-tab";
+    27→import { ServicesTab } from "@/components/eswen/admin/services-tab";
+    28→import { DoctorsTab } from "@/components/eswen/admin/doctors-tab";
+    29→import { usePayment } from "@/lib/eswen/site-config-context";
+    30→
+    31→/* ---------- types ---------- */
+    32→type Article = {
+    33→  id: string;
+    34→  title: string;
+    35→  slug: string;
+    36→  excerpt: string;
+    37→  content: string;
+    38→  category: string;
+    39→  imageUrl: string;
+    40→  language: string;
+    41→  readTime: string;
+    42→  published: boolean;
+    43→  date: string;
+    44→};
+    45→type Booking = {
+    46→  id: string;
+    47→  refCode: string;
+    48→  serviceName: string;
+    49→  doctorName: string;
+    50→  bookingDate: string;
+    51→  bookingTime: string;
+    52→  status: string;
+    53→  patientName: string;
+    54→  patientEmail: string;
+    55→  patientPhone: string;
+    56→  patientNotes: string;
+    57→  depositFormatted: string;
+    58→  paymentMethod: string;
+    59→  paymentGateway: string;
+    60→  paymentNote: string;
+    61→  confirmedAt: string;
+    62→  createdAt: string;
+    63→};
+    64→
+    65→/* ---------- tiny i18n for the admin (keeps it self-contained) ---------- */
+    66→const A = (lang: Lang) =>
+    67→  ({
+    68→    en: {
+    69→      title: "Eswen Medica · Admin",
+    70→      subtitle: "Content & Booking Management",
+    71→      login: "Admin Login",
+    72→      loginDesc: "Enter your password to manage articles and bookings.",
+    73→      password: "Password",
+    74→      enter: "Enter Dashboard",
+    75→      wrong: "Incorrect password.",
+    76→      checking: "Checking session...",
+    77→      tabArticles: "Articles",
+    78→      tabBookings: "Bookings",
+    79→      logout: "Logout",
+    80→      newArticle: "New Article",
+    81→      edit: "Edit",
+    82→      delete: "Delete",
+    83→      published: "Published",
+    84→      draft: "Draft",
+    85→      noArticles: "No articles yet. Click \"New Article\" to create one.",
+    86→      noBookings: "No bookings yet.",
+    87→      colTitle: "Title",
+    88→      colCategory: "Category",
+    89→      colLang: "Lang",
+    90→      colStatus: "Status",
+    91→      colDate: "Date",
+    92→      colActions: "Actions",
+    93→      colRef: "Reference",
+    94→      colService: "Service",
+    95→      colDoctor: "Doctor",
+    96→      colWhen: "When",
+    97→      colPatient: "Patient",
+    98→      colDeposit: "Deposit",
+    99→      colPayment: "Payment",
+   100→      editorNew: "New Article",
+   101→      editorEdit: "Edit Article",
+   102→      fTitle: "Title",
+   103→      fSlug: "Slug (url)",
+   104→      fSlugHint: "lowercase, hyphens only",
+   105→      fExcerpt: "Excerpt",
+   106→      fContent: "Content (Markdown)",
+   107→      fCategory: "Category",
+   108→      fImage: "Image URL",
+   109→      fReadTime: "Read Time",
+   110→      fLang: "Language",
+   111→      fPublished: "Published",
+   112→      save: "Save",
+   113→      cancel: "Cancel",
+   114→      saving: "Saving...",
+   115→      deleteConfirm: "Delete this article?",
+   116→      statusSaved: "Status updated",
+   117→      articleSaved: "Article saved",
+   118→      articleDeleted: "Article deleted",
+   119→      publishedToggle: "Show on website",
+   120→      viewSite: "View Site",
+   121→      total: "Total",
+   122→    },
+   123→    id: {
+   124→      title: "Eswen Medica · Admin",
+   125→      subtitle: "Manajemen Konten & Booking",
+   126→      login: "Login Admin",
+   127→      loginDesc: "Masukkan kata sandi untuk mengelola artikel dan booking.",
+   128→      password: "Kata Sandi",
+   129→      enter: "Masuk Dashboard",
+   130→      wrong: "Kata sandi salah.",
+   131→      checking: "Memeriksa sesi...",
+   132→      tabArticles: "Artikel",
+   133→      tabBookings: "Booking",
+   134→      logout: "Keluar",
+   135→      newArticle: "Artikel Baru",
+   136→      edit: "Edit",
+   137→      delete: "Hapus",
+   138→      published: "Dipublikasi",
+   139→      draft: "Draf",
+   140→      noArticles: "Belum ada artikel. Klik \"Artikel Baru\" untuk membuat.",
+   141→      noBookings: "Belum ada booking.",
+   142→      colTitle: "Judul",
+   143→      colCategory: "Kategori",
+   144→      colLang: "Bahasa",
+   145→      colStatus: "Status",
+   146→      colDate: "Tanggal",
+   147→      colActions: "Aksi",
+   148→      colRef: "Referensi",
+   149→      colService: "Layanan",
+   150→      colDoctor: "Dokter",
+   151→      colWhen: "Waktu",
+   152→      colPatient: "Pasien",
+   153→      colDeposit: "Deposit",
+   154→      colPayment: "Pembayaran",
+   155→      editorNew: "Artikel Baru",
+   156→      editorEdit: "Edit Artikel",
+   157→      fTitle: "Judul",
+   158→      fSlug: "Slug (url)",
+   159→      fSlugHint: "huruf kecil, tanda hubung saja",
+   160→      fExcerpt: "Ringkasan",
+   161→      fContent: "Konten (Markdown)",
+   162→      fCategory: "Kategori",
+   163→      fImage: "URL Gambar",
+   164→      fReadTime: "Durasi Baca",
+   165→      fLang: "Bahasa",
+   166→      fPublished: "Dipublikasi",
+   167→      save: "Simpan",
+   168→      cancel: "Batal",
+   169→      saving: "Menyimpan...",
+   170→      deleteConfirm: "Hapus artikel ini?",
+   171→      statusSaved: "Status diperbarui",
+   172→      articleSaved: "Artikel disimpan",
+   173→      articleDeleted: "Artikel dihapus",
+   174→      publishedToggle: "Tampilkan di website",
+   175→      viewSite: "Lihat Website",
+   176→      total: "Total",
+   177→    },
+   178→  }[lang]);
+   179→
+   180→const STATUSES = [
+   181→  "WAITING_PAYMENT",
+   182→  "CONFIRMED",
+   183→  "PAYMENT_FAILED",
+   184→  "CHECKED IN",
+   185→  "IN TREATMENT",
+   186→  "COMPLETED",
+   187→  "CANCELLED",
+   188→  "NO SHOW",
+   189→];
+   190→const STATUS_COLORS: Record<string, string> = {
+   191→  WAITING_PAYMENT: "bg-amber-100 text-amber-700",
+   192→  CONFIRMED: "bg-green-100 text-green-700",
+   193→  PAYMENT_FAILED: "bg-rose-100 text-rose-700",
+   194→  "CHECKED IN": "bg-sky-100 text-sky-700",
+   195→  "IN TREATMENT": "bg-violet-100 text-violet-700",
+   196→  COMPLETED: "bg-emerald-100 text-emerald-700",
+   197→  CANCELLED: "bg-stone-200 text-stone-600",
+   198→  "NO SHOW": "bg-stone-100 text-stone-500",
+   199→};
+   200→
+   201→export function AdminPanel() {
+   202→  const { lang } = useLanguage();
+   203→  const T = A(lang);
+   204→  const [open, setOpen] = useState(false);
+   205→  const [authed, setAuthed] = useState<boolean | null>(null); // null = checking
+   206→  const [tab, setTab] = useState<"settings" | "services" | "doctors" | "articles" | "bookings">("settings");
+   207→  const [articles, setArticles] = useState<Article[]>([]);
+   208→  const [bookings, setBookings] = useState<Booking[]>([]);
+   209→  const [editing, setEditing] = useState<Article | "new" | null>(null);
+   210→  const [toast, setToast] = useState<string | null>(null);
+   211→
+   212→  // login form
+   213→  const [pw, setPw] = useState("");
+   214→  const [loginErr, setLoginErr] = useState<string | null>(null);
+   215→  const [loginLoading, setLoginLoading] = useState(false);
+   216→
+   217→  // open the panel when the URL hash is #admin
+   218→  useEffect(() => {
+   219→    const check = () => setOpen(window.location.hash.replace("#", "").toLowerCase() === "admin");
+   220→    check();
+   221→    window.addEventListener("hashchange", check);
+   222→    return () => window.removeEventListener("hashchange", check);
+   223→  }, []);
+   224→
+   225→  // check session whenever the panel opens
+   226→  useEffect(() => {
+   227→    if (!open) return;
+   228→    setAuthed(null);
+   229→    fetch("/api/admin/session", { cache: "no-store" })
+   230→      .then((r) => r.json())
+   231→      .then((d) => setAuthed(!!d?.authed))
+   232→      .catch(() => setAuthed(false));
+   233→  }, [open]);
+   234→
+   235→  const showToast = useCallback((msg: string) => {
+   236→    setToast(msg);
+   237→    setTimeout(() => setToast(null), 2500);
+   238→  }, []);
+   239→
+   240→  const loadArticles = useCallback(async () => {
+   241→    const r = await fetch("/api/admin/articles", { cache: "no-store" });
+   242→    const d = await r.json();
+   243→    if (d?.ok) setArticles(d.articles);
+   244→  }, []);
+   245→
+   246→  const loadBookings = useCallback(async () => {
+   247→    const r = await fetch("/api/admin/bookings", { cache: "no-store" });
+   248→    const d = await r.json();
+   249→    if (d?.ok) setBookings(d.bookings);
+   250→  }, []);
+   251→
+   252→  // when authed, load the active tab's data (settings/services/doctors tabs
+   253→  // load their own data internally, so only articles + bookings are handled here)
+   254→  useEffect(() => {
+   255→    if (!open || !authed) return;
+   256→    if (tab === "articles") loadArticles();
+   257→    else if (tab === "bookings") loadBookings();
+   258→  }, [open, authed, tab, loadArticles, loadBookings]);
+   259→
+   260→  const login = async (e: React.FormEvent) => {
+   261→    e.preventDefault();
+   262→    setLoginErr(null);
+   263→    setLoginLoading(true);
+   264→    try {
+   265→      const r = await fetch("/api/admin/login", {
+   266→        method: "POST",
+   267→        headers: { "Content-Type": "application/json" },
+   268→        body: JSON.stringify({ password: pw }),
+   269→      });
+   270→      const d = await r.json();
+   271→      if (r.ok && d?.ok) {
+   272→        setAuthed(true);
+   273→        setPw("");
+   274→      } else {
+   275→        setLoginErr(d?.error || T.wrong);
+   276→      }
+   277→    } catch {
+   278→      setLoginErr(T.wrong);
+   279→    } finally {
+   280→      setLoginLoading(false);
+   281→    }
+   282→  };
+   283→
+   284→  const logout = async () => {
+   285→    await fetch("/api/admin/logout", { method: "POST" });
+   286→    setAuthed(false);
+   287→    setArticles([]);
+   288→    setBookings([]);
+   289→  };
+   290→
+   291→  const close = () => {
+   292→    setOpen(false);
+   293→    if (window.location.hash) {
+   294→      history.replaceState(null, "", window.location.pathname + window.location.search);
+   295→    }
+   296→  };
+   297→
+   298→  const saveArticle = async (data: Partial<Article> & { title: string; slug: string; excerpt: string }) => {
+   299→    const isNew = editing === "new";
+   300→    const r = await fetch(
+   301→      isNew ? "/api/admin/articles" : `/api/admin/articles/${(editing as Article)?.id}`,
+   302→      {
+   303→        method: isNew ? "POST" : "PUT",
+   304→        headers: { "Content-Type": "application/json" },
+   305→        body: JSON.stringify(data),
+   306→      }
+   307→    );
+   308→    const d = await r.json();
+   309→    if (r.ok && d?.ok) {
+   310→      setEditing(null);
+   311→      await loadArticles();
+   312→      showToast(T.articleSaved);
+   313→    } else {
+   314→      showToast(d?.error || "Error");
+   315→    }
+   316→  };
+   317→
+   318→  const deleteArticle = async (id: string) => {
+   319→    if (!confirm(T.deleteConfirm)) return;
+   320→    const r = await fetch(`/api/admin/articles/${id}`, { method: "DELETE" });
+   321→    const d = await r.json();
+   322→    if (r.ok && d?.ok) {
+   323→      await loadArticles();
+   324→      showToast(T.articleDeleted);
+   325→    }
+   326→  };
+   327→
+   328→  const updateBookingStatus = async (id: string, status: string) => {
+   329→    const r = await fetch(`/api/admin/bookings/${id}`, {
+   330→      method: "PUT",
+   331→      headers: { "Content-Type": "application/json" },
+   332→      body: JSON.stringify({ status }),
+   333→    });
+   334→    const d = await r.json();
+   335→    if (r.ok && d?.ok) {
+   336→      setBookings((cur) => cur.map((b) => (b.id === id ? { ...b, status } : b)));
+   337→      showToast(T.statusSaved);
+   338→    }
+   339→  };
+   340→
+   341→  // Manual payment confirmation: admin verified the deposit arrived in the
+   342→  // clinic's bank account and is approving the booking → CONFIRMED.
+   343→  const approvePayment = async (id: string, note: string) => {
+   344→    const r = await fetch(`/api/admin/bookings/${id}/approve`, {
+   345→      method: "POST",
+   346→      headers: { "Content-Type": "application/json" },
+   347→      body: JSON.stringify({ note: note || undefined }),
+   348→    });
+   349→    const d = await r.json();
+   350→    if (r.ok && d?.ok) {
+   351→      const b = d.booking;
+   352→      setBookings((cur) =>
+   353→        cur.map((x) =>
+   354→          x.id === id
+   355→            ? {
+   356→                ...x,
+   357→                status: b.status,
+   358→                paymentGateway: b.paymentGateway,
+   359→                paymentNote: b.paymentNote ?? "",
+   360→                confirmedAt: b.confirmedAt ?? "",
+   361→              }
+   362→            : x
+   363→        )
+   364→      );
+   365→      showToast("Payment approved — booking CONFIRMED");
+   366→    } else {
+   367→      showToast(d?.error || "Approve failed");
+   368→    }
+   369→  };
+   370→
+   371→  if (!open) return null;
+   372→
+   373→  return (
+   374→    <div className="fixed inset-0 z-[100] flex flex-col bg-eswen-gradient-soft">
+   375→      {/* top bar */}
+   376→      <header className="shrink-0 bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white px-4 sm:px-6 py-3 flex items-center justify-between gap-3 shadow-eswen-soft">
+   377→        <div className="flex items-center gap-2.5 min-w-0">
+   378→          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur shrink-0">
+   379→            <Lock className="h-4.5 w-4.5" />
+   380→          </span>
+   381→          <div className="min-w-0">
+   382→            <p className="font-bold text-sm leading-tight truncate">{T.title}</p>
+   383→            <p className="text-[11px] text-white/80 truncate">{T.subtitle}</p>
+   384→          </div>
+   385→        </div>
+   386→        <div className="flex items-center gap-2 shrink-0">
+   387→          {authed && (
+   388→            <button
+   389→              onClick={logout}
+   390→              className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1.5 text-xs font-semibold transition-colors"
+   391→            >
+   392→              <LogOut className="h-3.5 w-3.5" /> {T.logout}
+   393→            </button>
+   394→          )}
+   395→          <button
+   396→            onClick={close}
+   397→            className="inline-flex sm:hidden items-center gap-1.5 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1.5 text-xs font-semibold"
+   398→          >
+   399→            <X className="h-3.5 w-3.5" /> {T.viewSite}
+   400→          </button>
+   401→          <button
+   402→            onClick={close}
+   403→            className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/15 transition-colors"
+   404→            aria-label={T.viewSite}
+   405→          >
+   406→            <X className="h-4 w-4" />
+   407→          </button>
+   408→        </div>
+   409→      </header>
+   410→
+   411→      {/* body */}
+   412→      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen">
+   413→        {authed === null ? (
+   414→          <div className="flex items-center justify-center h-full text-muted-foreground text-sm gap-2">
+   415→            <Loader2 className="h-4 w-4 animate-spin" /> {T.checking}
+   416→          </div>
+   417→        ) : !authed ? (
+   418→          <LoginScreen
+   419→            T={T}
+   420→            pw={pw}
+   421→            setPw={setPw}
+   422→            loginErr={loginErr}
+   423→            loginLoading={loginLoading}
+   424→            onLogin={login}
+   425→          />
+   426→        ) : (
+   427→          <div className="max-w-6xl mx-auto p-4 sm:p-6">
+   428→            {/* tabs */}
+   429→            <div className="flex items-center gap-2 mb-5 flex-wrap">
+   430→              <TabBtn active={tab === "settings"} onClick={() => setTab("settings")} icon={<Settings className="h-4 w-4" />}>
+   431→                Site Settings
+   432→              </TabBtn>
+   433→              <TabBtn active={tab === "services"} onClick={() => setTab("services")} icon={<Stethoscope className="h-4 w-4" />}>
+   434→                Services
+   435→              </TabBtn>
+   436→              <TabBtn active={tab === "doctors"} onClick={() => setTab("doctors")} icon={<Users className="h-4 w-4" />}>
+   437→                Doctors
+   438→              </TabBtn>
+   439→              <TabBtn active={tab === "articles"} onClick={() => setTab("articles")} icon={<FileText className="h-4 w-4" />}>
+   440→                {T.tabArticles}
+   441→                <span className="ml-1.5 rounded-full bg-eswen-light-lavender text-eswen-deep text-[10px] font-bold px-1.5 py-0.5">
+   442→                  {articles.length}
+   443→                </span>
+   444→              </TabBtn>
+   445→              <TabBtn active={tab === "bookings"} onClick={() => setTab("bookings")} icon={<CalendarClock className="h-4 w-4" />}>
+   446→                {T.tabBookings}
+   447→                <span className="ml-1.5 rounded-full bg-eswen-light-lavender text-eswen-deep text-[10px] font-bold px-1.5 py-0.5">
+   448→                  {bookings.length}
+   449→                </span>
+   450→              </TabBtn>
+   451→            </div>
+   452→
+   453→            {tab === "settings" && <SiteSettingsTab showToast={showToast} />}
+   454→            {tab === "services" && <ServicesTab showToast={showToast} />}
+   455→            {tab === "doctors" && <DoctorsTab showToast={showToast} />}
+   456→            {tab === "articles" && (
+   457→              <ArticlesTab
+   458→                T={T}
+   459→                articles={articles}
+   460→                onNew={() => setEditing("new")}
+   461→                onEdit={(a) => setEditing(a)}
+   462→                onDelete={deleteArticle}
+   463→              />
+   464→            )}
+   465→            {tab === "bookings" && (
+   466→              <BookingsTab T={T} bookings={bookings} onUpdateStatus={updateBookingStatus} onApprove={approvePayment} />
+   467→            )}
+   468→          </div>
+   469→        )}
+   470→      </div>
+   471→
+   472→      {/* mobile logout */}
+   473→      {authed && (
+   474→        <div className="sm:hidden shrink-0 border-t border-eswen-lavender bg-white p-3">
+   475→          <Button onClick={logout} variant="outline" className="w-full rounded-full h-10 border-eswen-lavender text-eswen-deep">
+   476→            <LogOut className="h-4 w-4" /> {T.logout}
+   477→          </Button>
+   478→        </div>
+   479→      )}
+   480→
+   481→      {/* article editor modal */}
+   482→      <AnimatePresence>
+   483→        {editing && (
+   484→          <ArticleEditor
+   485→            T={T}
+   486→            article={editing === "new" ? null : (editing as Article)}
+   487→            onClose={() => setEditing(null)}
+   488→            onSave={saveArticle}
+   489→          />
+   490→        )}
+   491→      </AnimatePresence>
+   492→
+   493→      {/* toast */}
+   494→      <AnimatePresence>
+   495→        {toast && (
+   496→          <motion.div
+   497→            initial={{ opacity: 0, y: 20 }}
+   498→            animate={{ opacity: 1, y: 0 }}
+   499→            exit={{ opacity: 0, y: 20 }}
+   500→            className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[110] rounded-full bg-eswen-deep text-white px-4 py-2 text-xs font-semibold shadow-eswen-card flex items-center gap-2"
+   501→          >
+   502→            <Check className="h-3.5 w-3.5" /> {toast}
+   503→          </motion.div>
+   504→        )}
+   505→      </AnimatePresence>
+   506→    </div>
+   507→  );
+   508→}
+   509→
+   510→/* ---------- login ---------- */
+   511→function LoginScreen({ T, pw, setPw, loginErr, loginLoading, onLogin }: any) {
+   512→  return (
+   513→    <div className="flex items-center justify-center h-full p-4">
+   514→      <motion.div
+   515→        initial={{ opacity: 0, y: 20 }}
+   516→        animate={{ opacity: 1, y: 0 }}
+   517→        className="w-full max-w-sm rounded-3xl bg-white border border-eswen-lavender shadow-eswen-card p-7"
+   518→      >
+   519→        <div className="flex flex-col items-center text-center mb-5">
+   520→          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft mb-3">
+   521→            <Lock className="h-7 w-7" />
+   522→          </span>
+   523→          <h2 className="text-xl font-extrabold text-eswen-deep">{T.login}</h2>
+   524→          <p className="text-xs text-muted-foreground mt-1">{T.loginDesc}</p>
+   525→        </div>
+   526→        <form onSubmit={onLogin} className="space-y-3">
+   527→          <input
+   528→            type="password"
+   529→            autoFocus
+   530→            value={pw}
+   531→            onChange={(e: any) => setPw(e.target.value)}
+   532→            placeholder={T.password}
+   533→            className="w-full rounded-xl border border-eswen-lavender bg-white px-4 py-2.5 text-sm text-eswen-deep focus:outline-none focus:border-eswen-soft-purple"
+   534→          />
+   535→          {loginErr && (
+   536→            <p className="text-xs text-rose-600 flex items-center gap-1.5">
+   537→              <AlertCircle className="h-3.5 w-3.5" /> {loginErr}
+   538→            </p>
+   539→          )}
+   540→          <Button
+   541→            type="submit"
+   542→            disabled={loginLoading || !pw}
+   543→            className="w-full rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11"
+   544→          >
+   545→            {loginLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+   546→            {T.enter}
+   547→          </Button>
+   548→        </form>
+   549→        <p className="mt-4 text-[10px] text-center text-muted-foreground/70">
+   550→          Demo password: <code className="font-mono">eswen2026</code>
+   551→        </p>
+   552→      </motion.div>
+   553→    </div>
+   554→  );
+   555→}
+   556→
+   557→/* ---------- tab button ---------- */
+   558→function TabBtn({ active, onClick, icon, children }: any) {
+   559→  return (
+   560→    <button
+   561→      onClick={onClick}
+   562→      className={cn(
+   563→        "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all",
+   564→        active
+   565→          ? "bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft"
+   566→          : "bg-white border border-eswen-lavender text-eswen-deep hover:bg-eswen-light-lavender"
+   567→      )}
+   568→    >
+   569→      {icon}
+   570→      {children}
+   571→    </button>
+   572→  );
+   573→}
+   574→
+   575→/* ---------- articles tab ---------- */
+   576→function ArticlesTab({ T, articles, onNew, onEdit, onDelete }: any) {
+   577→  return (
+   578→    <div>
+   579→      <div className="flex items-center justify-between mb-4">
+   580→        <h3 className="text-lg font-extrabold text-eswen-deep">{T.tabArticles}</h3>
+   581→        <Button onClick={onNew} className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-9 px-4 text-sm">
+   582→          <Plus className="h-4 w-4" /> {T.newArticle}
+   583→        </Button>
+   584→      </div>
+   585→      {articles.length === 0 ? (
+   586→        <p className="text-sm text-muted-foreground text-center py-10">{T.noArticles}</p>
+   587→      ) : (
+   588→        <div className="rounded-2xl border border-eswen-lavender bg-white overflow-hidden">
+   589→          {/* desktop table */}
+   590→          <table className="hidden sm:table w-full text-sm">
+   591→            <thead className="bg-eswen-light-lavender/50 text-[10px] uppercase tracking-wider text-muted-foreground">
+   592→              <tr>
+   593→                <th className="text-left px-4 py-2.5 font-semibold">{T.colTitle}</th>
+   594→                <th className="text-left px-4 py-2.5 font-semibold">{T.colCategory}</th>
+   595→                <th className="text-left px-4 py-2.5 font-semibold">{T.colLang}</th>
+   596→                <th className="text-left px-4 py-2.5 font-semibold">{T.colStatus}</th>
+   597→                <th className="text-left px-4 py-2.5 font-semibold">{T.colDate}</th>
+   598→                <th className="text-right px-4 py-2.5 font-semibold">{T.colActions}</th>
+   599→              </tr>
+   600→            </thead>
+   601→            <tbody className="divide-y divide-eswen-lavender/60">
+   602→              {articles.map((a: Article) => (
+   603→                <tr key={a.id} className="hover:bg-eswen-light-lavender/30">
+   604→                  <td className="px-4 py-3 font-medium text-eswen-deep max-w-xs truncate">{a.title}</td>
+   605→                  <td className="px-4 py-3 text-muted-foreground text-xs">{a.category}</td>
+   606→                  <td className="px-4 py-3 text-xs uppercase text-muted-foreground">{a.language}</td>
+   607→                  <td className="px-4 py-3">
+   608→                    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold", a.published ? "bg-green-100 text-green-700" : "bg-stone-100 text-stone-500")}>
+   609→                      {a.published ? T.published : T.draft}
+   610→                    </span>
+   611→                  </td>
+   612→                  <td className="px-4 py-3 text-xs text-muted-foreground">{a.date}</td>
+   613→                  <td className="px-4 py-3 text-right">
+   614→                    <div className="inline-flex gap-1">
+   615→                      <button onClick={() => onEdit(a)} className="p-1.5 rounded-lg hover:bg-eswen-light-lavender text-eswen-soft-purple" aria-label={T.edit}>
+   616→                        <Pencil className="h-3.5 w-3.5" />
+   617→                      </button>
+   618→                      <button onClick={() => onDelete(a.id)} className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-500" aria-label={T.delete}>
+   619→                        <Trash2 className="h-3.5 w-3.5" />
+   620→                      </button>
+   621→                    </div>
+   622→                  </td>
+   623→                </tr>
+   624→              ))}
+   625→            </tbody>
+   626→          </table>
+   627→          {/* mobile cards */}
+   628→          <div className="sm:hidden divide-y divide-eswen-lavender/60">
+   629→            {articles.map((a: Article) => (
+   630→              <div key={a.id} className="p-3">
+   631→                <div className="flex items-start justify-between gap-2">
+   632→                  <p className="font-medium text-eswen-deep text-sm leading-snug">{a.title}</p>
+   633→                  <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold shrink-0", a.published ? "bg-green-100 text-green-700" : "bg-stone-100 text-stone-500")}>
+   634→                    {a.published ? T.published : T.draft}
+   635→                  </span>
+   636→                </div>
+   637→                <p className="text-[11px] text-muted-foreground mt-1">{a.category} · {a.language.toUpperCase()} · {a.date}</p>
+   638→                <div className="flex gap-1 mt-2">
+   639→                  <button onClick={() => onEdit(a)} className="inline-flex items-center gap-1 rounded-full bg-eswen-light-lavender text-eswen-deep px-2.5 py-1 text-[11px] font-semibold">
+   640→                    <Pencil className="h-3 w-3" /> {T.edit}
+   641→                  </button>
+   642→                  <button onClick={() => onDelete(a.id)} className="inline-flex items-center gap-1 rounded-full bg-rose-50 text-rose-500 px-2.5 py-1 text-[11px] font-semibold">
+   643→                    <Trash2 className="h-3 w-3" /> {T.delete}
+   644→                  </button>
+   645→                </div>
+   646→              </div>
+   647→            ))}
+   648→          </div>
+   649→        </div>
+   650→      )}
+   651→    </div>
+   652→  );
+   653→}
+   654→
+   655→/* ---------- bookings tab ---------- */
+   656→function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
+   657→  const payment = usePayment();
+   658→  const [approving, setApproving] = useState<Booking | null>(null);
+   659→  const [note, setNote] = useState("");
+   660→  const [approvingLoading, setApprovingLoading] = useState(false);
+   661→
+   662→  const doApprove = async () => {
+   663→    if (!approving) return;
+   664→    setApprovingLoading(true);
+   665→    await onApprove(approving.id, note);
+   666→    setApprovingLoading(false);
+   667→    setApproving(null);
+   668→    setNote("");
+   669→  };
+   670→
+   671→  return (
+   672→    <div>
+   673→      <div className="flex items-center justify-between mb-4">
+   674→        <h3 className="text-lg font-extrabold text-eswen-deep">{T.tabBookings}</h3>
+   675→        <span className="text-xs text-muted-foreground">{T.total}: {bookings.length}</span>
+   676→      </div>
+   677→
+   678→      {/* Payment-flow guide banner */}
+   679→      <div className="mb-4 rounded-2xl border border-eswen-soft-purple/30 bg-eswen-light-lavender/50 p-4 text-xs text-eswen-deep/80 leading-relaxed">
+   680→        <p className="font-bold text-eswen-deep mb-1">💳 How payment works (real-world)</p>
+   681→        <p>• <strong>Bank Transfer</strong> (manual): the client transfers to <strong>{payment.bankName} — {payment.accountNumber} ({payment.accountHolder})</strong>. You verify the money arrived in your account, then click <strong>"Approve Payment"</strong> below → status becomes CONFIRMED. Edit your bank details in <em>Site Settings → Payment / Bank Account</em>.</p>
+   682→        <p className="mt-1">• <strong>Credit Card / QRIS / E-Wallet</strong> (gateway): currently simulated. For real automatic payments, integrate <strong>Midtrans / Xendit / Stripe</strong> (money lands in your account, gateway callback auto-confirms). Requires business registration with the gateway.</p>
+   683→      </div>
+   684→
+   685→      {bookings.length === 0 ? (
+   686→        <p className="text-sm text-muted-foreground text-center py-10">{T.noBookings}</p>
+   687→      ) : (
+   688→        <div className="rounded-2xl border border-eswen-lavender bg-white overflow-x-auto">
+   689→          <table className="w-full text-sm min-w-[860px]">
+   690→            <thead className="bg-eswen-light-lavender/50 text-[10px] uppercase tracking-wider text-muted-foreground">
+   691→              <tr>
+   692→                <th className="text-left px-3 py-2.5 font-semibold">{T.colRef}</th>
+   693→                <th className="text-left px-3 py-2.5 font-semibold">{T.colService}</th>
+   694→                <th className="text-left px-3 py-2.5 font-semibold">{T.colPatient}</th>
+   695→                <th className="text-left px-3 py-2.5 font-semibold">{T.colDeposit}</th>
+   696→                <th className="text-left px-3 py-2.5 font-semibold">Payment</th>
+   697→                <th className="text-left px-3 py-2.5 font-semibold">{T.colStatus}</th>
+   698→                <th className="text-left px-3 py-2.5 font-semibold">Action</th>
+   699→              </tr>
+   700→            </thead>
+   701→            <tbody className="divide-y divide-eswen-lavender/60">
+   702→              {bookings.map((b: Booking) => (
+   703→                <tr key={b.id} className="hover:bg-eswen-light-lavender/30 align-top">
+   704→                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-eswen-deep whitespace-nowrap">
+   705→                    {b.refCode}
+   706→                    <div className="text-[9px] text-muted-foreground font-sans font-normal mt-0.5">{b.bookingDate} {b.bookingTime}</div>
+   707→                  </td>
+   708→                  <td className="px-3 py-2.5 text-xs text-muted-foreground">
+   709→                    <div className="font-medium text-eswen-deep">{b.serviceName}</div>
+   710→                    <div className="text-[10px]">{b.doctorName}</div>
+   711→                  </td>
+   712→                  <td className="px-3 py-2.5 text-xs">
+   713→                    <div className="font-medium text-eswen-deep">{b.patientName}</div>
+   714→                    <div className="text-[10px] text-muted-foreground">{b.patientPhone}</div>
+   715→                    {b.patientNotes && <div className="text-[10px] text-muted-foreground italic mt-1 max-w-[160px]">“{b.patientNotes}”</div>}
+   716→                  </td>
+   717→                  <td className="px-3 py-2.5 text-xs font-bold text-eswen-deep whitespace-nowrap">{b.depositFormatted}</td>
+   718→                  <td className="px-3 py-2.5 text-[10px] text-muted-foreground whitespace-nowrap">
+   719→                    {b.paymentMethod || "—"}<br />
+   720→                    <span className="text-muted-foreground/70">via {b.paymentGateway || "—"}</span>
+   721→                    {b.paymentNote && <div className="mt-0.5 italic text-eswen-soft-purple max-w-[140px]">“{b.paymentNote}”</div>}
+   722→                    {b.confirmedAt && <div className="mt-0.5 text-green-600">✓ {new Date(b.confirmedAt).toLocaleString()}</div>}
+   723→                  </td>
+   724→                  <td className="px-3 py-2.5">
+   725→                    <select
+   726→                      value={b.status}
+   727→                      onChange={(e) => onUpdateStatus(b.id, e.target.value)}
+   728→                      className={cn("rounded-full border-0 px-2 py-1 text-[10px] font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-eswen-soft-purple", STATUS_COLORS[b.status] || "bg-stone-100 text-stone-600")}
+   729→                    >
+   730→                      {STATUSES.map((s) => (
+   731→                        <option key={s} value={s}>{s}</option>
+   732→                      ))}
+   733→                    </select>
+   734→                  </td>
+   735→                  <td className="px-3 py-2.5">
+   736→                    {(b.status === "WAITING_PAYMENT" || b.status === "PAYMENT_FAILED") && (
+   737→                      <button
+   738→                        onClick={() => { setApproving(b); setNote(b.paymentNote || ""); }}
+   739→                        className="inline-flex items-center gap-1 rounded-full bg-green-600 text-white px-2.5 py-1 text-[11px] font-bold hover:bg-green-700 transition-colors whitespace-nowrap"
+   740→                      >
+   741→                        <Check className="h-3 w-3" /> Approve Payment
+   742→                      </button>
+   743→                    )}
+   744→                    {b.status === "CONFIRMED" && <span className="text-[10px] text-green-600 font-bold">✓ Confirmed</span>}
+   745→                  </td>
+   746→                </tr>
+   747→              ))}
+   748→            </tbody>
+   749→          </table>
+   750→        </div>
+   751→      )}
+   752→
+   753→      {/* Approve payment modal */}
+   754→      {approving && (
+   755→        <div className="fixed inset-0 z-[105] flex items-center justify-center bg-eswen-deep/40 backdrop-blur-sm p-4" onClick={() => setApproving(null)}>
+   756→          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl bg-white border border-eswen-lavender shadow-eswen-elevated overflow-hidden">
+   757→            <div className="px-5 py-3.5 bg-gradient-to-r from-green-600 to-green-700 text-white flex items-center justify-between">
+   758→              <h3 className="font-bold text-sm">Approve Payment — Confirm Deposit Received</h3>
+   759→              <button onClick={() => setApproving(null)} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/15"><X className="h-4 w-4" /></button>
+   760→            </div>
+   761→            <div className="p-5 space-y-3">
+   762→              <div className="rounded-xl bg-eswen-light-lavender/50 p-3 text-xs space-y-1">
+   763→                <div className="flex justify-between"><span className="text-muted-foreground">Ref</span><span className="font-mono font-bold text-eswen-deep">{approving.refCode}</span></div>
+   764→                <div className="flex justify-between"><span className="text-muted-foreground">Patient</span><span className="font-medium text-eswen-deep">{approving.patientName}</span></div>
+   765→                <div className="flex justify-between"><span className="text-muted-foreground">Service</span><span className="font-medium text-eswen-deep text-right max-w-[180px]">{approving.serviceName}</span></div>
+   766→                <div className="flex justify-between"><span className="text-muted-foreground">When</span><span className="font-medium text-eswen-deep">{approving.bookingDate} {approving.bookingTime}</span></div>
+   767→                <div className="flex justify-between border-t border-eswen-lavender/60 pt-1 mt-1"><span className="text-muted-foreground">Deposit to receive</span><span className="font-bold text-eswen-deep text-sm">{approving.depositFormatted}</span></div>
+   768→              </div>
+   769→              <div className="rounded-xl border border-eswen-soft-purple/40 p-3 text-[11px]">
+   770→                <p className="font-bold text-eswen-deep mb-1">Bank account (where money should arrive):</p>
+   771→                <p className="text-muted-foreground">{payment.bankName}</p>
+   772→                <p className="font-mono font-bold text-eswen-deep text-base tracking-wider">{payment.accountNumber}</p>
+   773→                <p className="text-muted-foreground">{payment.accountHolder}</p>
+   774→              </div>
+   775→              <label className="block">
+   776→                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Confirmation note (optional — for audit)</span>
+   777→                <textarea
+   778→                  value={note}
+   779→                  onChange={(e) => setNote(e.target.value)}
+   780→                  placeholder="e.g. Transfer received 2026-10-02, bank ref TRX12345, amount IDR 250.000"
+   781→                  maxLength={500}
+   782→                  className="w-full rounded-xl border border-eswen-lavender bg-white px-3 py-2 text-xs text-eswen-deep focus:outline-none focus:border-eswen-soft-purple min-h-[60px] resize-none"
+   783→                />
+   784→              </label>
+   785→              <p className="text-[10px] text-muted-foreground">Clicking confirm sets the booking to <strong>CONFIRMED</strong> and records your note + timestamp. Only do this after verifying the deposit arrived in the clinic account.</p>
+   786→              <div className="flex justify-end gap-2 pt-1">
+   787→                <Button type="button" onClick={() => setApproving(null)} variant="ghost" className="rounded-full h-9 text-eswen-deep">Cancel</Button>
+   788→                <Button type="button" onClick={doApprove} disabled={approvingLoading} className="rounded-full bg-green-600 hover:bg-green-700 text-white h-9 px-5">
+   789→                  {approvingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+   790→                  {approvingLoading ? "Confirming..." : "Confirm Payment Received"}
+   791→                </Button>
+   792→              </div>
+   793→            </div>
+   794→          </div>
+   795→        </div>
+   796→      )}
+   797→    </div>
+   798→  );
+   799→}
+   800→
+   801→/* ---------- article editor ---------- */
+   802→function ArticleEditor({ T, article, onClose, onSave }: any) {
+   803→  const [form, setForm] = useState({
+   804→    title: article?.title ?? "",
+   805→    slug: article?.slug ?? "",
+   806→    excerpt: article?.excerpt ?? "",
+   807→    content: article?.content ?? "",
+   808→    category: article?.category ?? "Medical",
+   809→    imageUrl: article?.imageUrl ?? "",
+   810→    language: article?.language ?? "en",
+   811→    readTime: article?.readTime ?? "5 min read",
+   812→    published: article?.published ?? true,
+   813→  });
+   814→  const [saving, setSaving] = useState(false);
+   815→  const [err, setErr] = useState<string | null>(null);
+   816→
+   817→  // auto-generate slug from title when creating new (intentional derived state)
+   818→  /* eslint-disable react-hooks/set-state-in-effect */
+   819→  useEffect(() => {
+   820→    if (!article) {
+   821→      setForm((f) => ({
+   822→        ...f,
+   823→        slug: f.title
+   824→          .toLowerCase()
+   825→          .replace(/[^a-z0-9\s-]/g, "")
+   826→          .replace(/\s+/g, "-")
+   827→          .replace(/-+/g, "-")
+   828→          .slice(0, 80),
+   829→      }));
+   830→    }
+   831→  }, [form.title]);
+   832→  /* eslint-enable react-hooks/set-state-in-effect */
+   833→
+   834→  const submit = async (e: React.FormEvent) => {
+   835→    e.preventDefault();
+   836→    setErr(null);
+   837→    if (form.title.trim().length < 3 || form.excerpt.trim().length < 10 || form.slug.trim().length < 3) {
+   838→      setErr("Please fill title, slug, and excerpt.");
+   839→      return;
+   840→    }
+   841→    setSaving(true);
+   842→    await onSave(form);
+   843→    setSaving(false);
+   844→  };
+   845→
+   846→  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+   847→
+   848→  return (
+   849→    <motion.div
+   850→      initial={{ opacity: 0 }}
+   851→      animate={{ opacity: 1 }}
+   852→      exit={{ opacity: 0 }}
+   853→      className="fixed inset-0 z-[105] flex items-center justify-center bg-eswen-deep/40 backdrop-blur-sm p-4"
+   854→      onClick={onClose}
+   855→    >
+   856→      <motion.div
+   857→        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+   858→        animate={{ opacity: 1, scale: 1, y: 0 }}
+   859→        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+   860→        onClick={(e) => e.stopPropagation()}
+   861→        className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl bg-white border border-eswen-lavender shadow-eswen-elevated overflow-hidden"
+   862→      >
+   863→        <div className="shrink-0 flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white">
+   864→          <h3 className="font-bold text-sm">{article ? T.editorEdit : T.editorNew}</h3>
+   865→          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/15">
+   866→            <X className="h-4 w-4" />
+   867→          </button>
+   868→        </div>
+   869→        <form onSubmit={submit} className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen p-5 space-y-3.5">
+   870→          <Field label={T.fTitle}>
+   871→            <input value={form.title} onChange={(e) => set("title", e.target.value)} maxLength={200} className="ainput" />
+   872→          </Field>
+   873→          <Field label={T.fSlug} hint={T.fSlugHint}>
+   874→            <input value={form.slug} onChange={(e) => set("slug", e.target.value.toLowerCase())} maxLength={120} className="ainput font-mono text-xs" />
+   875→          </Field>
+   876→          <Field label={T.fExcerpt}>
+   877→            <textarea value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} maxLength={500} className="ainput min-h-[60px] resize-none" />
+   878→          </Field>
+   879→          <Field label={T.fContent}>
+   880→            <textarea value={form.content} onChange={(e) => set("content", e.target.value)} maxLength={20000} className="ainput min-h-[120px] resize-y font-mono text-xs" />
+   881→          </Field>
+   882→          <div className="grid grid-cols-2 gap-3">
+   883→            <Field label={T.fCategory}>
+   884→              <input value={form.category} onChange={(e) => set("category", e.target.value)} className="ainput" />
+   885→            </Field>
+   886→            <Field label={T.fReadTime}>
+   887→              <input value={form.readTime} onChange={(e) => set("readTime", e.target.value)} className="ainput" />
+   888→            </Field>
+   889→          </div>
+   890→          <div className="grid grid-cols-2 gap-3">
+   891→            <Field label={T.fLang}>
+   892→              <select value={form.language} onChange={(e) => set("language", e.target.value)} className="ainput">
+   893→                <option value="en">English</option>
+   894→                <option value="id">Bahasa Indonesia</option>
+   895→              </select>
+   896→            </Field>
+   897→            <Field label={T.fImage}>
+   898→              <input value={form.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} placeholder="/images/..." className="ainput" />
+   899→            </Field>
+   900→          </div>
+   901→          <label className="flex items-center gap-2.5 cursor-pointer select-none rounded-xl border border-eswen-lavender bg-white px-3 py-2.5">
+   902→            <input type="checkbox" checked={form.published} onChange={(e) => set("published", e.target.checked)} className="h-4 w-4 accent-[#5B3A91]" />
+   903→            <span className="text-sm font-medium text-eswen-deep">{T.publishedToggle}</span>
+   904→          </label>
+   905→          {err && (
+   906→            <p className="text-xs text-rose-600 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> {err}</p>
+   907→          )}
+   908→          <style>{`.ainput{width:100%;border-radius:0.75rem;border:1px solid #E9DDFF;background:#fff;padding:0.5rem 0.75rem;font-size:0.875rem;color:#5B3A91;outline:none;transition:border-color .15s}.ainput:focus{border-color:#8B5CC7}`}</style>
+   909→        </form>
+   910→        <div className="shrink-0 border-t border-eswen-lavender bg-white px-5 py-3 flex items-center justify-end gap-2">
+   911→          <Button type="button" onClick={onClose} variant="ghost" className="rounded-full h-9 text-eswen-deep">{T.cancel}</Button>
+   912→          <Button type="button" onClick={submit} disabled={saving} className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-9 px-5">
+   913→            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+   914→            {saving ? T.saving : T.save}
+   915→          </Button>
+   916→        </div>
+   917→      </motion.div>
+   918→    </motion.div>
+   919→  );
+   920→}
+   921→
+   922→function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+   923→  return (
+   924→    <label className="block">
+   925→      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 flex items-center justify-between">
+   926→        <span>{label}</span>
+   927→        {hint && <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground/60">{hint}</span>}
+   928→      </span>
+   929→      {children}
+   930→    </label>
+   931→  );
+   932→}
+   933→

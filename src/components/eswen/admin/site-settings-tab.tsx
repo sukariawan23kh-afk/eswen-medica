@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Loader2, Save, ChevronDown, Image as ImageIcon, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ImageUpload } from "@/components/eswen/admin/image-upload";
 
 type Config = {
   logo: { url: string; alt: string };
@@ -14,6 +15,13 @@ type Config = {
     mapEmbed: string; directions: string;
   };
   social: { instagram: string; facebook: string; tiktok: string };
+  payment: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+    instructionsEn: string;
+    instructionsId: string;
+  };
   theme: Record<string, string>;
   translations: { en: Record<string, string>; id: Record<string, string> };
 };
@@ -23,6 +31,7 @@ const SECTIONS: { key: string; label: string }[] = [
   { key: "hero", label: "Hero" },
   { key: "nav", label: "Navbar" },
   { key: "services", label: "Services Section" },
+  { key: "promo", label: "Promo Section" },
   { key: "booking", label: "Smart Booking" },
   { key: "journey", label: "Patient Journey" },
   { key: "doctors", label: "Doctors Section" },
@@ -48,7 +57,7 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
   const [config, setConfig] = useState<Config | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ logo: true, brand: true, contact: true, social: true });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ logo: true, brand: true, contact: true, social: true, payment: true });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -121,9 +130,15 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
               {config.logo.url ? <img src={config.logo.url} alt={config.logo.alt} className="h-full w-full object-contain p-1" /> : <ImageIcon className="h-6 w-6 text-white" />}
             </div>
             <div className="flex-1">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Logo Image URL</label>
-              <input value={config.logo.url} onChange={(e) => setConfig({ ...config, logo: { ...config.logo, url: e.target.value } })} placeholder="/images/logo.png (leave empty for default mark)" className="ainput" />
-              <p className="text-[10px] text-muted-foreground mt-1">Upload your logo to <code>/public/images/</code> and put the path here, or paste any image URL. Empty = default sparkle icon.</p>
+              <ImageUpload
+                value={config.logo.url}
+                onChange={(url) => setConfig({ ...config, logo: { ...config.logo, url } })}
+                label="Logo Image URL"
+                placeholder="/images/logo.png (leave empty for default mark)"
+                recommendedSize="200×200px (square, transparent PNG/SVG)"
+                previewClass="h-14 w-14"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Upload a transparent PNG/SVG logo, or paste any image URL. Empty = default sparkle icon.</p>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -172,6 +187,20 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
           <div><label className="lbl">Instagram</label><input value={config.social.instagram} onChange={(e) => setConfig({ ...config, social: { ...config.social, instagram: e.target.value } })} className="ainput" /></div>
           <div><label className="lbl">Facebook</label><input value={config.social.facebook} onChange={(e) => setConfig({ ...config, social: { ...config.social, facebook: e.target.value } })} className="ainput" /></div>
           <div><label className="lbl">TikTok</label><input value={config.social.tiktok} onChange={(e) => setConfig({ ...config, social: { ...config.social, tiktok: e.target.value } })} className="ainput" /></div>
+        </div>
+      </Card>
+
+      {/* Payment / Bank account */}
+      <Card title="Payment / Bank Account (where deposits go)" open={openGroups.payment} onToggle={() => toggle("payment")}>
+        <div className="space-y-3">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">This bank account is shown to clients who choose <strong>Bank Transfer</strong>, and referenced in the admin "Approve Payment" modal. Money from gateway payments (Credit Card/QRIS/E-Wallet) also lands here once a real gateway is connected.</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><label className="lbl">Bank Name</label><input value={config.payment.bankName} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, bankName: e.target.value } })} className="ainput" placeholder="e.g. Bank Central Asia (BCA)" /></div>
+            <div><label className="lbl">Account Number</label><input value={config.payment.accountNumber} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, accountNumber: e.target.value } })} className="ainput font-mono" placeholder="e.g. 1234567890" /></div>
+          </div>
+          <div><label className="lbl">Account Holder Name</label><input value={config.payment.accountHolder} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, accountHolder: e.target.value } })} className="ainput" placeholder="e.g. PT Eswen Medica Sehat" /></div>
+          <div><label className="lbl">Transfer Instructions (EN)</label><textarea value={config.payment.instructionsEn} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, instructionsEn: e.target.value } })} className="ainput min-h-[50px] resize-none" /></div>
+          <div><label className="lbl">Transfer Instructions (ID)</label><textarea value={config.payment.instructionsId} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, instructionsId: e.target.value } })} className="ainput min-h-[50px] resize-none" /></div>
         </div>
       </Card>
 

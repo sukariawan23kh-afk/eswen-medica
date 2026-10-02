@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/eswen/navbar";
 import { HeroSection } from "@/components/eswen/hero-section";
 import { ServicesSection } from "@/components/eswen/services-section";
+import { PromoSection } from "@/components/eswen/promo-section";
 import { SmartBookingSection } from "@/components/eswen/smart-booking-section";
 import { PatientJourneySection } from "@/components/eswen/patient-journey-section";
 import { DoctorsSection } from "@/components/eswen/doctors-section";
@@ -12,6 +13,7 @@ import { AIAssistant } from "@/components/eswen/ai-assistant";
 import { WhatsAppButton } from "@/components/eswen/whatsapp-button";
 import { BookingDialog } from "@/components/eswen/booking-dialog";
 import { AdminPanel } from "@/components/eswen/admin-panel";
+import { OfferPopup } from "@/components/eswen/offer-popup";
 
 export default function Home() {
   return (
@@ -20,6 +22,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col">
         <HeroSection />
         <ServicesSection />
+        <PromoSection />
         <SmartBookingSection />
         <PatientJourneySection />
         <DoctorsSection />
@@ -33,6 +36,7 @@ export default function Home() {
       <WhatsAppButton />
       <BookingDialog />
       <AdminPanel />
+      <OfferPopup />
     </div>
   );
 }

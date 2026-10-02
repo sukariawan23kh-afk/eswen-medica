@@ -44,6 +44,13 @@ type SiteConfig = {
     directions: string;
   };
   social: { instagram: string; facebook: string; tiktok: string };
+  payment: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+    instructionsEn: string;
+    instructionsId: string;
+  };
   theme: Record<string, string>;
   translations: { en: Record<string, string>; id: Record<string, string> };
 };
@@ -145,6 +152,22 @@ export function useContact() {
 export function useSocial() {
   const { config } = useSiteConfig();
   return config?.social ?? { instagram: "#", facebook: "#", tiktok: "#" };
+}
+
+/** Live, admin-editable clinic bank/payment details (where deposits go). */
+export function usePayment() {
+  const { config } = useSiteConfig();
+  return (
+    config?.payment ?? {
+      bankName: "Bank Central Asia (BCA)",
+      accountNumber: "1234567890",
+      accountHolder: "PT Eswen Medica Sehat",
+      instructionsEn:
+        "Transfer the deposit amount to the bank account below. Once we receive your transfer, our admin will confirm your booking.",
+      instructionsId:
+        "Transfer jumlah deposit ke rekening bank di bawah ini. Setelah transfer kami terima, admin kami akan mengkonfirmasi booking Anda.",
+    }
+  );
 }
 
 // keep the static translations import referenced (used as fallback)

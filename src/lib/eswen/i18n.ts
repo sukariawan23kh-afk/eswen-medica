@@ -63,6 +63,21 @@ export const translations = {
     services_view: "View Details",
     services_book: "Book an Appointment",
 
+    // Promo
+    nav_promo: "PROMO",
+    promo_eyebrow: "Special Offers",
+    promo_title_1: "Today's Best",
+    promo_title_2: "Deals & Discounts",
+    promo_desc:
+      "Save on consultations, skin care, and wellness programs at Eswen Medica Bali. Limited-time offers, refreshed regularly — book early to lock in the best rate.",
+    promo_no_offers:
+      "No active offers right now. Please check back soon — we publish new deals every week.",
+    promo_cta: "Claim This Offer",
+    promo_daily: "Daily",
+    promo_weekly: "Weekly",
+    promo_monthly: "Monthly",
+    promo_onetime: "One-time",
+
     // Smart booking
     booking_eyebrow: "Smart Booking",
     booking_title_1: "Smart Booking.",
@@ -305,6 +320,21 @@ export const translations = {
     services_starting: "Mulai dari",
     services_view: "Lihat Detail",
     services_book: "Buat Janji Temu",
+
+    // Promo
+    nav_promo: "PROMO",
+    promo_eyebrow: "Penawaran Spesial",
+    promo_title_1: "Penawaran & Diskon",
+    promo_title_2: "Terbaik Hari Ini",
+    promo_desc:
+      "Hemat untuk konsultasi, perawatan kulit, dan program wellness di Eswen Medica Bali. Penawaran terbatas, diperbarui secara berkala — booking awal untuk dapatkan harga terbaik.",
+    promo_no_offers:
+      "Belum ada penawaran aktif saat ini. Silakan kembali lagi — kami merilis penawaran baru setiap minggu.",
+    promo_cta: "Klaim Penawaran",
+    promo_daily: "Harian",
+    promo_weekly: "Mingguan",
+    promo_monthly: "Bulanan",
+    promo_onetime: "Sekali",
 
     // Smart booking
     booking_eyebrow: "Booking Pintar",

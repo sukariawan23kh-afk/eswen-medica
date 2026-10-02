@@ -15,7 +15,11 @@ export async function GET(req: NextRequest) {
   try {
     await ensureSiteSeeded();
     const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
-    const config = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
+    // Merge with defaults so newly-added top-level keys (e.g. `payment`) are
+    // backfilled for configs created before those keys existed — prevents the
+    // editor from crashing on undefined fields.
+    const stored = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
+    const config = { ...DEFAULT_CONFIG, ...stored, payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) } };
     return NextResponse.json({ ok: true, config });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";

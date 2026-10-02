@@ -17,7 +17,10 @@ export async function GET() {
     await ensureSiteSeeded();
 
     const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
-    const config = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
+    // Merge with defaults so newly-added top-level keys (e.g. `payment`) are
+    // backfilled for configs created before those keys existed.
+    const stored = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
+    const config = { ...DEFAULT_CONFIG, ...stored, payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) } };
 
     const [services, doctors] = await Promise.all([
       db.service.findMany({

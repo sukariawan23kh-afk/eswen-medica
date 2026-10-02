@@ -37,6 +37,8 @@ export async function GET(req: NextRequest) {
         depositFormatted: formatIDR(b.depositAmount),
         paymentMethod: b.paymentMethod ?? "",
         paymentGateway: b.paymentGateway ?? "",
+        paymentNote: b.paymentNote ?? "",
+        confirmedAt: b.confirmedAt?.toISOString() ?? "",
         createdAt: b.createdAt.toISOString(),
       })),
     });
