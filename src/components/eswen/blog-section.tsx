@@ -33,6 +33,10 @@ export function BlogSection() {
   const notAvail = tr(lang, "blog_desc");
 
   useEffect(() => {
+    // Data-fetching effect: setState in the effect body and async callbacks is
+    // a standard, intentional pattern here. The react-hooks/set-state-in-effect
+    // rule is overly strict for this case, so it's disabled for this block.
+    /* eslint-disable react-hooks/set-state-in-effect */
     let cancelled = false;
     setLoading(true);
     fetch(`/api/articles?lang=${lang}`)
@@ -80,6 +84,7 @@ export function BlogSection() {
     return () => {
       cancelled = true;
     };
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [lang, notAvail]);
 
   return (

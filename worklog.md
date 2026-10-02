@@ -255,3 +255,46 @@ Stage Summary:
 - The Aesthetic brand is fully removed; the site now focuses exclusively on ESWEN MEDICA as a single premium medical clinic
 - All copy, services, doctors, filters, footer, AI prompts, SEO metadata, and schema.org are de-aestheticized and bilingual (EN/ID)
 - Booking system still fully functional (all services/medical professionals eligible)
+
+---
+Task ID: 10
+Agent: Main (Z.ai Code)
+Task: Build admin panel for self-editing (articles CRUD + bookings management)
+
+Work Log:
+- Added `Article` model to Prisma (id, title, slug unique, excerpt, content, category, imageUrl, language, readTime, published, timestamps) + db:push; seeded 3 default medical articles
+- Added ADMIN_PASSWORD=eswen2026 + ADMIN_SECRET to .env
+- Built stateless admin auth (src/lib/eswen/admin-auth.ts): HMAC-SHA256 signed cookie (base64url payload + signature), 7-day TTL, constant-time signature compare, httpOnly + sameSite=lax
+- Built 9 API endpoints:
+  - POST /api/admin/login (verify password → set cookie), POST /api/admin/logout (clear cookie), GET /api/admin/session (authed check)
+  - GET /api/articles?lang= (public, published only, seeds if empty) — blog section reads from DB now
+  - GET /api/admin/articles (all incl. drafts), POST /api/admin/articles (create, auto-unique slug on collision), PUT/DELETE /api/admin/articles/[id]
+  - GET /api/admin/bookings (all bookings, newest first), PUT /api/admin/bookings/[id] (update status)
+- Built AdminPanel overlay (src/components/eswen/admin-panel.tsx): triggered by URL hash `#admin` (listens to hashchange); bilingual (EN/ID) self-contained strings; full-screen overlay (fixed inset-0 z-100)
+  - Login screen (password field + demo hint) → POST /api/admin/login
+  - Dashboard: tab switcher (Articles | Bookings with live counts), logout, close
+  - Articles tab: responsive table (desktop) + cards (mobile) with title/category/lang/published status/date + edit/delete actions; "New Article" button → editor modal
+  - Article editor modal: title (auto-generates slug from title), slug, excerpt, content (markdown textarea), category, readTime, language (EN/ID), imageUrl, published toggle + Save/Cancel; validation
+  - Bookings tab: table with ref/service/doctor/when/patient/deposit + color-coded status dropdown (8 statuses) → instant update via PUT API; toast on save
+- Updated blog-section.tsx to fetch from /api/articles (DB) with static fallback; loading spinner
+- Added AdminPanel to page.tsx; added discreet "Admin" link in footer bottom bar (ShieldPlus icon → href="#admin")
+- Fixed dev-server staleness: stale next-server process held old Prisma client (db.article undefined) → killed PID + fresh restart resolved; article APIs now return data
+
+End-to-end verification (Agent Browser):
+- Navigated to http://localhost:3000/#admin → login screen (or auto-dashboard if cookie present) ✓
+- Logged in with "eswen2026" → dashboard ✓
+- Articles tab shows 3 seeded articles with Published badges ✓
+- Clicked "New Article" → editor modal opened ✓
+- Filled title "Test Article from Admin" (slug auto-generated) + excerpt → Save → "Article saved" toast ✓
+- Article list updated to 4 rows, new article at top (newest first) ✓
+- Public GET /api/articles returned the new article ✓
+- Reloaded public site → blog section showed 4 cards incl. the new article ✓
+- Deleted test article via DB → back to clean 3 articles ✓
+- Lint: 0 errors, 0 warnings
+
+Stage Summary:
+- Admin panel is live at http://localhost:3000/#admin (or click "Admin" in the footer)
+- Login password: eswen2026 (cookie persists 7 days)
+- Admins can: add/edit/delete blog articles (bilingual, with publish toggle) + view all bookings + update booking status
+- Articles are stored in the DB; the public blog section reads from DB (auto-seeds defaults if empty)
+- Services and doctors remain code-defined in data.ts (can be made DB-editable in a future iteration if needed)

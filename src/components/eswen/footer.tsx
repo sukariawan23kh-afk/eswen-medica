@@ -132,6 +132,15 @@ export function Footer() {
             <span className="hidden sm:inline h-1 w-1 rounded-full bg-eswen-deep/30" />
             <button className="hover:text-eswen-deep transition-colors">{t("footer_privacy")}</button>
             <button className="hover:text-eswen-deep transition-colors">{t("footer_terms")}</button>
+            <span className="hidden sm:inline h-1 w-1 rounded-full bg-eswen-deep/30" />
+            <a
+              href="#admin"
+              className="inline-flex items-center gap-1 text-eswen-deep/40 hover:text-eswen-deep transition-colors"
+              aria-label="Admin login"
+              title="Admin login"
+            >
+              <ShieldPlus className="h-3 w-3" /> Admin
+            </a>
           </div>
           <button
             onClick={scrollTop}
