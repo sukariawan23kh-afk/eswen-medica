@@ -58,3 +58,24 @@ model Booking {
   @@index([doctorId, bookingDate, bookingTime])
   @@index([status])
 }
+
+// Article — admin-managed blog content (editable from the admin panel).
+// The blog section reads published articles from the DB; falls back to the
+// static defaults in data.ts when the table is empty.
+model Article {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String?  // markdown body (for a future detail view)
+  category    String   @default("Medical")
+  imageUrl    String?
+  language    String   @default("en") // "en" | "id"
+  readTime    String?  // e.g. "6 min read"
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([published])
+  @@index([language])
+}
