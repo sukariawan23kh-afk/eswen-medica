@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { SectionHeading } from "./section-heading";
 import { patientJourney } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT } from "@/lib/eswen/i18n";
+import { useT } from "@/lib/eswen/site-config-context";
 
 export function PatientJourneySection() {
   const { lang } = useLanguage();

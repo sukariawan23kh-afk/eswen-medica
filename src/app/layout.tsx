@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { LangSync } from "@/components/eswen/lang-sync";
+import { SiteConfigProvider } from "@/lib/eswen/site-config-context";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -130,8 +131,10 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} font-sans antialiased bg-background text-foreground`}
       >
-        <LangSync />
-        {children}
+        <SiteConfigProvider>
+          <LangSync />
+          {children}
+        </SiteConfigProvider>
         <Toaster />
       </body>
     </html>

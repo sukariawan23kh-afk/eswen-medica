@@ -23,14 +23,16 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { cn } from "@/lib/utils";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT, tr } from "@/lib/eswen/i18n";
+import { useT, useServices, useDoctors } from "@/lib/eswen/site-config-context";
+import { tr } from "@/lib/eswen/i18n";
 import {
-  services,
-  doctors,
+  services as staticServices,
+  doctors as staticDoctors,
   paymentMethods,
   paymentGateways,
 } from "@/lib/eswen/data";
 import { nextDates, formatIDR, doctorsForService } from "@/lib/eswen/booking";
+import { getLucideIcon } from "@/lib/eswen/icons";
 import { useMounted } from "@/hooks/use-mounted";
 
 type Slot = { time: string; booked: boolean };
@@ -57,6 +59,8 @@ export function BookingDialog() {
   const { open, preselectedServiceId, closeDialog } = useBookingDialog();
   const { lang } = useLanguage();
   const t = useT();
+  const services = useServices(staticServices);
+  const doctors = useDoctors(staticDoctors);
 
   const [step, setStep] = useState(0); // 0..5
   const [serviceId, setServiceId] = useState<string | null>(null);
@@ -323,7 +327,7 @@ export function BookingDialog() {
                       >
                         <div className="flex items-start gap-3">
                           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shrink-0">
-                            <s.icon className="h-5 w-5" />
+                            {(() => { const Icon = getLucideIcon(typeof s.icon === "string" ? s.icon : "Stethoscope"); return <Icon className="h-5 w-5" />; })()}
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-eswen-soft-purple">

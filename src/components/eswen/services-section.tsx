@@ -4,16 +4,18 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
-import { services } from "@/lib/eswen/data";
+import { services as staticServices } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT } from "@/lib/eswen/i18n";
+import { useT, useServices } from "@/lib/eswen/site-config-context";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
+import { getLucideIcon } from "@/lib/eswen/icons";
 import { cn } from "@/lib/utils";
 
 export function ServicesSection() {
   const { lang } = useLanguage();
   const t = useT();
   const { openDialog } = useBookingDialog();
+  const services = useServices(staticServices);
   const scrollTo = (href: string) =>
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -49,7 +51,7 @@ export function ServicesSection() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent" />
                 <span className="absolute -bottom-5 left-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-card border-2 border-white">
-                  <service.icon className="h-5 w-5" />
+                  {(() => { const Icon = getLucideIcon(typeof service.icon === "string" ? service.icon : "Stethoscope"); return <Icon className="h-5 w-5" />; })()}
                 </span>
               </div>
 

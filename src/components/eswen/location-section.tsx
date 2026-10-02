@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { MapPin, Clock, MessageCircle, Phone, Mail, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
-import { contactInfo } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT } from "@/lib/eswen/i18n";
+import { useT, useContact } from "@/lib/eswen/site-config-context";
 
 export function LocationSection() {
   const { lang } = useLanguage();
   const t = useT();
+  const contactInfo = useContact();
 
   return (
     <section id="contact" className="relative py-20 sm:py-28 bg-eswen-gradient-soft">

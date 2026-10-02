@@ -13,6 +13,9 @@ import {
   CalendarClock,
   Loader2,
   Check,
+  Settings,
+  Stethoscope,
+  Users,
   AlertCircle,
   ExternalLink,
 } from "lucide-react";
@@ -20,6 +23,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/eswen/language-store";
 import type { Lang } from "@/lib/eswen/language-store";
+import { SiteSettingsTab } from "@/components/eswen/admin/site-settings-tab";
+import { ServicesTab } from "@/components/eswen/admin/services-tab";
+import { DoctorsTab } from "@/components/eswen/admin/doctors-tab";
 
 /* ---------- types ---------- */
 type Article = {
@@ -194,7 +200,7 @@ export function AdminPanel() {
   const T = A(lang);
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState<boolean | null>(null); // null = checking
-  const [tab, setTab] = useState<"articles" | "bookings">("articles");
+  const [tab, setTab] = useState<"settings" | "services" | "doctors" | "articles" | "bookings">("settings");
   const [articles, setArticles] = useState<Article[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [editing, setEditing] = useState<Article | "new" | null>(null);
@@ -240,11 +246,12 @@ export function AdminPanel() {
     if (d?.ok) setBookings(d.bookings);
   }, []);
 
-  // when authed, load the active tab's data
+  // when authed, load the active tab's data (settings/services/doctors tabs
+  // load their own data internally, so only articles + bookings are handled here)
   useEffect(() => {
     if (!open || !authed) return;
     if (tab === "articles") loadArticles();
-    else loadBookings();
+    else if (tab === "bookings") loadBookings();
   }, [open, authed, tab, loadArticles, loadBookings]);
 
   const login = async (e: React.FormEvent) => {
@@ -386,7 +393,16 @@ export function AdminPanel() {
         ) : (
           <div className="max-w-6xl mx-auto p-4 sm:p-6">
             {/* tabs */}
-            <div className="flex items-center gap-2 mb-5">
+            <div className="flex items-center gap-2 mb-5 flex-wrap">
+              <TabBtn active={tab === "settings"} onClick={() => setTab("settings")} icon={<Settings className="h-4 w-4" />}>
+                Site Settings
+              </TabBtn>
+              <TabBtn active={tab === "services"} onClick={() => setTab("services")} icon={<Stethoscope className="h-4 w-4" />}>
+                Services
+              </TabBtn>
+              <TabBtn active={tab === "doctors"} onClick={() => setTab("doctors")} icon={<Users className="h-4 w-4" />}>
+                Doctors
+              </TabBtn>
               <TabBtn active={tab === "articles"} onClick={() => setTab("articles")} icon={<FileText className="h-4 w-4" />}>
                 {T.tabArticles}
                 <span className="ml-1.5 rounded-full bg-eswen-light-lavender text-eswen-deep text-[10px] font-bold px-1.5 py-0.5">
@@ -401,6 +417,9 @@ export function AdminPanel() {
               </TabBtn>
             </div>
 
+            {tab === "settings" && <SiteSettingsTab showToast={showToast} />}
+            {tab === "services" && <ServicesTab showToast={showToast} />}
+            {tab === "doctors" && <DoctorsTab showToast={showToast} />}
             {tab === "articles" && (
               <ArticlesTab
                 T={T}

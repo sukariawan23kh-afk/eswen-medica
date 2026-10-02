@@ -79,3 +79,57 @@ model Article {
   @@index([published])
   @@index([language])
 }
+
+// SiteConfig — singleton row holding ALL editable website content as a JSON
+// blob: logo, brand name/tagline, all UI translations (en+id), contact info,
+// social links, theme colors, AI assistant text, SEO metadata. Edited from
+// the admin "Site Settings" tab.
+model SiteConfig {
+  id        String   @id @default("singleton")
+  config    String   // JSON string; parsed in code
+  updatedAt DateTime @updatedAt
+}
+
+// Service — admin-editable service catalog (replaces static data.ts services).
+model Service {
+  id            String   @id @default(cuid())
+  categoryEn    String
+  categoryId    String
+  nameEn        String
+  nameId        String
+  descriptionEn String
+  descriptionId String
+  startingPrice String
+  deposit       Int      @default(0)
+  icon          String   @default("Stethoscope") // lucide icon name
+  image         String   @default("/images/service-medical.png")
+  brand         String   @default("medical")
+  order         Int      @default(0)
+  published     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([published])
+}
+
+// Doctor — admin-editable professionals (replaces static data.ts doctors).
+model Doctor {
+  id          String   @id @default(cuid())
+  name        String
+  roleEn      String
+  roleId      String
+  category    String   @default("doctor") // "doctor" | "wellness"
+  specialtyEn String
+  specialtyId String
+  experienceEn String
+  experienceId String
+  languages   String   @default("EN, ID") // comma-separated
+  image       String   @default("/images/doctor-1.png")
+  initials    String   @default("XX")
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([published])
+}

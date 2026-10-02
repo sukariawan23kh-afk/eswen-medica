@@ -5,15 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Globe, Award, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
-import { doctors, doctorFilters } from "@/lib/eswen/data";
+import { doctors as staticDoctors, doctorFilters } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT } from "@/lib/eswen/i18n";
+import { useT, useDoctors } from "@/lib/eswen/site-config-context";
 import { cn } from "@/lib/utils";
 
 export function DoctorsSection() {
   const { lang } = useLanguage();
   const t = useT();
   const [filter, setFilter] = useState<string>("all");
+  const doctors = useDoctors(staticDoctors);
 
   const filtered =
     filter === "all"

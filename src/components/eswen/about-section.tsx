@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { aboutHighlights, whyChooseUs } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT } from "@/lib/eswen/i18n";
+import { useT } from "@/lib/eswen/site-config-context";
 import { SectionHeading } from "./section-heading";
 
 export function AboutSection() {

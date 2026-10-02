@@ -48,8 +48,9 @@ export async function POST(req: NextRequest) {
   }
   const data = parsed.data;
 
-  const service = getServiceById(data.serviceId);
-  const doctor = getDoctorById(data.doctorId);
+  // Look up the service + doctor from the DB (admin-editable catalog).
+  const service = await db.service.findUnique({ where: { id: data.serviceId } });
+  const doctor = await db.doctor.findUnique({ where: { id: data.doctorId } });
   if (!service || !doctor) {
     return NextResponse.json(
       { ok: false, error: "Service or doctor not found." },
@@ -57,9 +58,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // All services are medical; doctors must be medical professionals
-  // (category "doctor" or "wellness"). The "aesthetic"/"beauty" categories
-  // were removed when the site focused on Eswen Medica only.
+  // Doctors must be medical professionals (category "doctor" or "wellness").
   if (doctor.category !== "doctor" && doctor.category !== "wellness") {
     return NextResponse.json(
       { ok: false, error: "Selected professional is not available for this service." },
@@ -101,7 +100,7 @@ export async function POST(req: NextRequest) {
         data: {
           refCode,
           serviceId: service.id,
-          serviceName: service.name.en,
+          serviceName: service.nameEn,
           doctorId: doctor.id,
           doctorName: doctor.name,
           brand: service.brand,

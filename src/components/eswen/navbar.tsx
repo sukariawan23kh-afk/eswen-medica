@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, CalendarHeart, Sparkles } from "lucide-react";
+import { Menu, CalendarHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useMounted } from "@/hooks/use-mounted";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT } from "@/lib/eswen/i18n";
+import { useT } from "@/lib/eswen/site-config-context";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
+import { BrandLogo } from "@/components/eswen/brand-logo";
 import { navLinks } from "@/lib/eswen/data";
 
 export function Navbar() {
@@ -44,21 +45,10 @@ export function Navbar() {
           {/* Logo */}
           <button
             onClick={() => handleNav("#home")}
-            className="flex items-center gap-2.5 group"
+            className="group"
             aria-label="Eswen Medica home"
           >
-            <span className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft">
-              <Sparkles className="h-5 w-5" strokeWidth={2.2} />
-              <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full bg-white border-2 border-eswen-soft-purple" />
-            </span>
-            <span className="flex flex-col leading-none text-left">
-              <span className="font-extrabold text-base tracking-tight text-eswen-deep">
-                ESWEN <span className="text-eswen-soft-purple">MEDICA</span>
-              </span>
-              <span className="text-[10px] tracking-[0.2em] text-muted-foreground font-medium uppercase mt-0.5 hidden sm:block">
-                {t("nav_tagline")}
-              </span>
-            </span>
+            <BrandLogo />
           </button>
 
           {/* Desktop Nav */}
@@ -119,11 +109,8 @@ export function Navbar() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 bg-eswen-gradient-soft">
                   <SheetHeader className="p-6 pb-4 border-b border-eswen-lavender/60">
-                    <SheetTitle className="flex items-center gap-2.5">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white">
-                        <Sparkles className="h-4 w-4" />
-                      </span>
-                      <span className="font-extrabold text-eswen-deep">ESWEN MEDICA</span>
+                    <SheetTitle asChild>
+                      <div><BrandLogo size="sm" /></div>
                     </SheetTitle>
                   </SheetHeader>
                   <nav className="flex flex-col p-4 gap-1">

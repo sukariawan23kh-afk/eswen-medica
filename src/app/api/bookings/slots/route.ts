@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { TIME_SLOTS, getBookedSlots, isValidBookingDate, getDoctorById } from "@/lib/eswen/booking";
+import { db } from "@/lib/db";
+import { TIME_SLOTS, getBookedSlots, isValidBookingDate } from "@/lib/eswen/booking";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
       { status: 400 }
     );
   }
-  if (!getDoctorById(doctorId)) {
+  if (!(await db.doctor.findUnique({ where: { id: doctorId } }))) {
     return NextResponse.json(
       { ok: false, error: "Doctor not found." },
       { status: 404 }

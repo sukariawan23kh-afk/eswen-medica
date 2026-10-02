@@ -298,3 +298,38 @@ Stage Summary:
 - Admins can: add/edit/delete blog articles (bilingual, with publish toggle) + view all bookings + update booking status
 - Articles are stored in the DB; the public blog section reads from DB (auto-seeds defaults if empty)
 - Services and doctors remain code-defined in data.ts (can be made DB-editable in a future iteration if needed)
+
+---
+Task ID: 11
+Agent: Main (Z.ai Code)
+Task: Make EVERYTHING editable from admin (full CMS) — logo, all text, services, doctors, contact, social
+
+Work Log:
+- DB: added 3 new models — SiteConfig (singleton JSON blob holding logo/brand/contact/social/theme/ALL translations), Service (admin-editable catalog, replaces data.ts), Doctor (admin-editable, replaces data.ts) + db:push + seed (DEFAULT_CONFIG copies all 188 i18n strings + 6 services + 4 doctors)
+- Built public API: GET /api/site-config (returns config + published services + published doctors; auto-seeds on first call)
+- Built admin APIs: GET/PUT /api/admin/site-config (read/replace whole config JSON), GET/POST /api/admin/services + PUT/DELETE /[id], GET/POST /api/admin/doctors + PUT/DELETE /[id]
+- Created SiteConfigContext + SiteConfigProvider (wraps the app in layout.tsx) that fetches /api/site-config once and provides: useT() (reads live translations[lang][key] with static fallback for SSR), useServices()/useDoctors()/useLogo()/useBrand()/useContact()/useSocial() hooks
+- Created BrandLogo component (renders config.logo.url image if set, else default Sparkles mark) — used in navbar (desktop + mobile sheet) + footer
+- Created icon resolver (src/lib/eswen/icons.ts) getLucideIcon(name) — maps the ~24 lucide icon names the admin can type to components; services now store icon as a STRING (resolved at render)
+- Refactored all components to use config-backed hooks: navbar (BrandLogo), footer (BrandLogo + useContact + useSocial), services-section (useServices + getLucideIcon), doctors-section (useDoctors), location-section (useContact), booking-dialog (useServices/useDoctors + getLucideIcon); all useT() now reads from live config
+- Updated booking system to use DB services/doctors: slots API checks doctor in DB; bookings POST API fetches service/doctor from DB (uses nameEn, brand, deposit); booking dialog uses DB services/doctors with DB IDs
+- Built 3 new admin tabs:
+  - **Site Settings** (site-settings-tab.tsx): categorized collapsible form — Logo & Brand (logo URL + alt + brand name + tagline EN/ID), Contact Information (address/whatsapp/phone/email/hours EN-ID/mapEmbed/directions), Social Media (3 links), and "All Text Content" with 14 grouped collapsible sections (Hero/Navbar/Services/Booking/Journey/Doctors/About/Why/Blog/Location/Footer/AI/Booking-wizard) each showing EN + ID textareas for EVERY translation key — 188 editable strings total. "Save All" → PUT /api/admin/site-config
+  - **Services** (services-tab.tsx): card grid + "Add Service" + editor modal (category/name/description EN+ID, price, deposit, icon datalist, image, order, published toggle)
+  - **Doctors** (doctors-tab.tsx): card grid + "Add Professional" + editor modal (name/role/specialty/experience EN+ID, languages, category, order, photo, published)
+- Admin panel now has 5 tabs: Site Settings | Services | Doctors | Articles | Bookings
+
+Verification (Agent Browser):
+- Site-config API: ok=true, 188 translation keys, 6 services, 4 doctors, logo/brand/contact/social all seeded ✓
+- Admin #admin: 5 tabs render (Site Settings, Services, Doctors, Articles, Bookings), cookie-authed ✓
+- Site Settings tab: Save All button + Logo/Brand/Contact/Social cards + "All Text Content" with 14 grouped sections ✓
+- Logo change test: set logo URL → /images/brand-medical.png → Save All → "Settings saved" toast → reloaded public site → navbar rendered the logo IMAGE (loaded:true), default Sparkles icon gone (0) ✓ → reverted to default ✓
+- Public site renders DB-backed content: hero H1, brand name "ESWEN MEDICA", 6 services, 4 doctors, footer address, 3 blog articles — all from the editable config/DB ✓
+- No console errors. Lint: 0 errors, 0 warnings.
+
+Stage Summary:
+- EVERYTHING is now editable from the admin panel: logo, brand name + tagline, all 188 UI text strings (EN + ID), 6 services, 4 doctors, contact info, social links
+- The booking system uses the DB-edited services/doctors (so editing them updates booking too)
+- Admin access: http://localhost:3000/#admin (or footer "Admin" link), password: eswen2026
+- 5 admin tabs: Site Settings (logo + all text + contact + social), Services (CRUD), Doctors (CRUD), Articles (CRUD), Bookings (view + status)
+- Production-ready full CMS.

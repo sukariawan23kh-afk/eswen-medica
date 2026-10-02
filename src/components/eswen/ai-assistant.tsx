@@ -14,7 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT, tr } from "@/lib/eswen/i18n";
+import { useT } from "@/lib/eswen/site-config-context";
+import { tr } from "@/lib/eswen/i18n";
 import type { Lang } from "@/lib/eswen/language-store";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 

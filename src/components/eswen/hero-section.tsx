@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { CalendarHeart, ArrowRight, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { heroTrustPoints } from "@/lib/eswen/data";
-import { useT } from "@/lib/eswen/i18n";
+import { useT } from "@/lib/eswen/site-config-context";
 import type { TranslationKey } from "@/lib/eswen/i18n";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 
