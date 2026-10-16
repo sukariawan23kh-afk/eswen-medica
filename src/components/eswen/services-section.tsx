@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
+import { ServiceDetailModal } from "./service-detail-modal";
 import { services as staticServices } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT, useServices } from "@/lib/eswen/site-config-context";
@@ -16,6 +18,7 @@ export function ServicesSection() {
   const t = useT();
   const { openDialog } = useBookingDialog();
   const services = useServices(staticServices);
+  const [detailService, setDetailService] = useState<typeof services[number] | null>(null);
   const scrollTo = (href: string) =>
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -74,7 +77,7 @@ export function ServicesSection() {
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => openDialog(service.id)}
+                    onClick={() => setDetailService(service)}
                     className={cn(
                       "rounded-full h-9 px-4 text-xs font-semibold transition-all",
                       "bg-eswen-light-lavender text-eswen-deep hover:bg-eswen-deep hover:text-white"
@@ -99,6 +102,8 @@ export function ServicesSection() {
           </Button>
         </div>
       </div>
+
+      <ServiceDetailModal service={detailService} onClose={() => setDetailService(null)} />
     </section>
   );
 }
