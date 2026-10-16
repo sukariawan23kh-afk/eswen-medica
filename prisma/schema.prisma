@@ -105,6 +105,7 @@ model Service {
   deposit       Int      @default(0)
   icon          String   @default("Stethoscope") // lucide icon name
   image         String   @default("/images/service-medical.png")
+  gallery       String?  // JSON array of additional image URLs, e.g. ["url1","url2"]
   brand         String   @default("medical")
   order         Int      @default(0)
   published     Boolean  @default(true)

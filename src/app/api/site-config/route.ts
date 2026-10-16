@@ -45,6 +45,7 @@ export async function GET() {
         deposit: s.deposit,
         icon: s.icon,
         image: s.image,
+        gallery: s.gallery ? JSON.parse(s.gallery) : [],
         brand: s.brand,
         order: s.order,
       })),

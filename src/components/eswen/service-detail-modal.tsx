@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -12,6 +13,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT } from "@/lib/eswen/site-config-context";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
@@ -45,6 +47,10 @@ export function ServiceDetailModal({
     }
   };
 
+  // Gallery: main image + gallery images combined
+  const allImages = service ? [service.image, ...(service.gallery || [])].filter(Boolean) : [];
+  const [activeImage, setActiveImage] = useState(0);
+
   return (
     <AnimatePresence>
       {service && (
@@ -74,10 +80,10 @@ export function ServiceDetailModal({
 
             {/* Scrollable content */}
             <div className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen">
-              {/* Image header */}
+              {/* Image header (gallery-aware) */}
               <div className="relative h-48 sm:h-56 overflow-hidden bg-eswen-light-lavender">
                 <img
-                  src={service.image || "/images/service-medical.png"}
+                  src={allImages[Math.min(activeImage, allImages.length - 1)] || service.image || "/images/service-medical.png"}
                   alt={service.name[lang]}
                   className="h-full w-full object-cover"
                 />
@@ -91,6 +97,26 @@ export function ServiceDetailModal({
                   </span>
                 </div>
               </div>
+
+              {/* Gallery thumbnails (if more than 1 image) */}
+              {allImages.length > 1 && (
+                <div className="flex gap-2 p-3 overflow-x-auto scrollbar-eswen bg-white border-b border-eswen-lavender">
+                  {allImages.map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveImage(i)}
+                      className={cn(
+                        "h-14 w-20 rounded-lg overflow-hidden border-2 transition-all shrink-0",
+                        Math.min(activeImage, allImages.length - 1) === i
+                          ? "border-eswen-soft-purple ring-2 ring-eswen-soft-purple/30"
+                          : "border-transparent opacity-70 hover:opacity-100"
+                      )}
+                    >
+                      <img src={img} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Body */}
               <div className="p-5 sm:p-7 space-y-5">

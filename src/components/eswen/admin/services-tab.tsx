@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getLucideIcon, VALID_ICON_NAMES } from "@/lib/eswen/icons";
 import { ImageUpload } from "@/components/eswen/admin/image-upload";
+import { GalleryUpload } from "@/components/eswen/admin/gallery-upload";
 
 type Svc = {
   id: string; categoryEn: string; categoryId: string;
   nameEn: string; nameId: string;
   descriptionEn: string; descriptionId: string;
   startingPrice: string; deposit: number;
-  icon: string; image: string; brand: string;
+  icon: string; image: string; gallery: string[]; brand: string;
   order: number; published: boolean;
 };
 
@@ -20,7 +21,7 @@ const EMPTY: Svc = {
   id: "", categoryEn: "", categoryId: "", nameEn: "", nameId: "",
   descriptionEn: "", descriptionId: "", startingPrice: "IDR 350.000",
   deposit: 100000, icon: "Stethoscope", image: "/images/service-medical.png",
-  brand: "medical", order: 0, published: true,
+  gallery: [], brand: "medical", order: 0, published: true,
 };
 
 export function ServicesTab({ showToast }: { showToast: (msg: string) => void }) {
@@ -159,6 +160,10 @@ function SvcEditor({ svc, onClose, onSave }: { svc: Svc; onClose: () => void; on
               />
             </F>
           </div>
+          <GalleryUpload
+            images={f.gallery || []}
+            onChange={(urls) => set("gallery", urls)}
+          />
           <label className="flex items-center gap-2.5 cursor-pointer rounded-xl border border-eswen-lavender bg-white px-3 py-2.5">
             <input type="checkbox" checked={f.published} onChange={(e) => set("published", e.target.checked)} className="h-4 w-4 accent-[#5B3A91]" />
             <span className="text-sm font-medium text-eswen-deep">Published (show on website)</span>

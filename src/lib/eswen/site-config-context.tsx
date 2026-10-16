@@ -15,6 +15,7 @@ export type CfgService = {
   deposit: number;
   icon: string;
   image: string;
+  gallery: string[];
   brand: string;
   order: number;
 };

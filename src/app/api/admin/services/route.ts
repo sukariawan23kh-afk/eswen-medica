@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
         deposit: s.deposit,
         icon: s.icon,
         image: s.image,
+        gallery: s.gallery ? JSON.parse(s.gallery) : [],
         brand: s.brand,
         order: s.order,
         published: s.published,
@@ -51,6 +52,7 @@ const CreateSchema = z.object({
   deposit: z.number().int().min(0).max(10000000).default(0),
   icon: z.string().max(60).default("Stethoscope"),
   image: z.string().max(500).default("/images/service-medical.png"),
+  gallery: z.array(z.string()).optional().default([]),
   brand: z.string().max(20).default("medical"),
   order: z.number().int().default(0),
   published: z.boolean().default(true),
@@ -70,7 +72,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid input.", issues: parsed.error.issues }, { status: 400 });
   }
   try {
-    const created = await db.service.create({ data: parsed.data });
+    const { gallery, ...rest } = parsed.data;
+    const created = await db.service.create({
+      data: { ...rest, gallery: gallery && gallery.length > 0 ? JSON.stringify(gallery) : null },
+    });
     return NextResponse.json({ ok: true, service: { id: created.id } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";

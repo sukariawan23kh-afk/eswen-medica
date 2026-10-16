@@ -17,6 +17,7 @@ const UpdateSchema = z.object({
   deposit: z.number().int().min(0).max(10000000).optional(),
   icon: z.string().max(60).optional(),
   image: z.string().max(500).optional(),
+  gallery: z.array(z.string()).optional(),
   brand: z.string().max(20).optional(),
   order: z.number().int().optional(),
   published: z.boolean().optional(),
@@ -36,7 +37,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ ok: false, error: "Invalid input.", issues: parsed.error.issues }, { status: 400 });
   }
   try {
-    const updated = await db.service.update({ where: { id }, data: parsed.data });
+    const { gallery, ...rest } = parsed.data;
+    const data: Record<string, unknown> = { ...rest };
+    if (gallery !== undefined) {
+      data.gallery = gallery.length > 0 ? JSON.stringify(gallery) : null;
+    }
+    const updated = await db.service.update({ where: { id }, data });
     return NextResponse.json({ ok: true, service: { id: updated.id } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
