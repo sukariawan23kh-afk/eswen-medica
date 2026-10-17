@@ -45,10 +45,10 @@ export async function POST(req: NextRequest) {
 
     if (blobToken) {
       try {
-        const blob = await put(filename, buffer, {
-          // access: "public",  ← hapus/komen baris ini
+          const blob = await put(filename, buffer, {
+          access: "public",
           token: blobToken,
-        });
+        });;
         return NextResponse.json({ ok: true, url: blob.url, filename, size: file.size });
       } catch (blobErr) {
         const blobMsg = blobErr instanceof Error ? blobErr.message : String(blobErr);
