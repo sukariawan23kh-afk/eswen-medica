@@ -66,7 +66,7 @@ export function ServicesSection() {
                 <h3 className="mt-1 text-lg font-bold tracking-tight text-eswen-deep">
                   {service.name[lang]}
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed flex-1">
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-2 overflow-hidden">
                   {service.description[lang]}
                 </p>
 

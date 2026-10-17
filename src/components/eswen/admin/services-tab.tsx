@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getLucideIcon, VALID_ICON_NAMES } from "@/lib/eswen/icons";
 import { ImageUpload } from "@/components/eswen/admin/image-upload";
-import { GalleryUpload } from "@/components/eswen/admin/gallery-upload";
 
 type Svc = {
   id: string; categoryEn: string; categoryId: string;
   nameEn: string; nameId: string;
   descriptionEn: string; descriptionId: string;
   startingPrice: string; deposit: number;
-  icon: string; image: string; gallery: string[]; brand: string;
+  icon: string; image: string; brand: string;
   order: number; published: boolean;
 };
 
@@ -21,7 +20,7 @@ const EMPTY: Svc = {
   id: "", categoryEn: "", categoryId: "", nameEn: "", nameId: "",
   descriptionEn: "", descriptionId: "", startingPrice: "IDR 350.000",
   deposit: 100000, icon: "Stethoscope", image: "/images/service-medical.png",
-  gallery: [], brand: "medical", order: 0, published: true,
+  brand: "medical", order: 0, published: true,
 };
 
 export function ServicesTab({ showToast }: { showToast: (msg: string) => void }) {
@@ -78,9 +77,9 @@ export function ServicesTab({ showToast }: { showToast: (msg: string) => void })
                     <Icon className="h-5 w-5" />
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-eswen-soft-purple">{s.categoryEn}</p>
-                    <h4 className="text-sm font-bold text-eswen-deep leading-tight">{s.nameEn}</h4>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.descriptionEn}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-eswen-soft-purple">{s.categoryId}</p>
+                    <h4 className="text-sm font-bold text-eswen-deep leading-tight">{s.nameId}</h4>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.descriptionId}</p>
                     <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
                       <span className="font-bold text-eswen-deep">{s.startingPrice}</span>
                       <span>·</span>
@@ -132,14 +131,14 @@ function SvcEditor({ svc, onClose, onSave }: { svc: Svc; onClose: () => void; on
           <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/15"><X className="h-4 w-4" /></button>
         </div>
         <form onSubmit={submit} className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen p-5 space-y-3.5">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <F label="Category (EN)"><input value={f.categoryEn} onChange={(e) => set("categoryEn", e.target.value)} className="ainput" /></F>
-            <F label="Category (ID)"><input value={f.categoryId} onChange={(e) => set("categoryId", e.target.value)} className="ainput" /></F>
-            <F label="Name (EN)"><input value={f.nameEn} onChange={(e) => set("nameEn", e.target.value)} className="ainput" /></F>
-            <F label="Name (ID)"><input value={f.nameId} onChange={(e) => set("nameId", e.target.value)} className="ainput" /></F>
+          <div className="rounded-xl bg-eswen-light-lavender/60 p-2.5 text-[11px] text-eswen-soft-purple font-semibold flex items-center gap-1.5">
+            💡 Cukup input Bahasa Indonesia. English otomatis diterjemahkan saat Save.
           </div>
-          <F label="Description (EN)"><textarea value={f.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} className="ainput min-h-[60px] resize-none" /></F>
-          <F label="Description (ID)"><textarea value={f.descriptionId} onChange={(e) => set("descriptionId", e.target.value)} className="ainput min-h-[60px] resize-none" /></F>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <F label="Kategori (ID)"><input value={f.categoryId} onChange={(e) => set("categoryId", e.target.value)} className="ainput" placeholder="mis. Layanan Medis Umum" /></F>
+            <F label="Nama Layanan (ID)"><input value={f.nameId} onChange={(e) => set("nameId", e.target.value)} className="ainput" placeholder="mis. Konsultasi Medis Umum" /></F>
+          </div>
+          <F label="Deskripsi (ID)"><textarea value={f.descriptionId} onChange={(e) => set("descriptionId", e.target.value)} className="ainput min-h-[80px] resize-y" placeholder="Deskripsi lengkap layanan dalam Bahasa Indonesia..." /></F>
           <div className="grid sm:grid-cols-3 gap-3">
             <F label="Starting Price"><input value={f.startingPrice} onChange={(e) => set("startingPrice", e.target.value)} className="ainput" /></F>
             <F label="Deposit (IDR)"><input type="number" value={f.deposit} onChange={(e) => set("deposit", e.target.value)} className="ainput" /></F>
@@ -160,10 +159,6 @@ function SvcEditor({ svc, onClose, onSave }: { svc: Svc; onClose: () => void; on
               />
             </F>
           </div>
-          <GalleryUpload
-            images={f.gallery || []}
-            onChange={(urls) => set("gallery", urls)}
-          />
           <label className="flex items-center gap-2.5 cursor-pointer rounded-xl border border-eswen-lavender bg-white px-3 py-2.5">
             <input type="checkbox" checked={f.published} onChange={(e) => set("published", e.target.checked)} className="h-4 w-4 accent-[#5B3A91]" />
             <span className="text-sm font-medium text-eswen-deep">Published (show on website)</span>
