@@ -23,63 +23,47 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
   }
 
-  let file: File | null = null;
   try {
     const form = await req.formData();
-    file = form.get("file") as File | null;
+    const file = form.get("file") as File | null;
     if (!file || !(file instanceof File)) {
       return NextResponse.json({ ok: false, error: "No file in request." }, { status: 400 });
     }
     if (file.size > MAX_BYTES) {
-      return NextResponse.json({ ok: false, error: `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max 5MB).` }, { status: 400 });
+      return NextResponse.json({ ok: false, error: `File too large (max 5MB).` }, { status: 400 });
     }
     const ext = safeExt(file.name);
     if (!ext) {
-      return NextResponse.json({ ok: false, error: "Unsupported file type. Allowed: png, jpg, jpeg, gif, webp, svg." }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "Unsupported type." }, { status: 400 });
     }
 
     const stamp = Date.now();
     const rand = Math.random().toString(36).slice(2, 8);
     const filename = `eswen-${stamp}-${rand}.${ext}`;
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    const buffer = Buffer.from(await file.arrayBuffer());
 
     if (blobToken) {
-      // ── Vercel production: use Vercel Blob Storage ──
       try {
-        const blob = await put(filename, file, {
+        const blob = await put(filename, buffer, {
           access: "public",
           token: blobToken,
         });
         return NextResponse.json({ ok: true, url: blob.url, filename, size: file.size });
       } catch (blobErr) {
         const blobMsg = blobErr instanceof Error ? blobErr.message : String(blobErr);
-        // Blob failed — fall through to filesystem attempt
-        console.error("[upload] Blob failed:", blobMsg);
+        return NextResponse.json(
+          { ok: false, error: `Blob upload failed: ${blobMsg}` },
+          { status: 500 }
+        );
       }
     }
 
-    // ── Fallback: local filesystem (dev or if Blob failed) ──
-    try {
-      await fs.mkdir(UPLOAD_DIR, { recursive: true });
-      const buf = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(path.join(UPLOAD_DIR, filename), buf);
-      return NextResponse.json({ ok: true, url: `/images/uploads/${filename}`, filename, size: file.size });
-    } catch (fsErr) {
-      const fsMsg = fsErr instanceof Error ? fsErr.message : String(fsErr);
-      const blobStatus = blobToken ? "Blob token set but upload failed" : "No Blob token set";
-      return NextResponse.json(
-        {
-          ok: false,
-          error: `Upload failed — ${blobStatus}. Filesystem error: ${fsMsg}. Make sure BLOB_READ_WRITE_TOKEN is set in Vercel env vars.`,
-        },
-        { status: 500 }
-      );
-    }
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
+    return NextResponse.json({ ok: true, url: `/images/uploads/${filename}`, filename, size: file.size });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json(
-      { ok: false, error: `Upload error: ${msg}` },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: `Upload error: ${msg}` }, { status: 500 });
   }
 }
