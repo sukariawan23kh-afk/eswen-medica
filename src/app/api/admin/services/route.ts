@@ -42,11 +42,11 @@ export async function GET(req: NextRequest) {
 }
 
 const CreateSchema = z.object({
-  categoryEn: z.string().min(1).max(80),
+  categoryEn: z.string().max(80).default(""),     // optional — auto-translated from ID
   categoryId: z.string().min(1).max(80),
-  nameEn: z.string().min(2).max(200),
+  nameEn: z.string().max(200).default(""),          // optional — auto-translated from ID
   nameId: z.string().min(2).max(200),
-  descriptionEn: z.string().min(5).max(1000),
+  descriptionEn: z.string().max(1000).default(""),   // optional — auto-translated from ID
   descriptionId: z.string().min(5).max(1000),
   startingPrice: z.string().max(40).default("IDR 0"),
   deposit: z.number().int().min(0).max(10000000).default(0),

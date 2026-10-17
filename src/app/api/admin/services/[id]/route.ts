@@ -8,12 +8,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const UpdateSchema = z.object({
-  categoryEn: z.string().min(1).max(80).optional(),
-  categoryId: z.string().min(1).max(80).optional(),
-  nameEn: z.string().min(2).max(200).optional(),
-  nameId: z.string().min(2).max(200).optional(),
-  descriptionEn: z.string().min(5).max(1000).optional(),
-  descriptionId: z.string().min(5).max(1000).optional(),
+  categoryEn: z.string().max(80).optional(),        // optional — auto-translated from ID
+  categoryId: z.string().max(80).optional(),
+  nameEn: z.string().max(200).optional(),            // optional — auto-translated from ID
+  nameId: z.string().max(200).optional(),
+  descriptionEn: z.string().max(1000).optional(),     // optional — auto-translated from ID
+  descriptionId: z.string().max(1000).optional(),
   startingPrice: z.string().max(40).optional(),
   deposit: z.number().int().min(0).max(10000000).optional(),
   icon: z.string().max(60).optional(),
