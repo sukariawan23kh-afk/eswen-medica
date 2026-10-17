@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
 
 export const runtime = "nodejs";
@@ -29,7 +30,6 @@ export async function GET(req: NextRequest) {
         deposit: s.deposit,
         icon: s.icon,
         image: s.image,
-        gallery: s.gallery ? JSON.parse(s.gallery) : [],
         brand: s.brand,
         order: s.order,
         published: s.published,
@@ -52,7 +52,6 @@ const CreateSchema = z.object({
   deposit: z.number().int().min(0).max(10000000).default(0),
   icon: z.string().max(60).default("Stethoscope"),
   image: z.string().max(500).default("/images/service-medical.png"),
-  gallery: z.array(z.string()).optional().default([]),
   brand: z.string().max(20).default("medical"),
   order: z.number().int().default(0),
   published: z.boolean().default(true),
@@ -72,7 +71,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid input.", issues: parsed.error.issues }, { status: 400 });
   }
   try {
-    const { gallery, ...rest } = parsed.data;
+    const d = parsed.data;
+    // Auto-translate ID → EN if EN fields are empty (admin only inputs Indonesian)
+    if (!d.nameEn && d.nameId) d.nameEn = await translateIdToEn(d.nameId);
+    if (!d.descEn && d.descId) d.descEn = await translateIdToEn(d.descId);
+    if (!d.categoryEn && d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
+    const { gallery, ...rest } = d;
     const created = await db.service.create({
       data: { ...rest, gallery: gallery && gallery.length > 0 ? JSON.stringify(gallery) : null },
     });

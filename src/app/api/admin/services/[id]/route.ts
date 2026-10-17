@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +18,6 @@ const UpdateSchema = z.object({
   deposit: z.number().int().min(0).max(10000000).optional(),
   icon: z.string().max(60).optional(),
   image: z.string().max(500).optional(),
-  gallery: z.array(z.string()).optional(),
   brand: z.string().max(20).optional(),
   order: z.number().int().optional(),
   published: z.boolean().optional(),
@@ -37,7 +37,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ ok: false, error: "Invalid input.", issues: parsed.error.issues }, { status: 400 });
   }
   try {
-    const { gallery, ...rest } = parsed.data;
+    const d = parsed.data;
+    // Auto-translate ID → EN if EN fields are empty (admin only inputs Indonesian)
+    if (d.nameEn === "" && d.nameId) d.nameEn = await translateIdToEn(d.nameId);
+    if (d.descEn === "" && d.descId) d.descEn = await translateIdToEn(d.descId);
+    if (d.categoryEn === "" && d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
+    const { gallery, ...rest } = d;
     const data: Record<string, unknown> = { ...rest };
     if (gallery !== undefined) {
       data.gallery = gallery.length > 0 ? JSON.stringify(gallery) : null;
