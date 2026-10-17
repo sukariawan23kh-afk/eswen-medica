@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     if (blobToken) {
       try {
         const blob = await put(filename, buffer, {
-          access: "public",
+          // access: "public",  ← hapus/komen baris ini
           token: blobToken,
         });
         return NextResponse.json({ ok: true, url: blob.url, filename, size: file.size });
