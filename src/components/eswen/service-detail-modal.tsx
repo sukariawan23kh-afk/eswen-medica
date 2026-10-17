@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   CalendarHeart,
-  Check,
   ShieldPlus,
   Clock,
   Users,
@@ -40,6 +39,42 @@ export function ServiceDetailModal({
   const t = useT();
   const { openDialog } = useBookingDialog();
 
+  // Gallery: main image + gallery images combined
+  const allImages = service ? [service.image, ...(service.gallery || [])].filter(Boolean) : [];
+  const [activeImage, setActiveImage] = useState(0);
+  const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Reset to first image when service changes
+  useEffect(() => {
+  /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    setActiveImage(0);
+  }, [service?.id]);
+
+  // Auto-play gallery: cycle through images every 3 seconds
+  useEffect(() => {
+    if (!service || allImages.length <= 1) return;
+
+    autoPlayRef.current = setInterval(() => {
+      setActiveImage((prev) => (prev + 1) % allImages.length);
+    }, 3000);
+
+    return () => {
+      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+    };
+  }, [service?.id, allImages.length]);
+
+  // Pause auto-play briefly when user clicks a thumbnail
+  const handleThumbClick = (index: number) => {
+    setActiveImage(index);
+    if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+    // Resume after 5 seconds
+    if (allImages.length > 1) {
+      autoPlayRef.current = setInterval(() => {
+        setActiveImage((prev) => (prev + 1) % allImages.length);
+      }, 3000);
+    }
+  };
+
   const handleBook = () => {
     if (service) {
       openDialog(service.id);
@@ -47,9 +82,9 @@ export function ServiceDetailModal({
     }
   };
 
-  // Gallery: main image + gallery images combined
-  const allImages = service ? [service.image, ...(service.gallery || [])].filter(Boolean) : [];
-  const [activeImage, setActiveImage] = useState(0);
+  const currentImage = allImages.length > 0
+    ? allImages[Math.min(activeImage, allImages.length - 1)]
+    : "/images/service-medical.png";
 
   return (
     <AnimatePresence>
@@ -80,14 +115,21 @@ export function ServiceDetailModal({
 
             {/* Scrollable content */}
             <div className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen">
-              {/* Image header (gallery-aware) */}
+              {/* Image gallery (auto-play) */}
               <div className="relative h-48 sm:h-56 overflow-hidden bg-eswen-light-lavender">
-                <img
-                  src={allImages[Math.min(activeImage, allImages.length - 1)] || service.image || "/images/service-medical.png"}
-                  alt={service.name[lang]}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-eswen-deep/60 via-transparent to-transparent" />
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={currentImage + activeImage}
+                    src={currentImage}
+                    alt={service.name[lang]}
+                    className="h-full w-full object-cover absolute inset-0"
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </AnimatePresence>
+                <div className="absolute inset-0 bg-gradient-to-t from-eswen-deep/60 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-4 left-5 flex items-center gap-2.5">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-card border-2 border-white">
                     <Stethoscope className="h-5 w-5" />
@@ -96,6 +138,23 @@ export function ServiceDetailModal({
                     {service.category[lang]}
                   </span>
                 </div>
+
+                {/* Auto-play indicator dots */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-4 right-4 flex gap-1.5">
+                    {allImages.map((_, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          "h-2 rounded-full transition-all",
+                          Math.min(activeImage, allImages.length - 1) === i
+                            ? "w-6 bg-white"
+                            : "w-2 bg-white/50"
+                        )}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Gallery thumbnails (if more than 1 image) */}
@@ -104,7 +163,7 @@ export function ServiceDetailModal({
                   {allImages.map((img, i) => (
                     <button
                       key={i}
-                      onClick={() => setActiveImage(i)}
+                      onClick={() => handleThumbClick(i)}
                       className={cn(
                         "h-14 w-20 rounded-lg overflow-hidden border-2 transition-all shrink-0",
                         Math.min(activeImage, allImages.length - 1) === i
