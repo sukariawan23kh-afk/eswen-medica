@@ -72,10 +72,10 @@ export async function POST(req: NextRequest) {
   }
   try {
     const d = parsed.data;
-    // Auto-translate ID → EN if EN fields are empty (admin only inputs Indonesian)
-    if (!d.nameEn && d.nameId) d.nameEn = await translateIdToEn(d.nameId);
-    if (!d.descEn && d.descId) d.descEn = await translateIdToEn(d.descId);
-    if (!d.categoryEn && d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
+    // ALWAYS translate EN from ID (admin only inputs Indonesian)
+    if (d.nameId) d.nameEn = await translateIdToEn(d.nameId);
+    if (d.descId) d.descEn = await translateIdToEn(d.descId);
+    if (d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
     const { gallery, ...rest } = d;
     const created = await db.service.create({
       data: { ...rest, gallery: gallery && gallery.length > 0 ? JSON.stringify(gallery) : null },

@@ -1,58 +1,72 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { isAdmin } from "@/lib/eswen/admin-auth";
 import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
 import { DEFAULT_CONFIG } from "@/lib/eswen/seed-full";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/admin/site-config — returns the full config for the editor. */
-export async function GET(req: NextRequest) {
-  if (!isAdmin(req)) {
-    return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
-  }
+/**
+ * GET /api/site-config
+ * Public endpoint. Returns the full editable site config (logo, brand,
+ * translations, contact, social, theme) + published services + published
+ * doctors. This is what powers the entire editable website.
+ */
+export async function GET() {
   try {
     await ensureSiteSeeded();
+
     const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
     // Merge with defaults so newly-added top-level keys (e.g. `payment`) are
-    // backfilled for configs created before those keys existed — prevents the
-    // editor from crashing on undefined fields.
+    // backfilled for configs created before those keys existed.
     const stored = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
     const config = { ...DEFAULT_CONFIG, ...stored, payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) } };
-    return NextResponse.json({ ok: true, config });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ ok: false, error: "Failed.", debug: msg }, { status: 500 });
-  }
-}
 
-/** PUT /api/admin/site-config — replace the whole config JSON. */
-export async function PUT(req: NextRequest) {
-  if (!isAdmin(req)) {
-    return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
-  }
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ ok: false, error: "Invalid JSON." }, { status: 400 });
-  }
-  if (!body || typeof body !== "object") {
-    return NextResponse.json({ ok: false, error: "Config object required." }, { status: 400 });
-  }
-  try {
-    const configStr = JSON.stringify(body);
-    // Validate it parses back
-    JSON.parse(configStr);
-    await db.siteConfig.upsert({
-      where: { id: "singleton" },
-      create: { id: "singleton", config: configStr },
-      update: { config: configStr },
+    const [services, doctors] = await Promise.all([
+      db.service.findMany({
+        where: { published: true },
+        orderBy: { order: "asc" },
+      }),
+      db.doctor.findMany({
+        where: { published: true },
+        orderBy: { order: "asc" },
+      }),
+    ]);
+
+    return NextResponse.json({
+      ok: true,
+      config,
+      services: services.map((s) => ({
+        id: s.id,
+        category: { en: s.categoryEn || s.categoryId, id: s.categoryId },
+        name: { en: s.nameEn || s.nameId, id: s.nameId },
+        description: { en: s.descriptionEn || s.descriptionId, id: s.descriptionId },
+        startingPrice: s.startingPrice,
+        deposit: s.deposit,
+        icon: s.icon,
+        image: s.image,
+        gallery: s.gallery ? JSON.parse(s.gallery) : [],
+        brand: s.brand,
+        order: s.order,
+      })),
+      doctors: doctors.map((d) => ({
+        id: d.id,
+        name: d.name,
+        role: { en: d.roleEn, id: d.roleId },
+        category: d.category as "doctor" | "wellness",
+        specialty: { en: d.specialtyEn, id: d.specialtyId },
+        experience: { en: d.experienceEn, id: d.experienceId },
+        languages: d.languages.split(",").map((x) => x.trim()),
+        image: d.image,
+        initials: d.initials,
+        order: d.order,
+      })),
     });
-    return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ ok: false, error: "Failed to save.", debug: msg }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Failed to load site config.", debug: msg },
+      { status: 500 }
+    );
   }
 }
