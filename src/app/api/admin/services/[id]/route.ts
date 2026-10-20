@@ -8,16 +8,17 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const UpdateSchema = z.object({
-  categoryEn: z.string().max(80).optional(),        // optional — auto-translated from ID
+  categoryEn: z.string().max(80).optional(),
   categoryId: z.string().max(80).optional(),
-  nameEn: z.string().max(200).optional(),            // optional — auto-translated from ID
+  nameEn: z.string().max(200).optional(),
   nameId: z.string().max(200).optional(),
-  descriptionEn: z.string().max(1000).optional(),     // optional — auto-translated from ID
+  descriptionEn: z.string().max(1000).optional(),
   descriptionId: z.string().max(1000).optional(),
   startingPrice: z.string().max(40).optional(),
   deposit: z.number().int().min(0).max(10000000).optional(),
   icon: z.string().max(60).optional(),
   image: z.string().max(500).optional(),
+  gallery: z.array(z.string().max(500)).max(20).optional(),
   brand: z.string().max(20).optional(),
   order: z.number().int().optional(),
   published: z.boolean().optional(),
@@ -38,10 +39,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
   try {
     const d = parsed.data;
-    // Auto-translate ID → EN if EN fields are empty (admin only inputs Indonesian)
-    if (d.nameEn === "" && d.nameId) d.nameEn = await translateIdToEn(d.nameId);
-    if (d.descEn === "" && d.descId) d.descEn = await translateIdToEn(d.descId);
-    if (d.categoryEn === "" && d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
+    // ALWAYS re-translate EN from the latest ID text
+    if (d.nameId) d.nameEn = await translateIdToEn(d.nameId);
+    if (d.descriptionId) d.descriptionEn = await translateIdToEn(d.descriptionId);
+    if (d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
     const { gallery, ...rest } = d;
     const data: Record<string, unknown> = { ...rest };
     if (gallery !== undefined) {

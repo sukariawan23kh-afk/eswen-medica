@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
         deposit: s.deposit,
         icon: s.icon,
         image: s.image,
+        gallery: s.gallery ? safeParseGallery(s.gallery) : [],
         brand: s.brand,
         order: s.order,
         published: s.published,
@@ -41,17 +42,31 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/** Parse the gallery JSON string safely. Always returns a string[]. */
+function safeParseGallery(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((x) => typeof x === "string" && x.length > 0);
+    }
+  } catch {
+    /* ignore malformed JSON */
+  }
+  return [];
+}
+
 const CreateSchema = z.object({
-  categoryEn: z.string().max(80).default(""),     // optional — auto-translated from ID
+  categoryEn: z.string().max(80).default(""),
   categoryId: z.string().min(1).max(80),
-  nameEn: z.string().max(200).default(""),          // optional — auto-translated from ID
+  nameEn: z.string().max(200).default(""),
   nameId: z.string().min(2).max(200),
-  descriptionEn: z.string().max(1000).default(""),   // optional — auto-translated from ID
+  descriptionEn: z.string().max(1000).default(""),
   descriptionId: z.string().min(5).max(1000),
   startingPrice: z.string().max(40).default("IDR 0"),
   deposit: z.number().int().min(0).max(10000000).default(0),
   icon: z.string().max(60).default("Stethoscope"),
   image: z.string().max(500).default("/images/service-medical.png"),
+  gallery: z.array(z.string().max(500)).max(20).default([]),
   brand: z.string().max(20).default("medical"),
   order: z.number().int().default(0),
   published: z.boolean().default(true),
@@ -74,11 +89,14 @@ export async function POST(req: NextRequest) {
     const d = parsed.data;
     // ALWAYS translate EN from ID (admin only inputs Indonesian)
     if (d.nameId) d.nameEn = await translateIdToEn(d.nameId);
-    if (d.descId) d.descEn = await translateIdToEn(d.descId);
+    if (d.descriptionId) d.descriptionEn = await translateIdToEn(d.descriptionId);
     if (d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
     const { gallery, ...rest } = d;
     const created = await db.service.create({
-      data: { ...rest, gallery: gallery && gallery.length > 0 ? JSON.stringify(gallery) : null },
+      data: {
+        ...rest,
+        gallery: gallery && gallery.length > 0 ? JSON.stringify(gallery) : null,
+      },
     });
     return NextResponse.json({ ok: true, service: { id: created.id } });
   } catch (err) {
