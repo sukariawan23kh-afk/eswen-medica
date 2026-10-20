@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
-import { translateIdToEn } from "@/lib/eswen/auto-translate";
 import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
+import { getServiceEnTranslation } from "@/lib/eswen/service-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -82,9 +82,10 @@ export async function POST(req: NextRequest) {
   }
   try {
     const d = parsed.data;
-    if (d.nameId) d.nameEn = await translateIdToEn(d.nameId);
-    if (d.descriptionId) d.descriptionEn = await translateIdToEn(d.descriptionId);
-    if (d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
+    // Smart translate: uses SEED for default services, auto-translate for others
+    if (d.nameId) d.nameEn = await getServiceEnTranslation(undefined, "name", d.nameId);
+    if (d.descriptionId) d.descriptionEn = await getServiceEnTranslation(undefined, "description", d.descriptionId);
+    if (d.categoryId) d.categoryEn = await getServiceEnTranslation(undefined, "category", d.categoryId);
     const { gallery, ...rest } = d;
     const created = await db.service.create({
       data: {

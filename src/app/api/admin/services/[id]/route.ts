@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
-import { translateIdToEn } from "@/lib/eswen/auto-translate";
+import { getServiceEnTranslation } from "@/lib/eswen/service-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,9 +39,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
   try {
     const d = parsed.data;
-    if (d.nameId) d.nameEn = await translateIdToEn(d.nameId);
-    if (d.descriptionId) d.descriptionEn = await translateIdToEn(d.descriptionId);
-    if (d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
+    // Smart translate: uses SEED for default services (id matches), auto-translate for others
+    if (d.nameId) d.nameEn = await getServiceEnTranslation(id, "name", d.nameId);
+    if (d.descriptionId) d.descriptionEn = await getServiceEnTranslation(id, "description", d.descriptionId);
+    if (d.categoryId) d.categoryEn = await getServiceEnTranslation(id, "category", d.categoryId);
     const { gallery, ...rest } = d;
     const data: Record<string, unknown> = { ...rest };
     if (gallery !== undefined) {
