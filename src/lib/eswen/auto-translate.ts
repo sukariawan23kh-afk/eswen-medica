@@ -1,21 +1,17 @@
-import ZAI from "z-ai-web-dev-sdk";
-
 /**
- * Auto-translate Indonesian text to English using the z-ai-web-dev-sdk LLM.
+ * Auto-translate Indonesian text to English using the MyMemory API
+ * (https://mymemory.translated.net/).
  *
- * HANDLES LONG TEXT:
- *   - The ZAI chat API has a 500-char-per-query limit.
- *   - For text > 500 chars, we split on sentence boundaries (., !, ?, newline)
- *     into chunks ≤ ~480 chars, translate each chunk, and join with " ".
- *
- * ERROR-PROOF:
- *   - If the API throws, or returns an error message as content (e.g.
- *     "QUERY LENGTH LIMIT EXCEEDED..."), we fall back to the original
- *     Indonesian text. The field is never empty and never contains a raw
- *     error message.
+ * WHY MYMEMORY:
+ *   - Free, no API key required (works on Vercel production without any
+ *     `.z-ai-config` or env-var setup)
+ *   - Supports Indonesian → English (langpair=id|en)
+ *   - 500-char-per-request limit, but we chunk at 480 chars for safety
+ *   - 1000 requests/day free tier (enough for typical admin save operations)
  */
 
-const MAX_QUERY_CHARS = 480; // safety margin below the 500-char API limit
+const MAX_QUERY_CHARS = 480;
+const MYMEMORY_ENDPOINT = "https://api.mymemory.translated.net/get";
 
 const ERROR_PATTERNS = [
   /query length limit/i,
@@ -25,6 +21,7 @@ const ERROR_PATTERNS = [
   /unauthorized/i,
   /invalid api key/i,
   /service unavailable/i,
+  /mymemory/i,
 ];
 
 function looksLikeError(text: string): boolean {
@@ -66,20 +63,18 @@ function chunkText(text: string, maxChars: number): string[] {
 
 async function translateChunk(chunk: string): Promise<string> {
   if (!chunk || chunk.trim().length === 0) return "";
+  const url = `${MYMEMORY_ENDPOINT}?q=${encodeURIComponent(chunk)}&langpair=id|en`;
   try {
-    const zai = await ZAI.create();
-    const completion = await zai.chat.completions.create({
-      messages: [
-        {
-          role: "assistant",
-          content:
-            "You are a professional translator for a medical clinic in Bali. Translate the following Indonesian text to English. Keep it natural, professional, and medical-appropriate. Return ONLY the translation — no quotes, no explanation, no preamble.",
-        },
-        { role: "user", content: chunk },
-      ],
-      thinking: { type: "disabled" },
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json" },
     });
-    const result = completion?.choices?.[0]?.message?.content?.trim();
+    if (!res.ok) return chunk;
+    const data = (await res.json()) as {
+      responseData?: { translatedText?: string; match?: number };
+      responseStatus?: number;
+    };
+    const result = data?.responseData?.translatedText?.trim();
     if (!result) return chunk;
     if (looksLikeError(result)) return chunk;
     return result;

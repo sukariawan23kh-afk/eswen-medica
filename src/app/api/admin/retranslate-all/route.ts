@@ -1,36 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
+import { getServiceEnTranslation } from "@/lib/eswen/service-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * Translate Indonesian text to English using MyMemory free API.
- * No config/API key needed — works on Vercel out of the box.
- */
-async function translateIdToEn(text: string): Promise<string> {
-  if (!text || text.trim().length === 0) return "";
-  try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=id|en`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const translated = data?.responseData?.translatedText;
-    if (translated && translated.length > 0) {
-      // MyMemory sometimes wraps in quotes
-      return translated.replace(/^"|"$/g, "").trim();
-    }
-    return text; // fallback to original
-  } catch {
-    return text; // fallback to original
-  }
-}
-
-/**
- * GET /api/admin/retranslate-all?key=eswen2026
- * Re-translates ALL services' EN fields from ID using free translation API.
- * No login needed — just add ?key=eswen2026
+ * RE-TRANSLATE all services from Indonesian to English.
+ *
+ * For EACH service in the DB:
+ *   - Default services (general-medical, dermatology, dll) → SEED EN (hand-written)
+ *   - Admin-added services OR modified descriptions → MyMemory API
+ *   - Preserves non-text fields (price, deposit, image, icon, order, brand, gallery)
+ *
+ * Usage (admin-authed OR ?key=eswen2026):
+ *   GET /api/admin/retranslate-all
+ *   GET /api/admin/retranslate-all?key=eswen2026
  */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -39,21 +26,35 @@ export async function GET(req: NextRequest) {
 
   if (!isAdmin(req) && keyParam !== adminPassword) {
     return NextResponse.json(
-      { ok: false, error: "Add ?key=eswen2026 to the URL." },
+      { ok: false, error: "Unauthorized. Add ?key=eswen2026 to URL." },
       { status: 401 }
     );
   }
 
   try {
     const services = await db.service.findMany();
+    if (services.length === 0) {
+      return NextResponse.json({
+        ok: true,
+        message: "No services in DB. Site-config API will auto-seed defaults on next load.",
+        results: [],
+      });
+    }
+
     let count = 0;
-    const results: { id: string; nameId: string; nameEn: string }[] = [];
+    const results: Array<{
+      id: string;
+      nameId: string;
+      nameEn: string;
+      categoryEn: string;
+      descriptionEn: string;
+    }> = [];
 
     for (const s of services) {
       const [nameEn, descriptionEn, categoryEn] = await Promise.all([
-        translateIdToEn(s.nameId),
-        translateIdToEn(s.descriptionId),
-        translateIdToEn(s.categoryId),
+        getServiceEnTranslation(s.id, "name", s.nameId),
+        getServiceEnTranslation(s.id, "description", s.descriptionId),
+        getServiceEnTranslation(s.id, "category", s.categoryId),
       ]);
 
       await db.service.update({
@@ -61,13 +62,19 @@ export async function GET(req: NextRequest) {
         data: { nameEn, descriptionEn, categoryEn },
       });
 
-      results.push({ id: s.id, nameId: s.nameId, nameEn });
+      results.push({
+        id: s.id,
+        nameId: s.nameId,
+        nameEn,
+        categoryEn,
+        descriptionEn: descriptionEn.slice(0, 80) + (descriptionEn.length > 80 ? "..." : ""),
+      });
       count++;
     }
 
     return NextResponse.json({
       ok: true,
-      message: `Re-translated ${count} services from ID to EN.`,
+      message: `Re-translated ${count} of ${services.length} services.`,
       results,
     });
   } catch (err) {
