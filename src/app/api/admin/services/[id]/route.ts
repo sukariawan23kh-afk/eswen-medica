@@ -12,8 +12,8 @@ const UpdateSchema = z.object({
   categoryId: z.string().max(80).optional(),
   nameEn: z.string().max(200).optional(),
   nameId: z.string().max(200).optional(),
-  descriptionEn: z.string().max(1000).optional(),
-  descriptionId: z.string().max(1000).optional(),
+  descriptionEn: z.string().max(2000).optional(),
+  descriptionId: z.string().max(2000).optional(),
   startingPrice: z.string().max(40).optional(),
   deposit: z.number().int().min(0).max(10000000).optional(),
   icon: z.string().max(60).optional(),
@@ -39,7 +39,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
   try {
     const d = parsed.data;
-    // ALWAYS re-translate EN from the latest ID text
     if (d.nameId) d.nameEn = await translateIdToEn(d.nameId);
     if (d.descriptionId) d.descriptionEn = await translateIdToEn(d.descriptionId);
     if (d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);

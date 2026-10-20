@@ -8,7 +8,6 @@ import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/admin/services — all services (incl. unpublished), ordered. */
 export async function GET(req: NextRequest) {
   if (!isAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
@@ -42,16 +41,13 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** Parse the gallery JSON string safely. Always returns a string[]. */
 function safeParseGallery(raw: string): string[] {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       return parsed.filter((x) => typeof x === "string" && x.length > 0);
     }
-  } catch {
-    /* ignore malformed JSON */
-  }
+  } catch {}
   return [];
 }
 
@@ -60,8 +56,8 @@ const CreateSchema = z.object({
   categoryId: z.string().min(1).max(80),
   nameEn: z.string().max(200).default(""),
   nameId: z.string().min(2).max(200),
-  descriptionEn: z.string().max(1000).default(""),
-  descriptionId: z.string().min(5).max(1000),
+  descriptionEn: z.string().max(2000).default(""),
+  descriptionId: z.string().min(5).max(2000),
   startingPrice: z.string().max(40).default("IDR 0"),
   deposit: z.number().int().min(0).max(10000000).default(0),
   icon: z.string().max(60).default("Stethoscope"),
@@ -72,7 +68,6 @@ const CreateSchema = z.object({
   published: z.boolean().default(true),
 });
 
-/** POST /api/admin/services — create a service. */
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
@@ -87,7 +82,6 @@ export async function POST(req: NextRequest) {
   }
   try {
     const d = parsed.data;
-    // ALWAYS translate EN from ID (admin only inputs Indonesian)
     if (d.nameId) d.nameEn = await translateIdToEn(d.nameId);
     if (d.descriptionId) d.descriptionEn = await translateIdToEn(d.descriptionId);
     if (d.categoryId) d.categoryEn = await translateIdToEn(d.categoryId);
