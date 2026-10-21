@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { getLucideIcon, VALID_ICON_NAMES } from "@/lib/eswen/icons";
 import { ImageUpload } from "@/components/eswen/admin/image-upload";
 import { GalleryUpload } from "@/components/eswen/admin/gallery-upload";
+import { MarkdownEditor } from "@/components/eswen/admin/markdown-editor";
 
 type Svc = {
   id: string; categoryEn: string; categoryId: string;
@@ -138,12 +139,16 @@ function SvcEditor({ svc, onClose, onSave }: { svc: Svc; onClose: () => void; on
           <div className="grid sm:grid-cols-2 gap-3">
             <F label="Kategori (ID)"><input value={f.categoryId} onChange={(e) => set("categoryId", e.target.value)} className="ainput" placeholder="mis. Layanan Medis Umum" /></F>
             <F label="Nama Layanan (ID)"><input value={f.nameId} onChange={(e) => set("nameId", e.target.value)} className="ainput" placeholder="mis. Konsultasi Medis Umum" /></F>
-          </div>
-          <F label="Deskripsi (ID)"><textarea value={f.descriptionId} onChange={(e) => set("descriptionId", e.target.value)} className="ainput min-h-[80px] resize-y" placeholder="Deskripsi lengkap layanan dalam Bahasa Indonesia..." /></F>
-          <div className="grid sm:grid-cols-3 gap-3">
-            <F label="Starting Price"><input value={f.startingPrice} onChange={(e) => set("startingPrice", e.target.value)} className="ainput" /></F>
-            <F label="Deposit (IDR)"><input type="number" value={f.deposit} onChange={(e) => set("deposit", e.target.value)} className="ainput" /></F>
-            <F label="Order"><input type="number" value={f.order} onChange={(e) => set("order", e.target.value)} className="ainput" /></F>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+              Deskripsi (ID) — <span className="font-normal normal-case text-muted-foreground/70">gunakan toolbar untuk format</span>
+            </span>
+            <MarkdownEditor
+              value={f.descriptionId}
+              onChange={(v) => set("descriptionId", v)}
+              placeholder="Deskripsi lengkap layanan dalam Bahasa Indonesia..."
+              minHeight="160px"
+            />
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <F label="Icon (lucide name)" hint={VALID_ICON_NAMES.slice(0, 8).join(", ") + "..."}>
