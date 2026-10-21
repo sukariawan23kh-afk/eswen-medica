@@ -202,14 +202,57 @@ export function ServiceDetailModal({
                   </div>
                 </div>
 
-                {/* Description */}
+                {/* Description — rendered as markdown (supports line breaks, lists, bold, headings) */}
                 <div>
                   <h4 className="text-sm font-bold text-eswen-deep mb-2">
                     {lang === "id" ? "Tentang Layanan" : "About This Service"}
                   </h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {service.description[lang]}
-                  </p>
+                  <div className="eswen-prose text-sm text-muted-foreground leading-relaxed">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkBreaks, remarkGfm]}
+                      components={{
+                        p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                        ul: ({ children }) => (
+                          <ul className="list-disc ml-5 mb-3 space-y-1 last:mb-0">{children}</ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="list-decimal ml-5 mb-3 space-y-1 last:mb-0">{children}</ol>
+                        ),
+                        li: ({ children }) => <li className="text-sm">{children}</li>,
+                        strong: ({ children }) => (
+                          <strong className="font-bold text-eswen-deep">{children}</strong>
+                        ),
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                        h1: ({ children }) => (
+                          <h1 className="text-lg font-bold text-eswen-deep mb-2 mt-3">{children}</h1>
+                        ),
+                        h2: ({ children }) => (
+                          <h2 className="text-base font-bold text-eswen-deep mb-2 mt-3">{children}</h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 className="text-sm font-bold text-eswen-deep mb-1 mt-2">{children}</h3>
+                        ),
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-4 border-eswen-soft-purple pl-3 italic text-muted-foreground my-3">
+                            {children}
+                          </blockquote>
+                        ),
+                        code: ({ children }) => (
+                          <code className="bg-eswen-light-lavender px-1.5 py-0.5 rounded text-xs font-mono">
+                            {children}
+                          </code>
+                        ),
+                        hr: () => <hr className="border-eswen-lavender my-4" />,
+                        a: ({ children, href }) => (
+                          <a href={href} className="text-eswen-soft-purple underline hover:text-eswen-deep" target="_blank" rel="noopener noreferrer">
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      {service.description[lang]}
+                    </ReactMarkdown>
+                  </div>
                 </div>
 
                 {/* What to expect */}
