@@ -11,6 +11,9 @@ import {
   Globe,
   Stethoscope,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/eswen/language-store";
@@ -39,18 +42,15 @@ export function ServiceDetailModal({
   const t = useT();
   const { openDialog } = useBookingDialog();
 
-  // Gallery: main image + gallery images combined
   const allImages = service ? [service.image, ...(service.gallery || [])].filter(Boolean) : [];
   const [activeImage, setActiveImage] = useState(0);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Reset to first image when service changes
   useEffect(() => {
   /* eslint-disable-next-line react-hooks/set-state-in-effect */
     setActiveImage(0);
   }, [service?.id]);
 
-  // Auto-play gallery: cycle through images every 3 seconds
   useEffect(() => {
     if (!service || allImages.length <= 1) return;
 
@@ -63,11 +63,9 @@ export function ServiceDetailModal({
     };
   }, [service?.id, allImages.length]);
 
-  // Pause auto-play briefly when user clicks a thumbnail
   const handleThumbClick = (index: number) => {
     setActiveImage(index);
     if (autoPlayRef.current) clearInterval(autoPlayRef.current);
-    // Resume after 5 seconds
     if (allImages.length > 1) {
       autoPlayRef.current = setInterval(() => {
         setActiveImage((prev) => (prev + 1) % allImages.length);
@@ -104,7 +102,6 @@ export function ServiceDetailModal({
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden rounded-3xl bg-white border border-eswen-lavender shadow-eswen-elevated"
           >
-            {/* Close */}
             <button
               onClick={onClose}
               className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur text-eswen-deep hover:bg-white shadow-sm"
@@ -113,9 +110,7 @@ export function ServiceDetailModal({
               <X className="h-4 w-4" />
             </button>
 
-            {/* Scrollable content */}
             <div className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen">
-              {/* Image gallery (auto-play) */}
               <div className="relative h-48 sm:h-56 overflow-hidden bg-eswen-light-lavender">
                 <AnimatePresence mode="wait">
                   <motion.img
@@ -139,7 +134,6 @@ export function ServiceDetailModal({
                   </span>
                 </div>
 
-                {/* Auto-play indicator dots */}
                 {allImages.length > 1 && (
                   <div className="absolute bottom-4 right-4 flex gap-1.5">
                     {allImages.map((_, i) => (
@@ -157,7 +151,6 @@ export function ServiceDetailModal({
                 )}
               </div>
 
-              {/* Gallery thumbnails (if more than 1 image) */}
               {allImages.length > 1 && (
                 <div className="flex gap-2 p-3 overflow-x-auto scrollbar-eswen bg-white border-b border-eswen-lavender">
                   {allImages.map((img, i) => (
@@ -177,9 +170,7 @@ export function ServiceDetailModal({
                 </div>
               )}
 
-              {/* Body */}
               <div className="p-5 sm:p-7 space-y-5">
-                {/* Title + price */}
                 <div>
                   <h3 className="text-xl sm:text-2xl font-extrabold text-eswen-deep leading-tight tracking-tight">
                     {service.name[lang]}
@@ -202,7 +193,6 @@ export function ServiceDetailModal({
                   </div>
                 </div>
 
-                {/* Description — rendered as markdown (supports line breaks, lists, bold, headings) */}
                 <div>
                   <h4 className="text-sm font-bold text-eswen-deep mb-2">
                     {lang === "id" ? "Tentang Layanan" : "About This Service"}
@@ -255,7 +245,6 @@ export function ServiceDetailModal({
                   </div>
                 </div>
 
-                {/* What to expect */}
                 <div>
                   <h4 className="text-sm font-bold text-eswen-deep mb-3">
                     {lang === "id" ? "Yang Akan Anda Dapatkan" : "What to Expect"}
@@ -272,7 +261,6 @@ export function ServiceDetailModal({
                   </ul>
                 </div>
 
-                {/* Deposit info */}
                 <div className="rounded-xl bg-eswen-light-lavender/50 p-4 text-xs text-muted-foreground leading-relaxed">
                   <ShieldPlus className="inline h-3.5 w-3.5 text-eswen-soft-purple mb-1 mr-1" />
                   {lang === "id"
@@ -282,7 +270,6 @@ export function ServiceDetailModal({
               </div>
             </div>
 
-            {/* Footer — Book button */}
             <div className="shrink-0 border-t border-eswen-lavender bg-white p-4 sm:p-5">
               <Button
                 onClick={handleBook}
