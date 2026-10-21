@@ -8,7 +8,7 @@ import { SectionHeading } from "./section-heading";
 import { ServiceDetailModal } from "./service-detail-modal";
 import { services as staticServices } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT, useServices } from "@/lib/eswen/site-config-context";
+import { useT, useServices, useSiteConfig } from "@/lib/eswen/site-config-context";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 import { getLucideIcon } from "@/lib/eswen/icons";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ export function ServicesSection() {
   const { lang } = useLanguage();
   const t = useT();
   const { openDialog } = useBookingDialog();
+  const { loaded } = useSiteConfig();
   const services = useServices(staticServices);
   const [detailService, setDetailService] = useState<typeof services[number] | null>(null);
   const scrollTo = (href: string) =>
@@ -36,60 +37,79 @@ export function ServicesSection() {
         />
 
         <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service, idx) => (
-            <motion.article
-              key={service.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: (idx % 3) * 0.1 }}
-              className="group relative flex flex-col overflow-hidden rounded-[1.5rem] border border-eswen-lavender bg-white shadow-eswen-soft hover:shadow-eswen-elevated transition-all duration-500 hover:-translate-y-1"
-            >
-              {/* Image */}
-              <div className="relative h-44 overflow-hidden bg-eswen-light-lavender">
-                <img
-                  src={service.image}
-                  alt={`${service.name[lang]} at Eswen Medica Bali`}
-                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent" />
-                <span className="absolute -bottom-5 left-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-card border-2 border-white">
-                  {(() => { const Icon = getLucideIcon(typeof service.icon === "string" ? service.icon : "Stethoscope"); return <Icon className="h-5 w-5" />; })()}
-                </span>
-              </div>
-
-              {/* Body */}
-              <div className="flex flex-col flex-1 p-5 pt-7">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-eswen-soft-purple">
-                  {service.category[lang]}
-                </p>
-                <h3 className="mt-1 text-lg font-bold tracking-tight text-eswen-deep">
-                  {service.name[lang]}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-2 overflow-hidden">
-                  {service.description[lang]}
-                </p>
-
-                <div className="mt-5 flex items-end justify-between gap-3 pt-4 border-t border-eswen-lavender/60">
-                  <div>
-                    <p className="text-[11px] text-muted-foreground">{t("services_starting")}</p>
-                    <p className="text-sm font-bold text-eswen-deep">{service.startingPrice}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => setDetailService(service)}
-                    className={cn(
-                      "rounded-full h-9 px-4 text-xs font-semibold transition-all",
-                      "bg-eswen-light-lavender text-eswen-deep hover:bg-eswen-deep hover:text-white"
-                    )}
-                  >
-                    {t("services_view")}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
+          {!loaded ? (
+            // Skeleton placeholder while fetching DB data — prevents flash of
+            // stale English text from the static fallback in data.ts
+            [0, 1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="flex flex-col overflow-hidden rounded-[1.5rem] border border-eswen-lavender bg-white shadow-eswen-soft"
+              >
+                <div className="h-44 bg-eswen-light-lavender animate-pulse" />
+                <div className="p-5 pt-7 space-y-2">
+                  <div className="h-2 w-20 bg-eswen-light-lavender rounded animate-pulse" />
+                  <div className="h-4 w-3/4 bg-eswen-light-lavender rounded animate-pulse" />
+                  <div className="h-3 w-full bg-eswen-light-lavender/60 rounded animate-pulse" />
+                  <div className="h-3 w-2/3 bg-eswen-light-lavender/60 rounded animate-pulse" />
                 </div>
               </div>
-            </motion.article>
-          ))}
+            ))
+          ) : (
+            services.map((service, idx) => (
+              <motion.article
+                key={service.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: (idx % 3) * 0.1 }}
+                className="group relative flex flex-col overflow-hidden rounded-[1.5rem] border border-eswen-lavender bg-white shadow-eswen-soft hover:shadow-eswen-elevated transition-all duration-500 hover:-translate-y-1"
+              >
+                {/* Image */}
+                <div className="relative h-44 overflow-hidden bg-eswen-light-lavender">
+                  <img
+                    src={service.image}
+                    alt={`${service.name[lang]} at Eswen Medica Bali`}
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent" />
+                  <span className="absolute -bottom-5 left-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-card border-2 border-white">
+                    {(() => { const Icon = getLucideIcon(typeof service.icon === "string" ? service.icon : "Stethoscope"); return <Icon className="h-5 w-5" />; })()}
+                  </span>
+                </div>
+
+                {/* Body */}
+                <div className="flex flex-col flex-1 p-5 pt-7">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-eswen-soft-purple">
+                    {service.category[lang]}
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold tracking-tight text-eswen-deep">
+                    {service.name[lang]}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-2 overflow-hidden">
+                    {service.description[lang]}
+                  </p>
+
+                  <div className="mt-5 flex items-end justify-between gap-3 pt-4 border-t border-eswen-lavender/60">
+                    <div>
+                      <p className="text-[11px] text-muted-foreground">{t("services_starting")}</p>
+                      <p className="text-sm font-bold text-eswen-deep">{service.startingPrice}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => setDetailService(service)}
+                      className={cn(
+                        "rounded-full h-9 px-4 text-xs font-semibold transition-all",
+                        "bg-eswen-light-lavender text-eswen-deep hover:bg-eswen-deep hover:text-white"
+                      )}
+                    >
+                      {t("services_view")}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </motion.article>
+            ))
+          )}
         </div>
 
         <div className="mt-12 flex justify-center">
