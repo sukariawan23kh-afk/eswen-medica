@@ -28,3 +28,6 @@ coverage/
 
 # generated images (user uploads)
 public/images/uploads/
+
+.vercel
+.env*
