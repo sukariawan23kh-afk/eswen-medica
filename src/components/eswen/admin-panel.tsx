@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -17,6 +17,8 @@ import {
   Gift,
   Bell,
   Download,
+  Clock,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,6 +49,10 @@ type Booking = {
   paymentGateway: string;
   paymentNote: string;
   confirmedAt: string;
+  // Client self-declaration flag (client clicked "I've Made the Transfer").
+  // Drives the "Perlu Verifikasi" badge + priority sort in the admin table.
+  clientDeclaredTransfer: boolean;
+  clientDeclaredAt: string;
   createdAt: string;
 };
 
@@ -359,6 +365,8 @@ export function AdminPanel() {
                 paymentGateway: b.paymentGateway,
                 paymentNote: b.paymentNote ?? "",
                 confirmedAt: b.confirmedAt ?? "",
+                clientDeclaredTransfer: b.clientDeclaredTransfer ?? x.clientDeclaredTransfer,
+                clientDeclaredAt: b.clientDeclaredAt ?? x.clientDeclaredAt,
               }
             : x
         )
@@ -619,6 +627,30 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
   const [note, setNote] = useState("");
   const [approvingLoading, setApprovingLoading] = useState(false);
 
+  // Priority sort: bookings awaiting admin verification (client has declared
+  // the transfer + status is still WAITING_PAYMENT) go first, then the rest
+  // by createdAt desc (admin's natural priority queue).
+  const sorted = useMemo(() => {
+    const needsVerification = (b: Booking) =>
+      b.status === "WAITING_PAYMENT" && b.clientDeclaredTransfer;
+    return [...bookings].sort((a, b) => {
+      const av = needsVerification(a) ? 1 : 0;
+      const bv = needsVerification(b) ? 1 : 0;
+      if (av !== bv) return bv - av; // verifiable first
+      // Within the same priority bucket, keep the server's newest-first order.
+      // `bookings` is already createdAt-desc from the API, so just preserve it.
+      return 0;
+    });
+  }, [bookings]);
+
+  // Summary chips above the table — quick counts of pending action items.
+  const countVerify = bookings.filter(
+    (b: Booking) => b.status === "WAITING_PAYMENT" && b.clientDeclaredTransfer
+  ).length;
+  const countAwaiting = bookings.filter(
+    (b: Booking) => b.status === "WAITING_PAYMENT" && !b.clientDeclaredTransfer
+  ).length;
+
   const doApprove = async () => {
     if (!approving) return;
     setApprovingLoading(true);
@@ -643,8 +675,11 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
           <strong> {payment.bankName} — {payment.accountNumber} ({payment.accountHolder})</strong>.
         </p>
         <p className="mt-1">
-          When a client transfers the deposit, verify the money arrived in your account, then click
-          <strong> “Approve Payment”</strong> below → status becomes <strong>CONFIRMED</strong>.
+          When a client clicks <strong>“I’ve Made the Transfer”</strong> on the booking
+          confirmation page, the row here flips its badge to
+          <span className="inline-flex items-center rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-[9px] font-bold mx-1">Perlu Verifikasi</span>
+          and floats to the top of the table — verify the deposit arrived, then click
+          <strong> “Approve Payment”</strong> → status becomes <strong>CONFIRMED</strong>.
           Edit your bank details in <em>Site Settings → Payment / Bank Account</em>.
         </p>
         <p className="mt-1 text-muted-foreground">
@@ -654,11 +689,27 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
         </p>
       </div>
 
+      {/* Quick-summary chips — admin priority queue at a glance */}
+      {(countVerify > 0 || countAwaiting > 0) && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px]">
+          {countVerify > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 text-orange-700 px-2.5 py-1 font-bold">
+              <Clock className="h-3 w-3" /> {countVerify} Perlu Verifikasi
+            </span>
+          )}
+          {countAwaiting > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 text-stone-600 px-2.5 py-1 font-bold">
+              <Building2 className="h-3 w-3" /> {countAwaiting} Menunggu Pembayaran
+            </span>
+          )}
+        </div>
+      )}
+
       {bookings.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-10">{T.noBookings}</p>
       ) : (
         <div className="rounded-2xl border border-eswen-lavender bg-white overflow-x-auto">
-          <table className="w-full text-sm min-w-[860px]">
+          <table className="w-full text-sm min-w-[960px]">
             <thead className="bg-eswen-light-lavender/50 text-[10px] uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="text-left px-3 py-2.5 font-semibold">{T.colRef}</th>
@@ -671,64 +722,97 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
               </tr>
             </thead>
             <tbody className="divide-y divide-eswen-lavender/60">
-              {bookings.map((b: Booking) => (
-                <tr key={b.id} className="hover:bg-eswen-light-lavender/30 align-top">
-                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-eswen-deep whitespace-nowrap">
-                    {b.refCode}
-                    <div className="text-[9px] text-muted-foreground font-sans font-normal mt-0.5">{b.bookingDate} {b.bookingTime}</div>
-                  </td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">
-                    <div className="font-medium text-eswen-deep">{b.serviceName}</div>
-                    <div className="text-[10px]">{b.doctorName}</div>
-                  </td>
-                  <td className="px-3 py-2.5 text-xs">
-                    <div className="font-medium text-eswen-deep">{b.patientName}</div>
-                    <div className="text-[10px] text-muted-foreground">{b.patientPhone}</div>
-                    {b.patientNotes && <div className="text-[10px] text-muted-foreground italic mt-1 max-w-[160px]">“{b.patientNotes}”</div>}
-                  </td>
-                  <td className="px-3 py-2.5 text-xs font-bold text-eswen-deep whitespace-nowrap">{b.depositFormatted}</td>
-                  <td className="px-3 py-2.5 text-[10px] text-muted-foreground whitespace-nowrap">
-                    <span className="font-semibold text-eswen-deep">Bank Transfer</span>
-                    <br />
-                    <span className="text-muted-foreground/70">via Manual</span>
-                    {b.paymentNote && <div className="mt-0.5 italic text-eswen-soft-purple max-w-[140px]">“{b.paymentNote}”</div>}
-                    {b.confirmedAt && <div className="mt-0.5 text-green-600">✓ {new Date(b.confirmedAt).toLocaleString()}</div>}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <select
-                      value={b.status}
-                      onChange={(e) => onUpdateStatus(b.id, e.target.value)}
-                      className={cn("rounded-full border-0 px-2 py-1 text-[10px] font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-eswen-soft-purple", STATUS_COLORS[b.status] || "bg-stone-100 text-stone-600")}
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <div className="flex flex-col gap-1 items-start">
-                      {(b.status === "WAITING_PAYMENT" || b.status === "PAYMENT_FAILED") && (
-                        <button
-                          onClick={() => { setApproving(b); setNote(b.paymentNote || ""); }}
-                          className="inline-flex items-center gap-1 rounded-full bg-green-600 text-white px-2.5 py-1 text-[11px] font-bold hover:bg-green-700 transition-colors whitespace-nowrap"
-                        >
-                          <Check className="h-3 w-3" /> Approve Payment
-                        </button>
+              {sorted.map((b: Booking) => {
+                // Dynamic row badge — surfaces the client self-declaration
+                // sub-state of WAITING_PAYMENT so the admin sees at a glance
+                // whether the client has already transferred.
+                const isWaiting = b.status === "WAITING_PAYMENT";
+                const isDeclared = b.clientDeclaredTransfer;
+                return (
+                  <tr
+                    key={b.id}
+                    className={cn(
+                      "hover:bg-eswen-light-lavender/30 align-top",
+                      isWaiting && isDeclared && "bg-orange-50/40"
+                    )}
+                  >
+                    <td className="px-3 py-2.5 font-mono text-xs font-bold text-eswen-deep whitespace-nowrap">
+                      {b.refCode}
+                      <div className="text-[9px] text-muted-foreground font-sans font-normal mt-0.5">{b.bookingDate} {b.bookingTime}</div>
+                    </td>
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground">
+                      <div className="font-medium text-eswen-deep">{b.serviceName}</div>
+                      <div className="text-[10px]">{b.doctorName}</div>
+                    </td>
+                    <td className="px-3 py-2.5 text-xs">
+                      <div className="font-medium text-eswen-deep">{b.patientName}</div>
+                      <div className="text-[10px] text-muted-foreground">{b.patientPhone}</div>
+                      {b.patientNotes && <div className="text-[10px] text-muted-foreground italic mt-1 max-w-[160px]">“{b.patientNotes}”</div>}
+                    </td>
+                    <td className="px-3 py-2.5 text-xs font-bold text-eswen-deep whitespace-nowrap">{b.depositFormatted}</td>
+                    <td className="px-3 py-2.5 text-[10px] text-muted-foreground whitespace-nowrap">
+                      <span className="font-semibold text-eswen-deep">Bank Transfer</span>
+                      <br />
+                      <span className="text-muted-foreground/70">via Manual</span>
+                      {b.paymentNote && <div className="mt-0.5 italic text-eswen-soft-purple max-w-[140px]">“{b.paymentNote}”</div>}
+                      {b.confirmedAt && <div className="mt-0.5 text-green-600">✓ {new Date(b.confirmedAt).toLocaleString()}</div>}
+                      {isDeclared && b.clientDeclaredAt && (
+                        <div className="mt-0.5 text-orange-600 font-semibold">⚠ Client declared {new Date(b.clientDeclaredAt).toLocaleString()}</div>
                       )}
-                      {b.status === "CONFIRMED" && <span className="text-[10px] text-green-600 font-bold">✓ Confirmed</span>}
-                      <a
-                        href={`/api/bookings/${b.id}/proof`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-eswen-lavender text-eswen-deep bg-white px-2.5 py-1 text-[11px] font-bold hover:bg-eswen-light-lavender transition-colors whitespace-nowrap"
-                        title="Download Bukti Booking (PDF)"
-                      >
-                        <Download className="h-3 w-3" /> PDF
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex flex-col gap-1.5">
+                        <select
+                          value={b.status}
+                          onChange={(e) => onUpdateStatus(b.id, e.target.value)}
+                          className={cn("rounded-full border-0 px-2 py-1 text-[10px] font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-eswen-soft-purple", STATUS_COLORS[b.status] || "bg-stone-100 text-stone-600")}
+                        >
+                          {STATUSES.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                        {/* Dynamic verification badge next to status — the
+                            client-declared transfer sub-state is surfaced here
+                            so the admin sees the priority queue at a glance. */}
+                        {b.status === "CONFIRMED" ? (
+                          <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-[9px] font-bold w-fit">✓ Confirmed</span>
+                        ) : isWaiting && isDeclared ? (
+                          <span className="inline-flex items-center rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-[9px] font-bold w-fit">⚠ Perlu Verifikasi</span>
+                        ) : isWaiting && !isDeclared ? (
+                          <span className="inline-flex items-center rounded-full bg-stone-100 text-stone-600 px-2 py-0.5 text-[9px] font-bold w-fit">Menunggu Pembayaran</span>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex flex-col gap-1 items-start">
+                        {(b.status === "WAITING_PAYMENT" || b.status === "PAYMENT_FAILED") && (
+                          <button
+                            onClick={() => { setApproving(b); setNote(b.paymentNote || ""); }}
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold text-white transition-colors whitespace-nowrap",
+                              isDeclared
+                                ? "bg-orange-600 hover:bg-orange-700"
+                                : "bg-green-600 hover:bg-green-700"
+                            )}
+                          >
+                            <Check className="h-3 w-3" /> Approve Payment
+                          </button>
+                        )}
+                        {b.status === "CONFIRMED" && <span className="text-[10px] text-green-600 font-bold">✓ Confirmed</span>}
+                        <a
+                          href={`/api/bookings/${b.id}/proof`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-full border border-eswen-lavender text-eswen-deep bg-white px-2.5 py-1 text-[11px] font-bold hover:bg-eswen-light-lavender transition-colors whitespace-nowrap"
+                          title="Download Bukti Booking (PDF)"
+                        >
+                          <Download className="h-3 w-3" /> PDF
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -743,6 +827,17 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
               <button onClick={() => setApproving(null)} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/15"><X className="h-4 w-4" /></button>
             </div>
             <div className="p-5 space-y-3">
+              {approving.clientDeclaredTransfer && (
+                <div className="rounded-xl border border-orange-300 bg-orange-50 p-3 text-[11px] text-orange-800 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-bold">Client self-declared the transfer.</p>
+                    {approving.clientDeclaredAt && (
+                      <p className="text-orange-700">Declared at {new Date(approving.clientDeclaredAt).toLocaleString()} — please double-check your bank account before confirming.</p>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="rounded-xl bg-eswen-light-lavender/50 p-3 text-xs space-y-1">
                 <div className="flex justify-between"><span className="text-muted-foreground">Ref</span><span className="font-mono font-bold text-eswen-deep">{approving.refCode}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Patient</span><span className="font-medium text-eswen-deep">{approving.patientName}</span></div>

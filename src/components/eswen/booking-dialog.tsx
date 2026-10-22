@@ -15,6 +15,8 @@ import {
   AlertCircle,
   PartyPopper,
   Download,
+  Send,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -24,7 +26,13 @@ import { useLanguage } from "@/lib/eswen/language-store";
 import { useT, useServices, useDoctors, usePayment } from "@/lib/eswen/site-config-context";
 import { tr } from "@/lib/eswen/i18n";
 import { services as staticServices, doctors as staticDoctors } from "@/lib/eswen/data";
-import { nextDates, formatIDR, doctorsForService } from "@/lib/eswen/booking";
+import {
+  nextDates,
+  formatIDR,
+  doctorsForService,
+  getBookingStatusDisplay,
+  STATUS_PILL_CLASS,
+} from "@/lib/eswen/booking";
 import { getLucideIcon } from "@/lib/eswen/icons";
 import { useMounted } from "@/hooks/use-mounted";
 
@@ -41,6 +49,11 @@ type CreatedBooking = {
   depositFormatted: string;
   patientEmail?: string;
   patientName?: string;
+  // Client self-declaration flag — true after the client clicks
+  // "Saya Sudah Transfer" / "I've Made the Transfer". The status STAYS
+  // WAITING_PAYMENT but the displayed pill flips to "Menunggu Verifikasi".
+  clientDeclaredTransfer?: boolean;
+  clientDeclaredAt?: string;
 };
 
 // Online payment methods (Credit Card / QRIS / E-Wallet / Virtual Account) were
@@ -77,6 +90,13 @@ export function BookingDialog() {
   const [created, setCreated] = useState<CreatedBooking | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Client self-declaration state — mirrors `booking.clientDeclaredTransfer`
+  // on the server. Set to true when the client clicks "Saya Sudah Transfer".
+  // Drives the dynamic status pill (Menunggu Pembayaran → Menunggu Verifikasi).
+  const [declaredTransfer, setDeclaredTransfer] = useState(false);
+  const [declaring, setDeclaring] = useState(false);
+  const [declareMsg, setDeclareMsg] = useState<string | null>(null);
+
   // Reset everything when the dialog opens (or preselected service changes)
   useEffect(() => {
     if (open) {
@@ -88,6 +108,9 @@ export function BookingDialog() {
       setSlots(null);
       setCreated(null);
       setError(null);
+      setDeclaredTransfer(false);
+      setDeclaring(false);
+      setDeclareMsg(null);
     }
   }, [open, preselectedServiceId]);
 
@@ -179,6 +202,12 @@ export function BookingDialog() {
         patientEmail: info.email.trim(),
         patientName: info.name.trim(),
       });
+      // New bookings always start with clientDeclaredTransfer=false on the
+      // server — mirror that locally so the dynamic pill renders the
+      // "Menunggu Pembayaran" / "Awaiting Payment" state, not "Menunggu
+      // Verifikasi".
+      setDeclaredTransfer(false);
+      setDeclareMsg(null);
       setStep(4); // → done
     } catch (e) {
       setError(e instanceof Error ? e.message : t("bk_err_generic"));
@@ -214,6 +243,41 @@ export function BookingDialog() {
     const email = encodeURIComponent(created.patientEmail ?? "");
     const url = `/api/bookings/${created.id}/proof${email ? `?email=${email}` : ""}`;
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  // Client self-declaration: client clicked "Saya Sudah Transfer" / "I've Made
+  // the Transfer". POSTs to /api/bookings/{id}/declare-transfer with the
+  // patient email (server validates it matches the booking's patientEmail).
+  // On success → flip declaredTransfer to true → the status pill flips from
+  // "Menunggu Pembayaran" to "Menunggu Verifikasi" and the button disappears.
+  const declareTransfer = async () => {
+    if (!created) return;
+    setDeclaring(true);
+    setDeclareMsg(null);
+    try {
+      const res = await fetch(
+        `/api/bookings/${created.id}/declare-transfer`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: created.patientEmail }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || t("bk_err_generic"));
+      }
+      setDeclaredTransfer(true);
+      setDeclareMsg(
+        lang === "id"
+          ? "Terima kasih! Notifikasi sudah terkirim ke admin untuk verifikasi."
+          : "Thank you! The admin has been notified to verify your transfer."
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("bk_err_generic"));
+    } finally {
+      setDeclaring(false);
+    }
   };
 
   const stepLabels = [
@@ -510,80 +574,132 @@ export function BookingDialog() {
               )}
 
               {/* Step 4: Done — booking created, awaiting bank transfer */}
-              {step === 4 && created && (
-                <div className="text-center py-2">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600 mb-4">
-                    <PartyPopper className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-xl font-extrabold text-eswen-deep">{t("bk_confirm_title")}</h3>
-                  <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">{t("bk_confirm_desc")}</p>
-
-                  <div className="mt-5 inline-block rounded-2xl border border-eswen-lavender bg-white px-5 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("bk_ref_code")}</p>
-                    <p className="text-lg font-extrabold text-eswen-deep tracking-wider">{created.refCode}</p>
-                  </div>
-
-                  {/* Summary */}
-                  <div className="mt-4 text-xs text-muted-foreground space-y-1 max-w-sm mx-auto text-left">
-                    <div className="flex justify-between"><span>{t("bk_service")}</span><span className="font-medium text-eswen-deep">{created.serviceName}</span></div>
-                    <div className="flex justify-between"><span>{t("bk_with")}</span><span className="font-medium text-eswen-deep">{created.doctorName}</span></div>
-                    <div className="flex justify-between"><span>{t("bk_when")}</span><span className="font-medium text-eswen-deep">{created.bookingDate} · {created.bookingTime}</span></div>
-                    <div className="flex justify-between border-t border-eswen-lavender/60 pt-1"><span>{t("bk_deposit_amount")}</span><span className="font-bold text-eswen-deep">{created.depositFormatted}</span></div>
-                    <div className="flex justify-between items-center pt-1">
-                      <span>{t("bk_status_label")}</span>
-                      <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-[10px] font-bold">{created.status}</span>
+              {step === 4 && created && (() => {
+                // Dynamic status pill — reflects the client self-declaration
+                // sub-state of WAITING_PAYMENT so we never misleadingly show
+                // "Waiting Payment" after the client has transferred.
+                const statusDisplay = getBookingStatusDisplay({
+                  status: created.status,
+                  clientDeclaredTransfer: declaredTransfer,
+                });
+                const label = lang === "id" ? statusDisplay.label : statusDisplay.labelEn;
+                const showDeclareBtn =
+                  created.status === "WAITING_PAYMENT" && !declaredTransfer;
+                return (
+                  <div className="text-center py-2">
+                    <div className={cn(
+                      "mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4",
+                      statusDisplay.color === "green"
+                        ? "bg-green-100 text-green-600"
+                        : statusDisplay.color === "orange"
+                        ? "bg-orange-100 text-orange-600"
+                        : "bg-amber-100 text-amber-600"
+                    )}>
+                      {statusDisplay.color === "green"
+                        ? <CheckCircle2 className="h-8 w-8" />
+                        : statusDisplay.color === "orange"
+                        ? <Clock className="h-8 w-8" />
+                        : <PartyPopper className="h-8 w-8" />}
                     </div>
-                  </div>
+                    <h3 className="text-xl font-extrabold text-eswen-deep">{t("bk_confirm_title")}</h3>
+                    <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">{t("bk_confirm_desc")}</p>
 
-                  {/* Bank Transfer details */}
-                  <div className="mt-5 rounded-2xl border border-eswen-soft-purple/40 bg-white p-4 text-left max-w-sm mx-auto">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-eswen-deep mb-2 flex items-center gap-1.5">
-                      <Building2 className="h-3.5 w-3.5 text-eswen-soft-purple" />
-                      {lang === "id" ? "Rekening Tujuan (Transfer Bank)" : "Destination Account (Bank Transfer)"}
-                    </p>
-                    <div className="rounded-xl bg-eswen-light-lavender/50 p-3 space-y-1 text-sm">
-                      <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Bank" : "Bank"}</span><span className="font-semibold text-eswen-deep">{payment.bankName}</span></div>
-                      <div className="flex justify-between items-center"><span className="text-muted-foreground text-xs">{lang === "id" ? "No. Rekening" : "Account No."}</span><span className="font-mono font-bold text-eswen-deep text-base tracking-wider">{payment.accountNumber}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Atas Nama" : "Account Holder"}</span><span className="font-semibold text-eswen-deep">{payment.accountHolder}</span></div>
+                    <div className="mt-5 inline-block rounded-2xl border border-eswen-lavender bg-white px-5 py-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("bk_ref_code")}</p>
+                      <p className="text-lg font-extrabold text-eswen-deep tracking-wider">{created.refCode}</p>
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{lang === "id" ? payment.instructionsId : payment.instructionsEn}</p>
-                    <p className="text-[11px] text-eswen-soft-purple mt-2 font-semibold flex items-start gap-1.5">
-                      <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                      <span>
-                        {lang === "id" ? (
-                          <>Transfer sejumlah <span className="font-bold text-eswen-deep">{created.depositFormatted}</span> lalu tunggu konfirmasi admin (biasanya dalam beberapa jam pada jam buka 08:00–20:00 WITA).</>
-                        ) : (
-                          <>Transfer <span className="font-bold text-eswen-deep">{created.depositFormatted}</span> then wait for admin confirmation (usually within a few hours during 08:00–20:00 WITA).</>
+
+                    {/* Summary */}
+                    <div className="mt-4 text-xs text-muted-foreground space-y-1 max-w-sm mx-auto text-left">
+                      <div className="flex justify-between"><span>{t("bk_service")}</span><span className="font-medium text-eswen-deep">{created.serviceName}</span></div>
+                      <div className="flex justify-between"><span>{t("bk_with")}</span><span className="font-medium text-eswen-deep">{created.doctorName}</span></div>
+                      <div className="flex justify-between"><span>{t("bk_when")}</span><span className="font-medium text-eswen-deep">{created.bookingDate} · {created.bookingTime}</span></div>
+                      <div className="flex justify-between border-t border-eswen-lavender/60 pt-1"><span>{t("bk_deposit_amount")}</span><span className="font-bold text-eswen-deep">{created.depositFormatted}</span></div>
+                      <div className="flex justify-between items-center pt-1">
+                        <span>{t("bk_status_label")}</span>
+                        <span className={cn(
+                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold",
+                          STATUS_PILL_CLASS[statusDisplay.color]
+                        )}>
+                          {label}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bank Transfer details */}
+                    <div className="mt-5 rounded-2xl border border-eswen-soft-purple/40 bg-white p-4 text-left max-w-sm mx-auto">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-eswen-deep mb-2 flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-eswen-soft-purple" />
+                        {lang === "id" ? "Rekening Tujuan (Transfer Bank)" : "Destination Account (Bank Transfer)"}
+                      </p>
+                      <div className="rounded-xl bg-eswen-light-lavender/50 p-3 space-y-1 text-sm">
+                        <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Bank" : "Bank"}</span><span className="font-semibold text-eswen-deep">{payment.bankName}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-muted-foreground text-xs">{lang === "id" ? "No. Rekening" : "Account No."}</span><span className="font-mono font-bold text-eswen-deep text-base tracking-wider">{payment.accountNumber}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Atas Nama" : "Account Holder"}</span><span className="font-semibold text-eswen-deep">{payment.accountHolder}</span></div>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{lang === "id" ? payment.instructionsId : payment.instructionsEn}</p>
+                      <p className="text-[11px] text-eswen-soft-purple mt-2 font-semibold flex items-start gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                        <span>
+                          {lang === "id" ? (
+                            <>Transfer sejumlah <span className="font-bold text-eswen-deep">{created.depositFormatted}</span> lalu tunggu konfirmasi admin (biasanya dalam beberapa jam pada jam buka 08:00–20:00 WITA).</>
+                          ) : (
+                            <>Transfer <span className="font-bold text-eswen-deep">{created.depositFormatted}</span> then wait for admin confirmation (usually within a few hours during 08:00–20:00 WITA).</>
+                          )}
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* Self-declaration thank-you message (after "I've Made the Transfer") */}
+                    {declareMsg && declaredTransfer && (
+                      <div className="mt-4 max-w-sm mx-auto rounded-2xl border border-green-200 bg-green-50 p-3 text-left flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                        <p className="text-[11px] text-green-800 leading-relaxed">{declareMsg}</p>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center max-w-sm mx-auto">
+                      {showDeclareBtn && (
+                        <Button
+                          onClick={declareTransfer}
+                          disabled={declaring}
+                          className="rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white h-11 px-5"
+                        >
+                          {declaring ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          {lang === "id" ? "Saya Sudah Transfer" : "I've Made the Transfer"}
+                        </Button>
+                      )}
+                      <Button
+                        onClick={downloadProof}
+                        variant={showDeclareBtn ? "outline" : "default"}
+                        className={cn(
+                          "rounded-full h-11 px-5",
+                          showDeclareBtn
+                            ? "border-eswen-lavender text-eswen-deep bg-white"
+                            : "bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white"
                         )}
-                      </span>
+                      >
+                        <Download className="h-4 w-4" />
+                        {lang === "id" ? "Unduh Bukti Booking" : "Download Bukti Booking"}
+                      </Button>
+                      <Button
+                        onClick={resetAndClose}
+                        variant="outline"
+                        className="rounded-full border-eswen-lavender text-eswen-deep bg-white h-11 px-5"
+                      >
+                        {t("bk_close")}
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-3 flex items-center justify-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {lang === "id"
+                        ? "Simpan kode referensi — Anda dapat mengunduh bukti PDF kapan saja."
+                        : "Save your reference code — you can download the PDF proof anytime."}
                     </p>
                   </div>
-
-                  {/* Actions */}
-                  <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center max-w-sm mx-auto">
-                    <Button
-                      onClick={downloadProof}
-                      className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11 px-5"
-                    >
-                      <Download className="h-4 w-4" />
-                      {lang === "id" ? "Unduh Bukti Booking" : "Download Bukti Booking"}
-                    </Button>
-                    <Button
-                      onClick={resetAndClose}
-                      variant="outline"
-                      className="rounded-full border-eswen-lavender text-eswen-deep bg-white h-11 px-5"
-                    >
-                      {t("bk_close")}
-                    </Button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-3 flex items-center justify-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {lang === "id"
-                      ? "Simpan kode referensi — Anda dapat mengunduh bukti PDF kapan saja."
-                      : "Save your reference code — you can download the PDF proof anytime."}
-                  </p>
-                </div>
-              )}
+                );
+              })()}
             </motion.div>
           </AnimatePresence>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { formatIDR } from "@/lib/eswen/booking";
+import { formatIDR, getBookingStatusDisplay } from "@/lib/eswen/booking";
 import { isAdmin } from "@/lib/eswen/admin-auth";
 import { ensureSiteSeeded, DEFAULT_CONFIG } from "@/lib/eswen/seed-full";
 import type PDFKit from "pdfkit";
@@ -61,7 +61,16 @@ function summarize(b: {
   status: string;
   paymentMethod: string | null;
   paymentGateway: string | null;
+  clientDeclaredTransfer: boolean;
 }) {
+  // Dynamic bilingual label + color reflecting the client self-declaration
+  // sub-state of WAITING_PAYMENT. The PDF re-download reflects whatever the
+  // current state is on the booking (no static "WAITING_PAYMENT" amber pill
+  // after the client has transferred).
+  const display = getBookingStatusDisplay({
+    status: b.status,
+    clientDeclaredTransfer: b.clientDeclaredTransfer,
+  });
   return {
     refCode: b.refCode,
     service: b.serviceName,
@@ -73,6 +82,8 @@ function summarize(b: {
     notes: b.patientNotes ?? "",
     deposit: formatIDR(b.depositAmount),
     status: b.status,
+    statusLabel: display.labelEn, // English label for the PDF (matches the rest of the doc)
+    statusColor: display.color,
   };
 }
 
@@ -86,10 +97,24 @@ const COLORS = {
   muted: "#6B7280",
   amber: "#B45309",
   amberBg: "#FEF3C7",
+  orange: "#C2410C",
+  orangeBg: "#FFEDD5",
   green: "#15803D",
   greenBg: "#DCFCE7",
   white: "#FFFFFF",
   border: "#D9D1E8",
+};
+
+/** Map a BookingStatusDisplay color → {fg, bg} COLORS pair for PDF rendering. */
+const STATUS_COLOR_PAIR: Record<
+  "amber" | "orange" | "green" | "red" | "gray",
+  { fg: string; bg: string }
+> = {
+  amber: { fg: COLORS.amber, bg: COLORS.amberBg },
+  orange: { fg: COLORS.orange, bg: COLORS.orangeBg },
+  green: { fg: COLORS.green, bg: COLORS.greenBg },
+  red: { fg: COLORS.amber, bg: COLORS.amberBg },
+  gray: { fg: COLORS.muted, bg: COLORS.lightLavender },
 };
 
 /** Build the PDF buffer for a single booking. */
@@ -141,14 +166,20 @@ async function buildProofPdf(
     .fontSize(34)
     .text(booking.refCode, margin, refY + 14, { width: pageWidth - 2 * margin });
 
-  // Status pill (right side, next to ref code line)
-  const statusUpper = booking.status.toUpperCase();
-  const isConfirmed = booking.status === "CONFIRMED";
-  const pillBg = isConfirmed ? COLORS.greenBg : COLORS.amberBg;
-  const pillFg = isConfirmed ? COLORS.green : COLORS.amber;
+  // Status pill (right side, next to ref code line) — DYNAMIC:
+  //   - WAITING_PAYMENT + !declared → amber "AWAITING PAYMENT"
+  //   - WAITING_PAYMENT +  declared → orange "AWAITING VERIFICATION"
+  //   - CONFIRMED                       → green "CONFIRMED"
+  // Uses booking.statusLabel + STATUS_COLOR_PAIR so the PDF re-download
+  // reflects whatever the current booking state is (no stale "WAITING_PAYMENT"
+  // after the client has self-declared the transfer).
+  const statusLabelUpper = booking.statusLabel.toUpperCase();
+  const pair = STATUS_COLOR_PAIR[booking.statusColor] ?? STATUS_COLOR_PAIR.amber;
+  const pillBg = pair.bg;
+  const pillFg = pair.fg;
   // PDFKit doesn't auto-measure text width for the pill background easily, so
-  // we draw a fixed-size pill that comfortably fits our two possible labels.
-  const pillW = 165;
+  // we draw a fixed-size pill that comfortably fits our three possible labels.
+  const pillW = 195;
   const pillH = 22;
   const pillX = pageWidth - margin - pillW;
   const pillY = refY + 22;
@@ -157,7 +188,7 @@ async function buildProofPdf(
     .fillColor(pillFg)
     .font("Helvetica-Bold")
     .fontSize(10)
-    .text(statusUpper, pillX, pillY + 6, { width: pillW, align: "center" });
+    .text(statusLabelUpper, pillX, pillY + 6, { width: pillW, align: "center" });
 
   // ── Divider ────────────────────────────────────────────────────────────
   let y = refY + 70;
@@ -275,15 +306,30 @@ async function buildProofPdf(
     noteX, y + 16, { width: noteW, lineGap: 1 }
   );
 
-  // Confirmation note (depends on status)
+  // Confirmation callout (depends on the dynamic status — surfaces the
+  // client self-declaration sub-state of WAITING_PAYMENT so the PDF never
+  // misleadingly shows "AWAITING BANK TRANSFER" after the client transferred).
   const noteY = y + 50;
-  doc.roundedRect(noteX, noteY, noteW, 44, 8).fill(isConfirmed ? COLORS.greenBg : COLORS.amberBg);
+  const calloutPair = STATUS_COLOR_PAIR[booking.statusColor] ?? STATUS_COLOR_PAIR.amber;
+  const calloutTitle =
+    booking.statusColor === "green"
+      ? "BOOKING CONFIRMED"
+      : booking.statusColor === "orange"
+      ? "AWAITING VERIFICATION"
+      : "AWAITING BANK TRANSFER";
+  const calloutMsg =
+    booking.statusColor === "green"
+      ? "Your booking is confirmed! See you at the appointment."
+      : booking.statusColor === "orange"
+      ? "Your transfer declaration has been received. Please wait for admin verification (usually a few hours)."
+      : "Please transfer the deposit to the account above. Once transferred, click 'I've Made the Transfer' on the booking page.";
+  doc.roundedRect(noteX, noteY, noteW, 44, 8).fill(calloutPair.bg);
   doc
-    .fillColor(isConfirmed ? COLORS.green : COLORS.amber)
+    .fillColor(calloutPair.fg)
     .font("Helvetica-Bold")
     .fontSize(9)
     .text(
-      isConfirmed ? "BOOKING CONFIRMED" : "AWAITING BANK TRANSFER",
+      calloutTitle,
       noteX + 10, noteY + 8, { width: noteW - 20 }
     );
   doc
@@ -291,9 +337,7 @@ async function buildProofPdf(
     .font("Helvetica")
     .fontSize(8)
     .text(
-      isConfirmed
-        ? "Your deposit was received. See you at the clinic."
-        : "Please transfer the deposit to the account above. Booking will be confirmed once we receive your transfer.",
+      calloutMsg,
       noteX + 10, noteY + 22, { width: noteW - 20, lineGap: 1 }
     );
 
@@ -386,6 +430,7 @@ export async function GET(
       status: booking.status,
       paymentMethod: booking.paymentMethod,
       paymentGateway: booking.paymentGateway,
+      clientDeclaredTransfer: booking.clientDeclaredTransfer,
     });
 
     // PDFKit is imported as a CJS default; in Next.js 16 + TS the live binding

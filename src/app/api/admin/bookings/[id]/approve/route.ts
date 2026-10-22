@@ -75,10 +75,12 @@ export async function POST(
         paymentNote: updated.paymentNote,
         confirmedAt: updated.confirmedAt?.toISOString(),
         depositFormatted: formatIDR(updated.depositAmount),
+        clientDeclaredTransfer: updated.clientDeclaredTransfer,
+        clientDeclaredAt: updated.clientDeclaredAt?.toISOString() ?? "",
       },
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
+    const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ ok: false, error: "Failed to approve.", debug: msg }, { status: 500 });
   }
 }

@@ -110,3 +110,77 @@ export function isValidBookingDate(date: string): boolean {
 export function isValidSlot(time: string): boolean {
   return (TIME_SLOTS as readonly string[]).includes(time);
 }
+
+/**
+ * Dynamic booking status display.
+ *
+ * Drives the bilingual (Indonesian + English) status pill label + color across
+ * the booking dialog, admin bookings table, and PDF proof endpoint.
+ *
+ * The key trick: a booking in `WAITING_PAYMENT` has TWO sub-states depending on
+ * whether the client has clicked "I've Made the Transfer":
+ *   - `clientDeclaredTransfer = false` → "Menunggu Pembayaran" / "Awaiting Payment" (amber)
+ *   - `clientDeclaredTransfer = true`  → "Menunggu Verifikasi" / "Awaiting Verification" (orange)
+ *
+ * Without this, the system would keep showing "Waiting Payment" even after the
+ * client transferred the money — misleading. The flag lets us surface the
+ * client's self-declaration without changing the underlying status (the admin
+ * must still verify receipt before flipping to CONFIRMED).
+ */
+export type BookingStatusDisplay = {
+  label: string; // Indonesian label
+  labelEn: string; // English label
+  color: "amber" | "orange" | "green" | "red" | "gray";
+};
+
+export function getBookingStatusDisplay(booking: {
+  status: string;
+  clientDeclaredTransfer: boolean;
+}): BookingStatusDisplay {
+  if (booking.status === "CONFIRMED") {
+    return { label: "Terkonfirmasi", labelEn: "Confirmed", color: "green" };
+  }
+  if (booking.status === "WAITING_PAYMENT") {
+    if (booking.clientDeclaredTransfer) {
+      return {
+        label: "Menunggu Verifikasi",
+        labelEn: "Awaiting Verification",
+        color: "orange",
+      };
+    }
+    return {
+      label: "Menunggu Pembayaran",
+      labelEn: "Awaiting Payment",
+      color: "amber",
+    };
+  }
+  if (booking.status === "CANCELLED") {
+    return { label: "Dibatalkan", labelEn: "Cancelled", color: "red" };
+  }
+  if (booking.status === "PAYMENT_FAILED") {
+    return { label: "Pembayaran Gagal", labelEn: "Payment Failed", color: "red" };
+  }
+  if (booking.status === "COMPLETED") {
+    return { label: "Selesai", labelEn: "Completed", color: "green" };
+  }
+  if (booking.status === "CHECKED IN") {
+    return { label: "Sudah Check-in", labelEn: "Checked In", color: "gray" };
+  }
+  if (booking.status === "IN TREATMENT") {
+    return { label: "Sedang Ditangani", labelEn: "In Treatment", color: "gray" };
+  }
+  if (booking.status === "NO SHOW") {
+    return { label: "Tidak Hadir", labelEn: "No Show", color: "red" };
+  }
+  return { label: booking.status, labelEn: booking.status, color: "gray" };
+}
+
+/** Map a BookingStatusDisplay color → Tailwind class string (for client UI). */
+export const STATUS_PILL_CLASS: Record<BookingStatusDisplay["color"], string> = {
+  amber: "bg-amber-100 text-amber-700",
+  orange: "bg-orange-100 text-orange-700",
+  green: "bg-green-100 text-green-700",
+  red: "bg-rose-100 text-rose-700",
+  gray: "bg-stone-100 text-stone-600",
+};
+

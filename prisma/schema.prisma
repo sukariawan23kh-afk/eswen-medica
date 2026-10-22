@@ -54,6 +54,8 @@ model Booking {
   paymentGateway String? // Midtrans | Xendit | Stripe | Manual
   paymentNote   String?  // admin note when confirming a manual/bank-transfer payment (e.g. bank ref, date received)
   confirmedAt   DateTime? // when an admin manually confirmed the deposit was received
+  clientDeclaredTransfer Boolean  @default(false) // client clicked "I've made the transfer" button
+  clientDeclaredAt         DateTime?                 // when client self-declared the transfer
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
