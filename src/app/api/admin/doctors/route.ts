@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
 import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
+import { getServiceEnTranslation } from "@/lib/eswen/service-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,12 +43,12 @@ export async function GET(req: NextRequest) {
 
 const CreateSchema = z.object({
   name: z.string().min(2).max(100),
-  roleEn: z.string().min(1).max(60),
+  roleEn: z.string().max(60).default(""),           // ignored — auto-translated from ID
   roleId: z.string().min(1).max(60),
   category: z.enum(["doctor", "wellness"]).default("doctor"),
-  specialtyEn: z.string().min(1).max(100),
+  specialtyEn: z.string().max(100).default(""),     // ignored — auto-translated from ID
   specialtyId: z.string().min(1).max(100),
-  experienceEn: z.string().max(40).default(""),
+  experienceEn: z.string().max(40).default(""),      // ignored — auto-translated from ID
   experienceId: z.string().max(40).default(""),
   languages: z.string().max(120).default("EN, ID"),
   image: z.string().max(500).default("/images/doctor-1.png"),
@@ -70,7 +71,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid input.", issues: parsed.error.issues }, { status: 400 });
   }
   try {
-    const created = await db.doctor.create({ data: parsed.data });
+    const d = parsed.data;
+    // ALWAYS translate EN from ID (admin only inputs Indonesian; serviceId=undefined
+    // for new doctors → skips SEED lookup → falls through to MyMemory API which
+    // works on Vercel without any API key config).
+    if (d.roleId) d.roleEn = await getServiceEnTranslation(undefined, "name", d.roleId);
+    if (d.specialtyId) d.specialtyEn = await getServiceEnTranslation(undefined, "name", d.specialtyId);
+    if (d.experienceId) d.experienceEn = await getServiceEnTranslation(undefined, "name", d.experienceId);
+    const created = await db.doctor.create({ data: d });
     return NextResponse.json({ ok: true, doctor: { id: created.id } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";

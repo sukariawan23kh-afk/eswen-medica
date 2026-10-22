@@ -6,9 +6,6 @@ import {
   X,
   Lock,
   LogOut,
-  Plus,
-  Pencil,
-  Trash2,
   FileText,
   CalendarClock,
   Loader2,
@@ -17,9 +14,9 @@ import {
   Stethoscope,
   Users,
   AlertCircle,
-  ExternalLink,
   Gift,
   Bell,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,23 +26,10 @@ import { SiteSettingsTab } from "@/components/eswen/admin/site-settings-tab";
 import { ServicesTab } from "@/components/eswen/admin/services-tab";
 import { DoctorsTab } from "@/components/eswen/admin/doctors-tab";
 import { OffersTab } from "@/components/eswen/admin/offers-tab";
-import { ImageUpload } from "@/components/eswen/admin/image-upload";
+import { ArticlesTab } from "@/components/eswen/admin/articles-tab";
 import { usePayment } from "@/lib/eswen/site-config-context";
 
 /* ---------- types ---------- */
-type Article = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  category: string;
-  imageUrl: string;
-  language: string;
-  readTime: string;
-  published: boolean;
-  date: string;
-};
 type Booking = {
   id: string;
   refCode: string;
@@ -216,9 +200,7 @@ export function AdminPanel() {
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState<boolean | null>(null); // null = checking
   const [tab, setTab] = useState<"settings" | "services" | "doctors" | "articles" | "bookings" | "offers">("settings");
-  const [articles, setArticles] = useState<Article[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [editing, setEditing] = useState<Article | "new" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   // notification bell state
@@ -252,12 +234,6 @@ export function AdminPanel() {
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
-  }, []);
-
-  const loadArticles = useCallback(async () => {
-    const r = await fetch("/api/admin/articles", { cache: "no-store" });
-    const d = await r.json();
-    if (d?.ok) setArticles(d.articles);
   }, []);
 
   const loadBookings = useCallback(async () => {
@@ -298,13 +274,12 @@ export function AdminPanel() {
     setUnread(0);
   }, []);
 
-  // when authed, load the active tab's data (settings/services/doctors tabs
-  // load their own data internally, so only articles + bookings are handled here)
+  // when authed, load the active tab's data (settings/services/doctors/articles
+  // tabs load their own data internally, so only bookings are handled here)
   useEffect(() => {
     if (!open || !authed) return;
-    if (tab === "articles") loadArticles();
-    else if (tab === "bookings") loadBookings();
-  }, [open, authed, tab, loadArticles, loadBookings]);
+    if (tab === "bookings") loadBookings();
+  }, [open, authed, tab, loadBookings]);
 
   // notification bell: load on auth, refresh every 30s while authed + open
   useEffect(() => {
@@ -341,7 +316,6 @@ export function AdminPanel() {
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     setAuthed(false);
-    setArticles([]);
     setBookings([]);
   };
 
@@ -349,36 +323,6 @@ export function AdminPanel() {
     setOpen(false);
     if (window.location.hash) {
       history.replaceState(null, "", window.location.pathname + window.location.search);
-    }
-  };
-
-  const saveArticle = async (data: Partial<Article> & { title: string; slug: string; excerpt: string }) => {
-    const isNew = editing === "new";
-    const r = await fetch(
-      isNew ? "/api/admin/articles" : `/api/admin/articles/${(editing as Article)?.id}`,
-      {
-        method: isNew ? "POST" : "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }
-    );
-    const d = await r.json();
-    if (r.ok && d?.ok) {
-      setEditing(null);
-      await loadArticles();
-      showToast(T.articleSaved);
-    } else {
-      showToast(d?.error || "Error");
-    }
-  };
-
-  const deleteArticle = async (id: string) => {
-    if (!confirm(T.deleteConfirm)) return;
-    const r = await fetch(`/api/admin/articles/${id}`, { method: "DELETE" });
-    const d = await r.json();
-    if (r.ok && d?.ok) {
-      await loadArticles();
-      showToast(T.articleDeleted);
     }
   };
 
@@ -556,9 +500,6 @@ export function AdminPanel() {
               </TabBtn>
               <TabBtn active={tab === "articles"} onClick={() => setTab("articles")} icon={<FileText className="h-4 w-4" />}>
                 {T.tabArticles}
-                <span className="ml-1.5 rounded-full bg-eswen-light-lavender text-eswen-deep text-[10px] font-bold px-1.5 py-0.5">
-                  {articles.length}
-                </span>
               </TabBtn>
               <TabBtn active={tab === "bookings"} onClick={() => setTab("bookings")} icon={<CalendarClock className="h-4 w-4" />}>
                 {T.tabBookings}
@@ -572,15 +513,7 @@ export function AdminPanel() {
             {tab === "services" && <ServicesTab showToast={showToast} />}
             {tab === "doctors" && <DoctorsTab showToast={showToast} />}
             {tab === "offers" && <OffersTab showToast={showToast} />}
-            {tab === "articles" && (
-              <ArticlesTab
-                T={T}
-                articles={articles}
-                onNew={() => setEditing("new")}
-                onEdit={(a) => setEditing(a)}
-                onDelete={deleteArticle}
-              />
-            )}
+            {tab === "articles" && <ArticlesTab showToast={showToast} />}
             {tab === "bookings" && (
               <BookingsTab T={T} bookings={bookings} onUpdateStatus={updateBookingStatus} onApprove={approvePayment} />
             )}
@@ -596,18 +529,6 @@ export function AdminPanel() {
           </Button>
         </div>
       )}
-
-      {/* article editor modal */}
-      <AnimatePresence>
-        {editing && (
-          <ArticleEditor
-            T={T}
-            article={editing === "new" ? null : (editing as Article)}
-            onClose={() => setEditing(null)}
-            onSave={saveArticle}
-          />
-        )}
-      </AnimatePresence>
 
       {/* toast */}
       <AnimatePresence>
@@ -691,86 +612,6 @@ function TabBtn({ active, onClick, icon, children }: any) {
   );
 }
 
-/* ---------- articles tab ---------- */
-function ArticlesTab({ T, articles, onNew, onEdit, onDelete }: any) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-extrabold text-eswen-deep">{T.tabArticles}</h3>
-        <Button onClick={onNew} className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-9 px-4 text-sm">
-          <Plus className="h-4 w-4" /> {T.newArticle}
-        </Button>
-      </div>
-      {articles.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-10">{T.noArticles}</p>
-      ) : (
-        <div className="rounded-2xl border border-eswen-lavender bg-white overflow-hidden">
-          {/* desktop table */}
-          <table className="hidden sm:table w-full text-sm">
-            <thead className="bg-eswen-light-lavender/50 text-[10px] uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="text-left px-4 py-2.5 font-semibold">{T.colTitle}</th>
-                <th className="text-left px-4 py-2.5 font-semibold">{T.colCategory}</th>
-                <th className="text-left px-4 py-2.5 font-semibold">{T.colLang}</th>
-                <th className="text-left px-4 py-2.5 font-semibold">{T.colStatus}</th>
-                <th className="text-left px-4 py-2.5 font-semibold">{T.colDate}</th>
-                <th className="text-right px-4 py-2.5 font-semibold">{T.colActions}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-eswen-lavender/60">
-              {articles.map((a: Article) => (
-                <tr key={a.id} className="hover:bg-eswen-light-lavender/30">
-                  <td className="px-4 py-3 font-medium text-eswen-deep max-w-xs truncate">{a.title}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{a.category}</td>
-                  <td className="px-4 py-3 text-xs uppercase text-muted-foreground">{a.language}</td>
-                  <td className="px-4 py-3">
-                    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold", a.published ? "bg-green-100 text-green-700" : "bg-stone-100 text-stone-500")}>
-                      {a.published ? T.published : T.draft}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{a.date}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="inline-flex gap-1">
-                      <button onClick={() => onEdit(a)} className="p-1.5 rounded-lg hover:bg-eswen-light-lavender text-eswen-soft-purple" aria-label={T.edit}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => onDelete(a.id)} className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-500" aria-label={T.delete}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {/* mobile cards */}
-          <div className="sm:hidden divide-y divide-eswen-lavender/60">
-            {articles.map((a: Article) => (
-              <div key={a.id} className="p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-eswen-deep text-sm leading-snug">{a.title}</p>
-                  <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold shrink-0", a.published ? "bg-green-100 text-green-700" : "bg-stone-100 text-stone-500")}>
-                    {a.published ? T.published : T.draft}
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-1">{a.category} · {a.language.toUpperCase()} · {a.date}</p>
-                <div className="flex gap-1 mt-2">
-                  <button onClick={() => onEdit(a)} className="inline-flex items-center gap-1 rounded-full bg-eswen-light-lavender text-eswen-deep px-2.5 py-1 text-[11px] font-semibold">
-                    <Pencil className="h-3 w-3" /> {T.edit}
-                  </button>
-                  <button onClick={() => onDelete(a.id)} className="inline-flex items-center gap-1 rounded-full bg-rose-50 text-rose-500 px-2.5 py-1 text-[11px] font-semibold">
-                    <Trash2 className="h-3 w-3" /> {T.delete}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ---------- bookings tab ---------- */
 function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
   const payment = usePayment();
@@ -796,9 +637,21 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
 
       {/* Payment-flow guide banner */}
       <div className="mb-4 rounded-2xl border border-eswen-soft-purple/30 bg-eswen-light-lavender/50 p-4 text-xs text-eswen-deep/80 leading-relaxed">
-        <p className="font-bold text-eswen-deep mb-1">💳 How payment works (real-world)</p>
-        <p>• <strong>Bank Transfer</strong> (manual): the client transfers to <strong>{payment.bankName} — {payment.accountNumber} ({payment.accountHolder})</strong>. You verify the money arrived in your account, then click <strong>"Approve Payment"</strong> below → status becomes CONFIRMED. Edit your bank details in <em>Site Settings → Payment / Bank Account</em>.</p>
-        <p className="mt-1">• <strong>Credit Card / QRIS / E-Wallet</strong> (gateway): currently simulated. For real automatic payments, integrate <strong>Midtrans / Xendit / Stripe</strong> (money lands in your account, gateway callback auto-confirms). Requires business registration with the gateway.</p>
+        <p className="font-bold text-eswen-deep mb-1">🏦 How payment works</p>
+        <p>
+          All bookings are paid via <strong>Bank Transfer</strong> to the clinic account
+          <strong> {payment.bankName} — {payment.accountNumber} ({payment.accountHolder})</strong>.
+        </p>
+        <p className="mt-1">
+          When a client transfers the deposit, verify the money arrived in your account, then click
+          <strong> “Approve Payment”</strong> below → status becomes <strong>CONFIRMED</strong>.
+          Edit your bank details in <em>Site Settings → Payment / Bank Account</em>.
+        </p>
+        <p className="mt-1 text-muted-foreground">
+          Online methods (Credit Card / QRIS / E-Wallet / Virtual Account) were removed —
+          every booking is created with <code>paymentMethod = Bank Transfer</code> and
+          <code> paymentGateway = Manual</code> automatically.
+        </p>
       </div>
 
       {bookings.length === 0 ? (
@@ -835,8 +688,9 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
                   </td>
                   <td className="px-3 py-2.5 text-xs font-bold text-eswen-deep whitespace-nowrap">{b.depositFormatted}</td>
                   <td className="px-3 py-2.5 text-[10px] text-muted-foreground whitespace-nowrap">
-                    {b.paymentMethod || "—"}<br />
-                    <span className="text-muted-foreground/70">via {b.paymentGateway || "—"}</span>
+                    <span className="font-semibold text-eswen-deep">Bank Transfer</span>
+                    <br />
+                    <span className="text-muted-foreground/70">via Manual</span>
                     {b.paymentNote && <div className="mt-0.5 italic text-eswen-soft-purple max-w-[140px]">“{b.paymentNote}”</div>}
                     {b.confirmedAt && <div className="mt-0.5 text-green-600">✓ {new Date(b.confirmedAt).toLocaleString()}</div>}
                   </td>
@@ -852,15 +706,26 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
                     </select>
                   </td>
                   <td className="px-3 py-2.5">
-                    {(b.status === "WAITING_PAYMENT" || b.status === "PAYMENT_FAILED") && (
-                      <button
-                        onClick={() => { setApproving(b); setNote(b.paymentNote || ""); }}
-                        className="inline-flex items-center gap-1 rounded-full bg-green-600 text-white px-2.5 py-1 text-[11px] font-bold hover:bg-green-700 transition-colors whitespace-nowrap"
+                    <div className="flex flex-col gap-1 items-start">
+                      {(b.status === "WAITING_PAYMENT" || b.status === "PAYMENT_FAILED") && (
+                        <button
+                          onClick={() => { setApproving(b); setNote(b.paymentNote || ""); }}
+                          className="inline-flex items-center gap-1 rounded-full bg-green-600 text-white px-2.5 py-1 text-[11px] font-bold hover:bg-green-700 transition-colors whitespace-nowrap"
+                        >
+                          <Check className="h-3 w-3" /> Approve Payment
+                        </button>
+                      )}
+                      {b.status === "CONFIRMED" && <span className="text-[10px] text-green-600 font-bold">✓ Confirmed</span>}
+                      <a
+                        href={`/api/bookings/${b.id}/proof`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border border-eswen-lavender text-eswen-deep bg-white px-2.5 py-1 text-[11px] font-bold hover:bg-eswen-light-lavender transition-colors whitespace-nowrap"
+                        title="Download Bukti Booking (PDF)"
                       >
-                        <Check className="h-3 w-3" /> Approve Payment
-                      </button>
-                    )}
-                    {b.status === "CONFIRMED" && <span className="text-[10px] text-green-600 font-bold">✓ Confirmed</span>}
+                        <Download className="h-3 w-3" /> PDF
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -917,141 +782,3 @@ function BookingsTab({ T, bookings, onUpdateStatus, onApprove }: any) {
   );
 }
 
-/* ---------- article editor ---------- */
-function ArticleEditor({ T, article, onClose, onSave }: any) {
-  const [form, setForm] = useState({
-    title: article?.title ?? "",
-    slug: article?.slug ?? "",
-    excerpt: article?.excerpt ?? "",
-    content: article?.content ?? "",
-    category: article?.category ?? "Medical",
-    imageUrl: article?.imageUrl ?? "",
-    language: article?.language ?? "en",
-    readTime: article?.readTime ?? "5 min read",
-    published: article?.published ?? true,
-  });
-  const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  // auto-generate slug from title when creating new (intentional derived state)
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (!article) {
-      setForm((f) => ({
-        ...f,
-        slug: f.title
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, "")
-          .replace(/\s+/g, "-")
-          .replace(/-+/g, "-")
-          .slice(0, 80),
-      }));
-    }
-  }, [form.title]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErr(null);
-    if (form.title.trim().length < 3 || form.excerpt.trim().length < 10 || form.slug.trim().length < 3) {
-      setErr("Please fill title, slug, and excerpt.");
-      return;
-    }
-    setSaving(true);
-    await onSave(form);
-    setSaving(false);
-  };
-
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[105] flex items-center justify-center bg-eswen-deep/40 backdrop-blur-sm p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl bg-white border border-eswen-lavender shadow-eswen-elevated overflow-hidden"
-      >
-        <div className="shrink-0 flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white">
-          <h3 className="font-bold text-sm">{article ? T.editorEdit : T.editorNew}</h3>
-          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/15">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <form onSubmit={submit} className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen p-5 space-y-3.5">
-          <Field label={T.fTitle}>
-            <input value={form.title} onChange={(e) => set("title", e.target.value)} maxLength={200} className="ainput" />
-          </Field>
-          <Field label={T.fSlug} hint={T.fSlugHint}>
-            <input value={form.slug} onChange={(e) => set("slug", e.target.value.toLowerCase())} maxLength={120} className="ainput font-mono text-xs" />
-          </Field>
-          <Field label={T.fExcerpt}>
-            <textarea value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} maxLength={500} className="ainput min-h-[60px] resize-none" />
-          </Field>
-          <Field label={T.fContent}>
-            <textarea value={form.content} onChange={(e) => set("content", e.target.value)} maxLength={20000} className="ainput min-h-[120px] resize-y font-mono text-xs" />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={T.fCategory}>
-              <input value={form.category} onChange={(e) => set("category", e.target.value)} className="ainput" />
-            </Field>
-            <Field label={T.fReadTime}>
-              <input value={form.readTime} onChange={(e) => set("readTime", e.target.value)} className="ainput" />
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={T.fLang}>
-              <select value={form.language} onChange={(e) => set("language", e.target.value)} className="ainput">
-                <option value="en">English</option>
-                <option value="id">Bahasa Indonesia</option>
-              </select>
-            </Field>
-            <Field label={T.fImage}>
-              <ImageUpload
-                value={form.imageUrl}
-                onChange={(v) => set("imageUrl", v)}
-                placeholder="/images/..."
-                recommendedSize="800×500px (landscape)"
-                previewClass="h-16 w-24"
-              />
-            </Field>
-          </div>
-          <label className="flex items-center gap-2.5 cursor-pointer select-none rounded-xl border border-eswen-lavender bg-white px-3 py-2.5">
-            <input type="checkbox" checked={form.published} onChange={(e) => set("published", e.target.checked)} className="h-4 w-4 accent-[#5B3A91]" />
-            <span className="text-sm font-medium text-eswen-deep">{T.publishedToggle}</span>
-          </label>
-          {err && (
-            <p className="text-xs text-rose-600 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> {err}</p>
-          )}
-          <style>{`.ainput{width:100%;border-radius:0.75rem;border:1px solid #E9DDFF;background:#fff;padding:0.5rem 0.75rem;font-size:0.875rem;color:#5B3A91;outline:none;transition:border-color .15s}.ainput:focus{border-color:#8B5CC7}`}</style>
-        </form>
-        <div className="shrink-0 border-t border-eswen-lavender bg-white px-5 py-3 flex items-center justify-end gap-2">
-          <Button type="button" onClick={onClose} variant="ghost" className="rounded-full h-9 text-eswen-deep">{T.cancel}</Button>
-          <Button type="button" onClick={submit} disabled={saving} className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-9 px-5">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-            {saving ? T.saving : T.save}
-          </Button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 flex items-center justify-between">
-        <span>{label}</span>
-        {hint && <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground/60">{hint}</span>}
-      </span>
-      {children}
-    </label>
-  );
-}

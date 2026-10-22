@@ -238,9 +238,9 @@ export const translations = {
     bk_no_slots: "All slots are booked for this date. Please pick another date.",
     bk_loading_slots: "Loading availability...",
     bk_slot_booked: "Booked",
-    bk_confirm_title: "Booking Confirmed!",
+    bk_confirm_title: "Booking Created!",
     bk_confirm_desc:
-      "Your appointment is locked. We've sent a confirmation to your email and WhatsApp.",
+      "Transfer the deposit to our bank account below. Your booking will be CONFIRMED once we receive your transfer.",
     bk_ref_code: "Booking Reference",
     bk_status_label: "Status",
     bk_when: "When",
@@ -259,7 +259,7 @@ export const translations = {
     bk_err_generic: "Something went wrong. Please try again.",
     bk_created_status: "PENDING PAYMENT",
     bk_secure_note:
-      "Booking is never set to CONFIRMED until payment is verified via gateway callback.",
+      "Booking is only CONFIRMED after our admin verifies your bank transfer arrived in the clinic's account.",
   },
 
   id: {
@@ -497,9 +497,9 @@ export const translations = {
     bk_no_slots: "Semua slot untuk tanggal ini sudah dipesan. Silakan pilih tanggal lain.",
     bk_loading_slots: "Memuat ketersediaan...",
     bk_slot_booked: "Dipesan",
-    bk_confirm_title: "Booking Dikonfirmasi!",
+    bk_confirm_title: "Booking Dibuat!",
     bk_confirm_desc:
-      "Janji temu Anda dikunci. Kami telah mengirim konfirmasi ke email dan WhatsApp Anda.",
+      "Transfer deposit ke rekening bank kami di bawah ini. Booking Anda akan DIKONFIRMASI setelah transfer kami terima.",
     bk_ref_code: "Kode Referensi Booking",
     bk_status_label: "Status",
     bk_when: "Waktu",
@@ -518,7 +518,7 @@ export const translations = {
     bk_err_generic: "Terjadi kesalahan. Silakan coba lagi.",
     bk_created_status: "MENUNGGU PEMBAYARAN",
     bk_secure_note:
-      "Booking tidak pernah diubah menjadi DIKONFIRMASI sebelum pembayaran diverifikasi via callback gateway.",
+      "Booking hanya DIKONFIRMASI setelah admin kami memverifikasi transfer bank Anda diterima di rekening klinik.",
   },
 } as const;
 

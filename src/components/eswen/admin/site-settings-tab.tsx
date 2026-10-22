@@ -120,6 +120,12 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
         </Button>
       </div>
 
+      {/* Indonesian-only hint banner */}
+      <div className="rounded-xl bg-eswen-light-lavender/70 border border-eswen-lavender px-4 py-2.5 text-xs text-eswen-deep font-medium flex items-center gap-2">
+        <span className="text-base">💡</span>
+        <span>Cukup input Bahasa Indonesia. Semua text English otomatis diterjemahkan saat <strong>Save All</strong>.</span>
+      </div>
+
       <p className="text-xs text-muted-foreground -mt-2">Edit logo, brand, all text, contact info, and social links. Click <strong>Save All</strong>, then reload the public site to see changes.</p>
 
       {/* Logo & Brand */}
@@ -151,15 +157,9 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
               <input value={config.logo.alt} onChange={(e) => setConfig({ ...config, logo: { ...config.logo, alt: e.target.value } })} className="ainput" />
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <label className="lbl">Tagline (EN)</label>
-              <input value={config.brand.tagline.en} onChange={(e) => setConfig({ ...config, brand: { ...config.brand, tagline: { ...config.brand.tagline, en: e.target.value } } })} className="ainput" />
-            </div>
-            <div>
-              <label className="lbl">Tagline (ID)</label>
-              <input value={config.brand.tagline.id} onChange={(e) => setConfig({ ...config, brand: { ...config.brand, tagline: { ...config.brand.tagline, id: e.target.value } } })} className="ainput" />
-            </div>
+          <div>
+            <label className="lbl">Tagline (ID) <span className="text-[9px] font-normal normal-case text-muted-foreground/70">— EN auto-translated on save</span></label>
+            <input value={config.brand.tagline.id} onChange={(e) => setConfig({ ...config, brand: { ...config.brand, tagline: { ...config.brand.tagline, id: e.target.value } } })} className="ainput" placeholder="mis. Kesehatan • Wellness • Kepercayaan" />
           </div>
         </div>
       </Card>
@@ -174,8 +174,7 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
           <div><label className="lbl">WhatsApp</label><input value={config.contact.whatsapp} onChange={(e) => setConfig({ ...config, contact: { ...config.contact, whatsapp: e.target.value } })} className="ainput" /></div>
           <div><label className="lbl">Phone</label><input value={config.contact.phone} onChange={(e) => setConfig({ ...config, contact: { ...config.contact, phone: e.target.value } })} className="ainput" /></div>
           <div><label className="lbl">Email</label><input value={config.contact.email} onChange={(e) => setConfig({ ...config, contact: { ...config.contact, email: e.target.value } })} className="ainput" /></div>
-          <div><label className="lbl">Hours (EN)</label><input value={config.contact.hours.en} onChange={(e) => setConfig({ ...config, contact: { ...config.contact, hours: { ...config.contact.hours, en: e.target.value } } })} className="ainput" /></div>
-          <div><label className="lbl">Hours (ID)</label><input value={config.contact.hours.id} onChange={(e) => setConfig({ ...config, contact: { ...config.contact, hours: { ...config.contact.hours, id: e.target.value } } })} className="ainput" /></div>
+          <div><label className="lbl">Hours (ID) <span className="text-[9px] font-normal normal-case text-muted-foreground/70">— EN auto-translated on save</span></label><input value={config.contact.hours.id} onChange={(e) => setConfig({ ...config, contact: { ...config.contact, hours: { ...config.contact.hours, id: e.target.value } } })} className="ainput" placeholder="mis. Senin–Sabtu, 08:00–20:00 WITA" /></div>
           <div className="sm:col-span-2"><label className="lbl">Google Maps Embed URL</label><input value={config.contact.mapEmbed} onChange={(e) => setConfig({ ...config, contact: { ...config.contact, mapEmbed: e.target.value } })} className="ainput" /></div>
           <div className="sm:col-span-2"><label className="lbl">Get Directions URL</label><input value={config.contact.directions} onChange={(e) => setConfig({ ...config, contact: { ...config.contact, directions: e.target.value } })} className="ainput" /></div>
         </div>
@@ -199,16 +198,15 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
             <div><label className="lbl">Account Number</label><input value={config.payment.accountNumber} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, accountNumber: e.target.value } })} className="ainput font-mono" placeholder="e.g. 1234567890" /></div>
           </div>
           <div><label className="lbl">Account Holder Name</label><input value={config.payment.accountHolder} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, accountHolder: e.target.value } })} className="ainput" placeholder="e.g. PT Eswen Medica Sehat" /></div>
-          <div><label className="lbl">Transfer Instructions (EN)</label><textarea value={config.payment.instructionsEn} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, instructionsEn: e.target.value } })} className="ainput min-h-[50px] resize-none" /></div>
-          <div><label className="lbl">Transfer Instructions (ID)</label><textarea value={config.payment.instructionsId} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, instructionsId: e.target.value } })} className="ainput min-h-[50px] resize-none" /></div>
+          <div><label className="lbl">Transfer Instructions (ID) <span className="text-[9px] font-normal normal-case text-muted-foreground/70">— EN auto-translated on save</span></label><textarea value={config.payment.instructionsId} onChange={(e) => setConfig({ ...config, payment: { ...config.payment, instructionsId: e.target.value } })} className="ainput min-h-[50px] resize-none" placeholder="Instruksi transfer bank dalam Bahasa Indonesia..." /></div>
         </div>
       </Card>
 
-      {/* Text content (all translations, grouped) */}
+      {/* Text content (all translations, grouped) — ID only */}
       <div className="rounded-2xl border border-eswen-lavender bg-white overflow-hidden">
         <div className="px-4 py-3 bg-eswen-light-lavender/50 border-b border-eswen-lavender">
-          <h4 className="text-sm font-bold text-eswen-deep">All Text Content (EN / ID)</h4>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Every visible text on the website — edit per section. EN = English, ID = Bahasa Indonesia.</p>
+          <h4 className="text-sm font-bold text-eswen-deep">All Text Content (ID only)</h4>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Setiap teks tervisual di website — input Bahasa Indonesia saja. Versi English otomatis dibuat saat Save All.</p>
         </div>
         <div className="divide-y divide-eswen-lavender/40">
           {SECTIONS.map((sec) => {
@@ -224,15 +222,9 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
                 {open && (
                   <div className="px-4 pb-3 space-y-2.5 bg-eswen-gradient-soft/40">
                     {keys.map((k) => (
-                      <div key={k} className="grid sm:grid-cols-2 gap-2">
-                        <div>
-                          <label className="lbl-tiny">{k}</label>
-                          <textarea value={config.translations.en[k] ?? ""} onChange={(e) => setT("en", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" />
-                        </div>
-                        <div>
-                          <label className="lbl-tiny">{k} (ID)</label>
-                          <textarea value={config.translations.id[k] ?? ""} onChange={(e) => setT("id", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" />
-                        </div>
+                      <div key={k}>
+                        <label className="lbl-tiny">{k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">— EN auto-translated</span></label>
+                        <textarea value={config.translations.id[k] ?? ""} onChange={(e) => setT("id", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" />
                       </div>
                     ))}
                   </div>

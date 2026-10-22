@@ -4,9 +4,6 @@ import { motion } from "framer-motion";
 import {
   CalendarHeart,
   ShieldCheck,
-  CreditCard,
-  Wallet,
-  Smartphone,
   Building2,
   CheckCircle2,
   AlertCircle,
@@ -15,9 +12,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
-import { bookingSteps, paymentMethods, paymentGateways, bookingStatuses } from "@/lib/eswen/data";
+import { bookingSteps, bookingStatuses } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT } from "@/lib/eswen/site-config-context";
+import { useT, usePayment } from "@/lib/eswen/site-config-context";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +22,7 @@ export function SmartBookingSection() {
   const { lang } = useLanguage();
   const t = useT();
   const { openDialog } = useBookingDialog();
+  const payment = usePayment();
   const scrollTo = (href: string) =>
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -106,49 +104,31 @@ export function SmartBookingSection() {
                 ))}
               </div>
 
-              {/* Payment methods */}
-              <div className="mt-7">
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/70 mb-3">
-                  {t("booking_methods")}
+              {/* Bank transfer destination */}
+              <div className="mt-7 rounded-2xl bg-white/10 backdrop-blur p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-white/70 mb-2 flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5" />
+                  {lang === "id" ? "Transfer ke Rekening Klinik" : "Transfer to Clinic Account"}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {paymentMethods.map((m) => {
-                    const Icon =
-                      m === "Credit Card"
-                        ? CreditCard
-                        : m === "Bank Transfer" || m === "Virtual Account"
-                        ? Building2
-                        : m === "E-Wallet"
-                        ? Wallet
-                        : Smartphone;
-                    return (
-                      <span
-                        key={m}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-3 py-1.5 text-xs font-medium"
-                      >
-                        <Icon className="h-3.5 w-3.5" />
-                        {m}
-                      </span>
-                    );
-                  })}
+                <div className="grid sm:grid-cols-3 gap-2 text-sm">
+                  <div>
+                    <p className="text-[10px] text-white/60 uppercase tracking-wider">{lang === "id" ? "Bank" : "Bank"}</p>
+                    <p className="font-semibold leading-tight">{payment.bankName}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-white/60 uppercase tracking-wider">{lang === "id" ? "No. Rekening" : "Account No."}</p>
+                    <p className="font-mono font-bold tracking-wider">{payment.accountNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-white/60 uppercase tracking-wider">{lang === "id" ? "Atas Nama" : "Account Holder"}</p>
+                    <p className="font-semibold leading-tight">{payment.accountHolder}</p>
+                  </div>
                 </div>
-              </div>
-
-              {/* Gateways */}
-              <div className="mt-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/70 mb-2">
-                  {t("booking_gateways")}
+                <p className="mt-3 text-[11px] text-white/70 leading-relaxed">
+                  {lang === "id"
+                    ? "Pembayaran hanya via Transfer Bank. Setelah transfer diterima, admin kami mengkonfirmasi booking Anda."
+                    : "Payment via Bank Transfer only. Once we receive your transfer, our admin confirms your booking."}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {paymentGateways.map((g) => (
-                    <span
-                      key={g}
-                      className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-bold tracking-wide"
-                    >
-                      {g}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               <Button
@@ -202,6 +182,17 @@ export function SmartBookingSection() {
               <ShieldCheck className="inline h-4 w-4 text-eswen-soft-purple mb-1 mr-1" />
               {t("booking_secure_note")}
             </div>
+
+            {/* scroll helper for users on slow devices */}
+            <button
+              type="button"
+              onClick={() => scrollTo("#booking")}
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+            >
+              {""}
+            </button>
           </motion.div>
         </div>
       </div>

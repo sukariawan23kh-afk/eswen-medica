@@ -365,9 +365,14 @@ export const aboutHighlights: {
   },
 ];
 
-/* ---------- Payment methods ---------- */
-export const paymentMethods = ["Credit Card", "Virtual Account", "E-Wallet", "QRIS", "Bank Transfer"];
-export const paymentGateways = ["Midtrans", "Xendit", "Stripe"];
+/* ---------- Payment methods ----------
+ * Online payment methods (Credit Card / QRIS / E-Wallet / Virtual Account)
+ * were removed — the clinic now ONLY accepts Bank Transfer to its company
+ * bank account. The deposit is paid offline; an admin verifies receipt and
+ * flips the booking WAITING_PAYMENT → CONFIRMED.
+ */
+export const paymentMethods = ["Bank Transfer"] as const;
+export const paymentGateways: readonly string[] = [];
 
 /* ---------- Blog posts ---------- */
 export type BlogPost = {

@@ -135,8 +135,7 @@ export function OffersTab({ showToast }: { showToast: (msg: string) => void }) {
               <div className="flex items-start gap-3 p-3">
                 <div className="h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-eswen-light-lavender flex items-center justify-center">
                   {o.imageUrl ? (
-                     
-                    <img src={o.imageUrl} alt={o.titleEn} className="h-full w-full object-cover" />
+                    <img src={o.imageUrl} alt={o.titleId} className="h-full w-full object-cover" />
                   ) : (
                     <Gift className="h-5 w-5 text-muted-foreground/60" />
                   )}
@@ -160,8 +159,8 @@ export function OffersTab({ showToast }: { showToast: (msg: string) => void }) {
                       {o.active ? "Active" : "Hidden"}
                     </span>
                   </div>
-                  <h4 className="text-sm font-bold text-eswen-deep leading-tight mt-1 line-clamp-1">{o.titleEn}</h4>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{o.descEn}</p>
+                  <h4 className="text-sm font-bold text-eswen-deep leading-tight mt-1 line-clamp-1">{o.titleId}</h4>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{o.descId}</p>
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
                     <span>priority {o.priority}</span>
                     {o.ctaLink && <span>· → {o.ctaLink}</span>}
@@ -222,26 +221,23 @@ function OfferEditor({ offer, onClose, onSave }: { offer: Offer; onClose: () => 
           </button>
         </div>
         <form onSubmit={submit} className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen p-5 space-y-3.5">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <F label="Title (EN)">
-              <input value={f.titleEn} onChange={(e) => set("titleEn", e.target.value)} className="ainput" />
-            </F>
-            <F label="Title (ID)">
-              <input value={f.titleId} onChange={(e) => set("titleId", e.target.value)} className="ainput" />
-            </F>
+          <div className="rounded-xl bg-eswen-light-lavender/60 p-2.5 text-[11px] text-eswen-soft-purple font-semibold flex items-center gap-1.5">
+            💡 Cukup input Bahasa Indonesia. English otomatis diterjemahkan saat Save.
           </div>
-          <F label="Description (EN)">
-            <textarea
-              value={f.descEn}
-              onChange={(e) => set("descEn", e.target.value)}
-              className="ainput min-h-[70px] resize-none"
+          <F label="Judul (ID)">
+            <input
+              value={f.titleId}
+              onChange={(e) => set("titleId", e.target.value)}
+              className="ainput"
+              placeholder="mis. Promo Spesial Awal Tahun"
             />
           </F>
-          <F label="Description (ID)">
+          <F label="Deskripsi (ID)">
             <textarea
               value={f.descId}
               onChange={(e) => set("descId", e.target.value)}
-              className="ainput min-h-[70px] resize-none"
+              className="ainput min-h-[80px] resize-y"
+              placeholder="Deskripsi lengkap promo dalam Bahasa Indonesia..."
             />
           </F>
           <div className="grid sm:grid-cols-3 gap-3">
@@ -275,26 +271,15 @@ function OfferEditor({ offer, onClose, onSave }: { offer: Offer; onClose: () => 
               previewClass="h-16 w-24"
             />
           </F>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <F label="CTA Text (EN)">
-              <input
-                value={f.ctaTextEn}
-                onChange={(e) => set("ctaTextEn", e.target.value)}
-                placeholder="Book Now"
-                maxLength={80}
-                className="ainput"
-              />
-            </F>
-            <F label="CTA Text (ID)">
-              <input
-                value={f.ctaTextId}
-                onChange={(e) => set("ctaTextId", e.target.value)}
-                placeholder="Booking Sekarang"
-                maxLength={80}
-                className="ainput"
-              />
-            </F>
-          </div>
+          <F label="Teks CTA (ID)">
+            <input
+              value={f.ctaTextId}
+              onChange={(e) => set("ctaTextId", e.target.value)}
+              placeholder="mis. Booking Sekarang"
+              maxLength={80}
+              className="ainput"
+            />
+          </F>
           <F label="CTA Link (section anchor or URL)">
             <input
               value={f.ctaLink}

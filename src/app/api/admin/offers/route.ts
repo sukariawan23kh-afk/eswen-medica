@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
 
 export const runtime = "nodejs";
@@ -45,14 +46,14 @@ export async function GET(req: NextRequest) {
 }
 
 const CreateSchema = z.object({
-  titleEn: z.string().min(2).max(200),
+  titleEn: z.string().max(200).default(""),       // optional — auto-translated from ID
   titleId: z.string().min(2).max(200),
-  descEn: z.string().min(5).max(2000),
+  descEn: z.string().max(2000).default(""),       // optional — auto-translated from ID
   descId: z.string().min(5).max(2000),
   offerType: z.string().max(30).default("weekly"),
   badge: z.string().max(40).nullable().optional(),
   imageUrl: z.string().max(500).nullable().optional(),
-  ctaTextEn: z.string().max(80).nullable().optional(),
+  ctaTextEn: z.string().max(80).nullable().optional(), // auto-translated from ID
   ctaTextId: z.string().max(80).nullable().optional(),
   ctaLink: z.string().max(300).nullable().optional(),
   active: z.boolean().default(true),
@@ -81,6 +82,10 @@ export async function POST(req: NextRequest) {
   }
   try {
     const d = parsed.data;
+    // ALWAYS translate EN from ID (admin only inputs Indonesian)
+    if (d.titleId) d.titleEn = await translateIdToEn(d.titleId);
+    if (d.descId) d.descEn = await translateIdToEn(d.descId);
+    if (d.ctaTextId) d.ctaTextEn = await translateIdToEn(d.ctaTextId);
     const created = await db.specialOffer.create({
       data: {
         titleEn: d.titleEn,

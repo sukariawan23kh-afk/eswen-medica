@@ -107,6 +107,12 @@ export async function POST(req: NextRequest) {
           bookingDate: data.bookingDate,
           bookingTime: data.bookingTime,
           status: "WAITING_PAYMENT",
+          // Online payment methods (Credit Card / QRIS / E-Wallet / VA) were
+          // removed. Every booking is paid offline via Bank Transfer; the
+          // client wires the deposit to the clinic's bank account and an
+          // admin verifies receipt → flips the booking to CONFIRMED.
+          paymentMethod: "Bank Transfer",
+          paymentGateway: "Manual",
           patientName: data.patientName,
           patientEmail: data.patientEmail,
           patientPhone: data.patientPhone,
@@ -130,6 +136,10 @@ export async function POST(req: NextRequest) {
         bookingTime: created.bookingTime,
         depositAmount: created.depositAmount,
         depositFormatted: formatIDR(created.depositAmount),
+        paymentMethod: created.paymentMethod,
+        paymentGateway: created.paymentGateway,
+        patientName: created.patientName,
+        patientEmail: created.patientEmail,
         createdAt: created.createdAt,
       },
     });

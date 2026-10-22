@@ -10,13 +10,11 @@ import {
   CalendarHeart,
   ShieldCheck,
   Loader2,
-  CreditCard,
-  Wallet,
-  Smartphone,
   Building2,
   Clock,
   AlertCircle,
   PartyPopper,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -25,12 +23,7 @@ import { useBookingDialog } from "@/lib/eswen/booking-store";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT, useServices, useDoctors, usePayment } from "@/lib/eswen/site-config-context";
 import { tr } from "@/lib/eswen/i18n";
-import {
-  services as staticServices,
-  doctors as staticDoctors,
-  paymentMethods,
-  paymentGateways,
-} from "@/lib/eswen/data";
+import { services as staticServices, doctors as staticDoctors } from "@/lib/eswen/data";
 import { nextDates, formatIDR, doctorsForService } from "@/lib/eswen/booking";
 import { getLucideIcon } from "@/lib/eswen/icons";
 import { useMounted } from "@/hooks/use-mounted";
@@ -46,15 +39,19 @@ type CreatedBooking = {
   bookingTime: string;
   depositAmount: number;
   depositFormatted: string;
-};
-type PayResult = {
-  paymentOk: boolean;
-  manual?: boolean;
-  message?: string;
-  booking: CreatedBooking;
+  patientEmail?: string;
+  patientName?: string;
 };
 
-const STEPS = ["service", "doctor", "datetime", "info", "payment", "done"] as const;
+// Online payment methods (Credit Card / QRIS / E-Wallet / Virtual Account) were
+// removed — the clinic ONLY accepts Bank Transfer. The booking flow is now:
+//   1. Service → 2. Doctor → 3. Date & Time → 4. Patient Info → 5. Done
+// On "Book Appointment" (step 3 → 4), the booking is created with status
+// WAITING_PAYMENT + paymentMethod="Bank Transfer" + paymentGateway="Manual".
+// Step 4 shows the bank account details + deposit amount + a "Download Bukti
+// Booking" (PDF) button. The booking is CONFIRMED later by an admin who
+// verifies the deposit arrived in the clinic account.
+const STEPS = ["service", "doctor", "datetime", "info", "done"] as const;
 
 export function BookingDialog() {
   const mounted = useMounted();
@@ -65,23 +62,19 @@ export function BookingDialog() {
   const doctors = useDoctors(staticDoctors);
   const payment = usePayment();
 
-  const [step, setStep] = useState(0); // 0..5
+  const [step, setStep] = useState(0); // 0..4
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [doctorId, setDoctorId] = useState<string | null>(null);
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
   const [info, setInfo] = useState({ name: "", email: "", phone: "", notes: "" });
-  const [paymentMethod, setPaymentMethod] = useState<string>("Credit Card");
-  const [paymentGateway, setPaymentGateway] = useState<string>("Midtrans");
 
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
-  const [paying, setPaying] = useState(false);
   const [created, setCreated] = useState<CreatedBooking | null>(null);
-  const [payResult, setPayResult] = useState<PayResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Reset everything when the dialog opens (or preselected service changes)
@@ -94,7 +87,6 @@ export function BookingDialog() {
       setTime("");
       setSlots(null);
       setCreated(null);
-      setPayResult(null);
       setError(null);
     }
   }, [open, preselectedServiceId]);
@@ -150,7 +142,9 @@ export function BookingDialog() {
     return true;
   })();
 
-  // Create the booking when moving from info → payment (reserves the slot)
+  // Create the booking on "Book Appointment" (step 3 → 4). The booking is
+  // created in WAITING_PAYMENT with paymentMethod="Bank Transfer" hardcoded
+  // on the server. No payment-gateway step exists anymore.
   const createBooking = async () => {
     if (!serviceId || !doctorId || !date || !time) return;
     setSubmitting(true);
@@ -180,8 +174,12 @@ export function BookingDialog() {
         }
         throw new Error(data?.error || t("bk_err_generic"));
       }
-      setCreated(data.booking);
-      setStep(4); // → payment
+      setCreated({
+        ...data.booking,
+        patientEmail: info.email.trim(),
+        patientName: info.name.trim(),
+      });
+      setStep(4); // → done
     } catch (e) {
       setError(e instanceof Error ? e.message : t("bk_err_generic"));
     } finally {
@@ -189,36 +187,10 @@ export function BookingDialog() {
     }
   };
 
-  const payDeposit = async () => {
-    if (!created) return;
-    setPaying(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/bookings/${created.id}/pay`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentMethod, paymentGateway }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.ok) throw new Error(data?.error || t("bk_err_generic"));
-      setPayResult(data);
-      setStep(5); // → done
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("bk_err_generic"));
-    } finally {
-      setPaying(false);
-    }
-  };
-
   const handleNext = () => {
     if (step === 3) {
-      // info → payment: create the booking first
+      // info → done: create the booking (Bank Transfer is auto-selected)
       createBooking();
-      return;
-    }
-    if (step === 4) {
-      // payment → done: pay the deposit
-      payDeposit();
       return;
     }
     // Advance service(0)→doctor(1)→datetime(2)→info(3)
@@ -227,11 +199,21 @@ export function BookingDialog() {
 
   const handleBack = () => {
     setError(null);
-    if (step > 0 && step < 5) setStep((s) => s - 1);
+    if (step > 0 && step < 4) setStep((s) => s - 1);
   };
 
   const resetAndClose = () => {
     closeDialog();
+  };
+
+  // Opens the PDF booking proof in a new tab — the email query param lets the
+  // server verify the requester is the patient who booked (admin downloads
+  // don't need this since admin auths via cookie).
+  const downloadProof = () => {
+    if (!created) return;
+    const email = encodeURIComponent(created.patientEmail ?? "");
+    const url = `/api/bookings/${created.id}/proof${email ? `?email=${email}` : ""}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const stepLabels = [
@@ -239,7 +221,6 @@ export function BookingDialog() {
     t("bk_step_doctor"),
     t("bk_step_datetime"),
     t("bk_step_info"),
-    t("bk_step_payment"),
     t("bk_step_done"),
   ];
 
@@ -512,171 +493,95 @@ export function BookingDialog() {
                       />
                     </Field>
                   </div>
+
+                  {/* Bank Transfer notice — payment is offline to the clinic account */}
+                  <div className="mt-5 rounded-2xl border border-eswen-soft-purple/40 bg-eswen-light-lavender/40 p-3 text-[11px] text-eswen-deep/80 leading-relaxed flex items-start gap-2">
+                    <Building2 className="h-3.5 w-3.5 text-eswen-soft-purple mt-0.5 shrink-0" />
+                    <span>
+                      {lang === "id"
+                        ? "Pembayaran hanya via Transfer Bank ke rekening klinik. Setelah Anda booking, kami tampilkan nomor rekening + jumlah deposit. Booking akan Dikonfirmasi admin setelah transfer diterima."
+                        : "Payment is via Bank Transfer to the clinic's account only. After you book, we'll show the bank account + deposit amount. Your booking will be CONFIRMED by our admin once the transfer is received."}
+                    </span>
+                  </div>
+
                   {/* Inline style for form inputs */}
                   <style>{`.form-input{width:100%;border-radius:0.75rem;border:1px solid var(--eswen-lavender);background:#fff;padding:0.625rem 0.875rem;font-size:0.875rem;color:var(--eswen-deep);outline:none;transition:border-color .15s,background .15s}.form-input::placeholder{color:var(--muted-foreground);opacity:.6}.form-input:focus{border-color:var(--eswen-soft-purple);background:#FCFAFF}`}</style>
                 </StepWrap>
               )}
 
-              {/* Step 4: Payment */}
+              {/* Step 4: Done — booking created, awaiting bank transfer */}
               {step === 4 && created && (
-                <StepWrap title={t("bk_pay_deposit")} desc={t("bk_pay_desc")}>
+                <div className="text-center py-2">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600 mb-4">
+                    <PartyPopper className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-xl font-extrabold text-eswen-deep">{t("bk_confirm_title")}</h3>
+                  <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">{t("bk_confirm_desc")}</p>
+
+                  <div className="mt-5 inline-block rounded-2xl border border-eswen-lavender bg-white px-5 py-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("bk_ref_code")}</p>
+                    <p className="text-lg font-extrabold text-eswen-deep tracking-wider">{created.refCode}</p>
+                  </div>
+
                   {/* Summary */}
-                  <div className="rounded-2xl border border-eswen-lavender bg-white p-4 mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-muted-foreground">{t("bk_deposit_amount")}</span>
-                      <span className="text-lg font-extrabold text-eswen-deep">{created.depositFormatted}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground space-y-1 border-t border-eswen-lavender/60 pt-2">
-                      <div className="flex justify-between"><span>{t("bk_service")}</span><span className="font-medium text-eswen-deep">{created.serviceName}</span></div>
-                      <div className="flex justify-between"><span>{t("bk_with")}</span><span className="font-medium text-eswen-deep">{created.doctorName}</span></div>
-                      <div className="flex justify-between"><span>{t("bk_when")}</span><span className="font-medium text-eswen-deep">{created.bookingDate} · {created.bookingTime}</span></div>
-                      <div className="flex justify-between items-center pt-1">
-                        <span>{t("bk_status_label")}</span>
-                        <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-[10px] font-bold">{created.status}</span>
-                      </div>
+                  <div className="mt-4 text-xs text-muted-foreground space-y-1 max-w-sm mx-auto text-left">
+                    <div className="flex justify-between"><span>{t("bk_service")}</span><span className="font-medium text-eswen-deep">{created.serviceName}</span></div>
+                    <div className="flex justify-between"><span>{t("bk_with")}</span><span className="font-medium text-eswen-deep">{created.doctorName}</span></div>
+                    <div className="flex justify-between"><span>{t("bk_when")}</span><span className="font-medium text-eswen-deep">{created.bookingDate} · {created.bookingTime}</span></div>
+                    <div className="flex justify-between border-t border-eswen-lavender/60 pt-1"><span>{t("bk_deposit_amount")}</span><span className="font-bold text-eswen-deep">{created.depositFormatted}</span></div>
+                    <div className="flex justify-between items-center pt-1">
+                      <span>{t("bk_status_label")}</span>
+                      <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-[10px] font-bold">{created.status}</span>
                     </div>
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{t("bk_pay_method")}</p>
-                      <div className="space-y-1.5">
-                        {paymentMethods.map((m) => {
-                          const Icon = m === "Credit Card" ? CreditCard : m === "Bank Transfer" || m === "Virtual Account" ? Building2 : m === "E-Wallet" ? Wallet : Smartphone;
-                          return (
-                            <button
-                              key={m}
-                              onClick={() => setPaymentMethod(m)}
-                              className={cn(
-                                "w-full flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all",
-                                paymentMethod === m ? "border-eswen-soft-purple bg-eswen-light-lavender text-eswen-deep" : "border-eswen-lavender bg-white text-muted-foreground hover:border-eswen-soft-purple"
-                              )}
-                            >
-                              <Icon className="h-4 w-4" /> {m}
-                            </button>
-                          );
-                        })}
-                      </div>
+                  {/* Bank Transfer details */}
+                  <div className="mt-5 rounded-2xl border border-eswen-soft-purple/40 bg-white p-4 text-left max-w-sm mx-auto">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-eswen-deep mb-2 flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 text-eswen-soft-purple" />
+                      {lang === "id" ? "Rekening Tujuan (Transfer Bank)" : "Destination Account (Bank Transfer)"}
+                    </p>
+                    <div className="rounded-xl bg-eswen-light-lavender/50 p-3 space-y-1 text-sm">
+                      <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Bank" : "Bank"}</span><span className="font-semibold text-eswen-deep">{payment.bankName}</span></div>
+                      <div className="flex justify-between items-center"><span className="text-muted-foreground text-xs">{lang === "id" ? "No. Rekening" : "Account No."}</span><span className="font-mono font-bold text-eswen-deep text-base tracking-wider">{payment.accountNumber}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Atas Nama" : "Account Holder"}</span><span className="font-semibold text-eswen-deep">{payment.accountHolder}</span></div>
                     </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{t("bk_pay_gateway")}</p>
-                      <div className="space-y-1.5">
-                        {paymentGateways.map((g) => (
-                          <button
-                            key={g}
-                            onClick={() => setPaymentGateway(g)}
-                            className={cn(
-                              "w-full rounded-xl border px-3 py-2 text-xs font-bold tracking-wide transition-all",
-                              paymentGateway === g ? "border-eswen-soft-purple bg-eswen-light-lavender text-eswen-deep" : "border-eswen-lavender bg-white text-muted-foreground hover:border-eswen-soft-purple"
-                            )}
-                          >
-                            {g}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{lang === "id" ? payment.instructionsId : payment.instructionsEn}</p>
+                    <p className="text-[11px] text-eswen-soft-purple mt-2 font-semibold flex items-start gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <span>
+                        {lang === "id" ? (
+                          <>Transfer sejumlah <span className="font-bold text-eswen-deep">{created.depositFormatted}</span> lalu tunggu konfirmasi admin (biasanya dalam beberapa jam pada jam buka 08:00–20:00 WITA).</>
+                        ) : (
+                          <>Transfer <span className="font-bold text-eswen-deep">{created.depositFormatted}</span> then wait for admin confirmation (usually within a few hours during 08:00–20:00 WITA).</>
+                        )}
+                      </span>
+                    </p>
                   </div>
 
-                  <div className="mt-4 rounded-xl bg-eswen-light-lavender/60 p-3 text-[11px] text-muted-foreground flex items-start gap-2">
-                    <ShieldCheck className="h-3.5 w-3.5 text-eswen-soft-purple mt-0.5 shrink-0" />
-                    {t("bk_secure_note")}
+                  {/* Actions */}
+                  <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center max-w-sm mx-auto">
+                    <Button
+                      onClick={downloadProof}
+                      className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11 px-5"
+                    >
+                      <Download className="h-4 w-4" />
+                      {lang === "id" ? "Unduh Bukti Booking" : "Download Bukti Booking"}
+                    </Button>
+                    <Button
+                      onClick={resetAndClose}
+                      variant="outline"
+                      className="rounded-full border-eswen-lavender text-eswen-deep bg-white h-11 px-5"
+                    >
+                      {t("bk_close")}
+                    </Button>
                   </div>
-
-                  {/* Bank details shown when Bank Transfer is selected (manual flow) */}
-                  {paymentMethod === "Bank Transfer" && (
-                    <div className="mt-4 rounded-2xl border border-eswen-soft-purple/40 bg-white p-4">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-eswen-deep mb-2 flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 text-eswen-soft-purple" /> {lang === "id" ? "Rekening Tujuan (Transfer Bank)" : "Destination Account (Bank Transfer)"}
-                      </p>
-                      <div className="rounded-xl bg-eswen-light-lavender/50 p-3 space-y-1 text-sm">
-                        <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Bank" : "Bank"}</span><span className="font-semibold text-eswen-deep">{payment.bankName}</span></div>
-                        <div className="flex justify-between items-center"><span className="text-muted-foreground text-xs">{lang === "id" ? "No. Rekening" : "Account No."}</span><span className="font-mono font-bold text-eswen-deep text-base tracking-wider">{payment.accountNumber}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground text-xs">{lang === "id" ? "Atas Nama" : "Account Holder"}</span><span className="font-semibold text-eswen-deep">{payment.accountHolder}</span></div>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{lang === "id" ? payment.instructionsId : payment.instructionsEn}</p>
-                      <p className="text-[11px] text-eswen-soft-purple mt-2 font-semibold">
-                        {lang === "id" ? "💰 Transfer sejumlah " : "💰 Transfer "}<span className="font-bold text-eswen-deep">{created.depositFormatted}</span>{lang === "id" ? " lalu klik tombol di bawah. Booking Anda akan dikonfirmasi admin setelah transfer diterima." : " then click the button below. Your booking will be confirmed by our admin once we receive your transfer."}
-                      </p>
-                    </div>
-                  )}
-                </StepWrap>
-              )}
-
-              {/* Step 5: Done / Failed */}
-              {step === 5 && payResult && (
-                <div className="text-center py-6">
-                  {payResult.paymentOk ? (
-                    <>
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600 mb-4">
-                        <PartyPopper className="h-8 w-8" />
-                      </div>
-                      <h3 className="text-xl font-extrabold text-eswen-deep">{t("bk_confirm_title")}</h3>
-                      <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">{t("bk_confirm_desc")}</p>
-                      <div className="mt-5 inline-block rounded-2xl border border-eswen-lavender bg-white px-5 py-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("bk_ref_code")}</p>
-                        <p className="text-lg font-extrabold text-eswen-deep tracking-wider">{payResult.booking.refCode}</p>
-                      </div>
-                      <div className="mt-4 text-xs text-muted-foreground space-y-1 max-w-sm mx-auto text-left">
-                        <div className="flex justify-between"><span>{t("bk_service")}</span><span className="font-medium text-eswen-deep">{payResult.booking.serviceName}</span></div>
-                        <div className="flex justify-between"><span>{t("bk_with")}</span><span className="font-medium text-eswen-deep">{payResult.booking.doctorName}</span></div>
-                        <div className="flex justify-between"><span>{t("bk_when")}</span><span className="font-medium text-eswen-deep">{payResult.booking.bookingDate} · {payResult.booking.bookingTime}</span></div>
-                        <div className="flex justify-between items-center pt-1">
-                          <span>{t("bk_status_label")}</span>
-                          <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2.5 py-0.5 text-[10px] font-bold">{payResult.booking.status}</span>
-                        </div>
-                      </div>
-                      <Button onClick={resetAndClose} className="mt-6 rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11 px-6">
-                        {t("bk_close")}
-                      </Button>
-                    </>
-                  ) : payResult.manual ? (
-                    <>
-                      {/* Manual bank-transfer flow: awaiting admin confirmation */}
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600 mb-4">
-                        <Clock className="h-8 w-8" />
-                      </div>
-                      <h3 className="text-xl font-extrabold text-eswen-deep">{lang === "id" ? "Menunggu Konfirmasi Pembayaran" : "Awaiting Payment Confirmation"}</h3>
-                      <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
-                        {lang === "id" ? "Permintaan transfer Anda tercatat. Booking Anda menunggu konfirmasi — admin kami akan mengkonfirmasi setelah transfer Anda diterima di rekening klinik (biasanya dalam beberapa jam pada jam buka 08:00–20:00 WITA)." : "Your transfer request is recorded. Your booking is awaiting confirmation — our admin will confirm once your transfer is received in the clinic's account (usually within a few hours during 08:00–20:00 WITA)."}
-                      </p>
-                      <div className="mt-5 inline-block rounded-2xl border border-eswen-lavender bg-white px-5 py-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("bk_ref_code")}</p>
-                        <p className="text-lg font-extrabold text-eswen-deep tracking-wider">{payResult.booking.refCode}</p>
-                      </div>
-                      <div className="mt-4 text-xs text-muted-foreground space-y-1 max-w-sm mx-auto text-left">
-                        <div className="flex justify-between"><span>{t("bk_service")}</span><span className="font-medium text-eswen-deep">{payResult.booking.serviceName}</span></div>
-                        <div className="flex justify-between"><span>{t("bk_with")}</span><span className="font-medium text-eswen-deep">{payResult.booking.doctorName}</span></div>
-                        <div className="flex justify-between"><span>{t("bk_when")}</span><span className="font-medium text-eswen-deep">{payResult.booking.bookingDate} · {payResult.booking.bookingTime}</span></div>
-                        <div className="flex justify-between items-center pt-1">
-                          <span>{t("bk_status_label")}</span>
-                          <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-[10px] font-bold">{payResult.booking.status}</span>
-                        </div>
-                      </div>
-                      <Button onClick={resetAndClose} className="mt-6 rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11 px-6">
-                        {t("bk_close")}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-600 mb-4">
-                        <AlertCircle className="h-8 w-8" />
-                      </div>
-                      <h3 className="text-xl font-extrabold text-eswen-deep">{t("bk_pay_failed_title")}</h3>
-                      <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">{t("bk_pay_failed_desc")}</p>
-                      <div className="mt-5 inline-block rounded-2xl border border-eswen-lavender bg-white px-5 py-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("bk_ref_code")}</p>
-                        <p className="text-lg font-extrabold text-eswen-deep tracking-wider">{payResult.booking.refCode}</p>
-                      </div>
-                      <div className="mt-5 flex gap-2 justify-center">
-                        <Button onClick={() => setStep(4)} variant="outline" className="rounded-full border-eswen-lavender-soft text-eswen-deep bg-white h-11">
-                          <ArrowLeft className="h-4 w-4" /> {t("bk_retry_payment")}
-                        </Button>
-                        <Button onClick={resetAndClose} className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-11">
-                          {t("bk_close")}
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                  <p className="text-[10px] text-muted-foreground mt-3 flex items-center justify-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {lang === "id"
+                      ? "Simpan kode referensi — Anda dapat mengunduh bukti PDF kapan saja."
+                      : "Save your reference code — you can download the PDF proof anytime."}
+                  </p>
                 </div>
               )}
             </motion.div>
@@ -691,11 +596,11 @@ export function BookingDialog() {
         </div>
 
         {/* Footer with Back / Next */}
-        {step < 5 && (
+        {step < 4 && (
           <div className="shrink-0 border-t border-eswen-lavender bg-white px-5 sm:px-7 py-4 flex items-center justify-between gap-3">
             <Button
               onClick={handleBack}
-              disabled={step === 0 || submitting || paying}
+              disabled={step === 0 || submitting}
               variant="ghost"
               className="rounded-full text-eswen-deep hover:bg-eswen-light-lavender h-10"
             >
@@ -707,18 +612,16 @@ export function BookingDialog() {
             </div>
             <Button
               onClick={handleNext}
-              disabled={!canNext || submitting || paying}
+              disabled={!canNext || submitting}
               className="rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white h-10 px-5"
             >
-              {(submitting || paying) && <Loader2 className="h-4 w-4 animate-spin" />}
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {submitting
                 ? t("bk_processing")
-                : paying
-                ? t("bk_processing")
-                : step === 4
-                ? (paymentMethod === "Bank Transfer" ? (lang === "id" ? "Saya Sudah Transfer" : "I've Made the Transfer") : t("bk_pay_now"))
+                : step === 3
+                ? (lang === "id" ? "Buat Booking" : "Book Appointment")
                 : t("bk_next")}
-              {!submitting && !paying && step !== 4 && <ArrowRight className="h-4 w-4" />}
+              {!submitting && step !== 3 && <ArrowRight className="h-4 w-4" />}
             </Button>
           </div>
         )}

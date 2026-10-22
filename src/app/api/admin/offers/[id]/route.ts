@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,6 +46,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const d = parsed.data;
     const data: Record<string, unknown> = { ...d };
+    // ALWAYS re-translate EN from ID (admin only inputs Indonesian)
+    if (d.titleId) data.titleEn = await translateIdToEn(d.titleId);
+    if (d.descId) data.descEn = await translateIdToEn(d.descId);
+    if (d.ctaTextId) data.ctaTextEn = await translateIdToEn(d.ctaTextId);
     if (d.startAt !== undefined) data.startAt = d.startAt ? new Date(d.startAt) : null;
     if (d.endAt !== undefined) data.endAt = d.endAt ? new Date(d.endAt) : null;
     if (d.priority !== undefined) data.priority = Number(d.priority) || 0;

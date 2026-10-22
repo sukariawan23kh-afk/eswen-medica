@@ -71,10 +71,10 @@ export function DoctorsTab({ showToast }: { showToast: (msg: string) => void }) 
               </span>
               <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-bold text-eswen-deep leading-tight truncate">{d.name}</h4>
-                <p className="text-[11px] font-semibold text-eswen-soft-purple">{d.roleEn}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{d.specialtyEn}</p>
+                <p className="text-[11px] font-semibold text-eswen-soft-purple">{d.roleId}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{d.specialtyId}</p>
                 <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                  <span>{d.experienceEn}</span><span>·</span><span>{d.category}</span><span>·</span><span>order {d.order}</span>
+                  <span>{d.experienceId}</span><span>·</span><span>{d.category}</span><span>·</span><span>order {d.order}</span>
                   <span className={cn("ml-auto rounded-full px-2 py-0.5 text-[9px] font-bold", d.published ? "bg-green-100 text-green-700" : "bg-stone-100 text-stone-500")}>
                     {d.published ? "Published" : "Draft"}
                   </span>
@@ -114,15 +114,15 @@ function DocEditor({ doc, onClose, onSave }: { doc: Doc; onClose: () => void; on
           <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/15"><X className="h-4 w-4" /></button>
         </div>
         <form onSubmit={submit} className="flex-1 min-h-0 overflow-y-auto scrollbar-eswen p-5 space-y-3.5">
+          <div className="rounded-xl bg-eswen-light-lavender/60 p-2.5 text-[11px] text-eswen-soft-purple font-semibold flex items-center gap-1.5">
+            💡 Cukup input Bahasa Indonesia. English otomatis diterjemahkan saat Save.
+          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <F label="Full Name"><input value={f.name} onChange={(e) => set("name", e.target.value)} className="ainput" /></F>
             <F label="Initials"><input value={f.initials} onChange={(e) => set("initials", e.target.value)} maxLength={4} className="ainput" /></F>
-            <F label="Role (EN)"><input value={f.roleEn} onChange={(e) => set("roleEn", e.target.value)} className="ainput" /></F>
-            <F label="Role (ID)"><input value={f.roleId} onChange={(e) => set("roleId", e.target.value)} className="ainput" /></F>
-            <F label="Specialty (EN)"><input value={f.specialtyEn} onChange={(e) => set("specialtyEn", e.target.value)} className="ainput" /></F>
-            <F label="Specialty (ID)"><input value={f.specialtyId} onChange={(e) => set("specialtyId", e.target.value)} className="ainput" /></F>
-            <F label="Experience (EN)"><input value={f.experienceEn} onChange={(e) => set("experienceEn", e.target.value)} className="ainput" /></F>
-            <F label="Experience (ID)"><input value={f.experienceId} onChange={(e) => set("experienceId", e.target.value)} className="ainput" /></F>
+            <F label="Role (ID)"><input value={f.roleId} onChange={(e) => set("roleId", e.target.value)} className="ainput" placeholder="mis. Dokter Umum" /></F>
+            <F label="Specialty (ID)"><input value={f.specialtyId} onChange={(e) => set("specialtyId", e.target.value)} className="ainput" placeholder="mis. Penyakit Dalam" /></F>
+            <F label="Experience (ID)"><input value={f.experienceId} onChange={(e) => set("experienceId", e.target.value)} className="ainput" placeholder="mis. 12 tahun" /></F>
             <F label="Languages (comma-sep)"><input value={f.languages} onChange={(e) => set("languages", e.target.value)} className="ainput" /></F>
             <F label="Category">
               <select value={f.category} onChange={(e) => set("category", e.target.value)} className="ainput">

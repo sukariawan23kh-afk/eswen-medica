@@ -53,8 +53,8 @@ export async function GET(req: NextRequest) {
       ...articles.map((a) => ({
         kind: "article" as const,
         id: a.id,
-        title: a.title,
-        detail: `${a.category} · ${a.language.toUpperCase()} · ${a.published ? "Published" : "Draft"}`,
+        title: a.titleEn || a.titleId,
+        detail: `${a.categoryEn || a.categoryId} · ${a.published ? "Published" : "Draft"}`,
         createdAt: a.createdAt.toISOString(),
       })),
     ].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
