@@ -230,6 +230,9 @@ export type Doctor = {
   category: "doctor" | "wellness";
   specialty: Bi;
   experience: Bi;
+  bio: Bi;
+  education: Bi;
+  certifications: Bi;
   languages: string[];
   image: string;
   initials: string;
@@ -243,6 +246,18 @@ export const doctors: Doctor[] = [
     category: "doctor",
     specialty: bi("General Practice & Preventive Medicine", "Praktik Umum & Kedokteran Preventif"),
     experience: bi("12+ years", "12+ tahun"),
+    bio: bi(
+      "Dr. Anastasia Putri is a seasoned general practitioner with 12+ years of practice in family and preventive medicine. She earned her medical degree from the Faculty of Medicine, Universitas Indonesia, and completed her residency in Internal Medicine at RSCM Jakarta. Dr. Anastasia is committed to delivering holistic, personalized healthcare to every patient — both local and international.",
+      "Dr. Anastasia Putri adalah dokter umum berpengalaman dengan 12+ tahun praktik di bidang kedokteran keluarga dan preventif. Ia menyelesaikan pendidikan dokter di Fakultas Kedokteran Universitas Indonesia dan menyelesaikan residency di RSCM Jakarta. Dr. Anastasia berkomitmen memberikan layanan kesehatan holistik dengan pendekatan personal untuk setiap pasien, baik lokal maupun internasional."
+    ),
+    education: bi(
+      "- MD, Faculty of Medicine, Universitas Indonesia (2010)\n- Residency in Internal Medicine, RSCM Jakarta (2014)\n- Fellowship in Preventive Medicine, Singapore (2017)",
+      "- MD, Fakultas Kedokteran Universitas Indonesia (2010)\n- Residency di Internal Medicine, RSCM Jakarta (2014)\n- Fellowship in Preventive Medicine, Singapore (2017)"
+    ),
+    certifications: bi(
+      "- Board Certified in Internal Medicine (Indonesian Medical Council)\n- ACLS (Advanced Cardiovascular Life Support) Certified\n- BLS (Basic Life Support) Instructor",
+      "- Board Certified in Internal Medicine (Indonesian Medical Council)\n- ACLS (Advanced Cardiovascular Life Support) Certified\n- BLS (Basic Life Support) Instructor"
+    ),
     languages: ["EN", "ID", "Japanese"],
     image: "/images/doctor-1.png",
     initials: "AP",
@@ -254,6 +269,18 @@ export const doctors: Doctor[] = [
     category: "doctor",
     specialty: bi("Dermatology & Skin Health", "Dermatologi & Kesehatan Kulit"),
     experience: bi("15+ years", "15+ tahun"),
+    bio: bi(
+      "Dr. Marcus Tan is a board-certified dermatologist with 15+ years of experience diagnosing and treating skin conditions — acne, eczema, pigmentation, infections — and performing cosmetic dermatology procedures. He combines evidence-based medicine with a gentle, patient-first approach to help patients achieve healthy, confident skin in Bali's tropical climate.",
+      "Dr. Marcus Tan adalah dokter kulit bersertifikat dengan 15+ tahun pengalaman dalam diagnosis dan perawatan masalah kulit — jerawat, eksem, pigmentasi, infeksi — serta prosedur dermatologi kosmetik. Ia menggabungkan pendekatan berbasis bukti dengan pelayanan yang lembut dan pasien-first untuk membantu pasien mencapai kulit sehat dan percaya diri di iklim tropis Bali."
+    ),
+    education: bi(
+      "- MD, Faculty of Medicine, Universitas Gadjah Mada (2005)\n- Residency in Dermatology, Dr. Cipto Mangunkusumo Hospital (2010)\n- Aesthetic Dermatology Fellowship, Bangkok (2013)",
+      "- MD, Fakultas Kedokteran Universitas Gadjah Mada (2005)\n- Residency di Dermatologi, RS Dr. Cipto Mangunkusumo (2010)\n- Aesthetic Dermatology Fellowship, Bangkok (2013)"
+    ),
+    certifications: bi(
+      "- Board Certified in Dermatology (Indonesian Medical Council)\n- Member, Indonesian Society of Dermatology and Venereology (PDSCI)\n- Certified in Aesthetic Laser Procedures",
+      "- Board Certified in Dermatology (Indonesian Medical Council)\n- Member, Indonesian Society of Dermatology and Venereology (PDSCI)\n- Certified in Aesthetic Laser Procedures"
+    ),
     languages: ["EN", "Chinese", "ID"],
     image: "/images/doctor-2.png",
     initials: "MT",
@@ -265,6 +292,18 @@ export const doctors: Doctor[] = [
     category: "wellness",
     specialty: bi("Medical Skin Therapy & Wellness", "Terapi Kulit Medis & Wellness"),
     experience: bi("9+ years", "9+ tahun"),
+    bio: bi(
+      "Lina Saraswati is a certified medical skin therapist with 9+ years of hands-on experience in medical-grade facials, chemical peels, microneedling, and personalized skin-rejuvenation programs. She works closely with our dermatologists to design therapy plans that combine clinical results with a relaxing, spa-like experience for every guest.",
+      "Lina Saraswati adalah terapis kulit medis bersertifikat dengan 9+ tahun pengalaman langsung dalam facial medis, chemical peel, microneedling, dan program rejuvenasi kulit personal. Ia bekerja sama dengan dokter kulit kami untuk merancang paket terapi yang menggabungkan hasil klinis dengan pengalaman spa yang menenangkan untuk setiap tamu."
+    ),
+    education: bi(
+      "- D3 Nursing, Poltekkes Jakarta (2013)\n- Diploma in Aesthetic Skin Therapy, Jakarta (2015)\n- Advanced Course in Medical Aesthetics, Singapore (2019)",
+      "- D3 Keperawatan, Poltekkes Jakarta (2013)\n- Diploma Aesthetic Skin Therapy, Jakarta (2015)\n- Advanced Course in Medical Aesthetics, Singapore (2019)"
+    ),
+    certifications: bi(
+      "- Licensed Aesthetic Therapist (Indonesian Ministry of Health)\n- Certified in Chemical Peels & Microneedling\n- Hydrafacial & Dermapen Authorized Practitioner",
+      "- Licensed Aesthetic Therapist (Indonesian Ministry of Health)\n- Certified in Chemical Peels & Microneedling\n- Hydrafacial & Dermapen Authorized Practitioner"
+    ),
     languages: ["EN", "ID", "Korean"],
     image: "/images/doctor-3.png",
     initials: "LS",
@@ -276,6 +315,18 @@ export const doctors: Doctor[] = [
     category: "wellness",
     specialty: bi("IV Therapy & Wellness", "Terapi IV & Wellness"),
     experience: bi("7+ years", "7+ tahun"),
+    bio: bi(
+      "Amara Wijaya is a registered nurse and wellness therapist specializing in IV therapy, vitamin boosters, and lifestyle wellness consultations. With 7+ years of clinical experience, she helps guests feel their best through personalized infusion protocols, immunity drips, and recovery programs designed for Bali's active lifestyle.",
+      "Amara Wijaya adalah perawat terdaftar dan terapis wellness yang berspesialisasi dalam terapi IV, booster vitamin, dan konsultasi wellness gaya hidup. Dengan 7+ tahun pengalaman klinis, ia membantu tamu merasa lebih sehat melalui protokol infus personal, immunity drip, dan program pemulihan yang dirancang untuk gaya hidup aktif di Bali."
+    ),
+    education: bi(
+      "- S.Kep, Faculty of Nursing, Universitas Indonesia (2015)\n- IV Therapy Certification, Jakarta (2017)\n- Wellness Coaching Course, Bali (2020)",
+      "- S.Kep, Fakultas Ilmu Keperawatan, Universitas Indonesia (2015)\n- IV Therapy Certification, Jakarta (2017)\n- Wellness Coaching Course, Bali (2020)"
+    ),
+    certifications: bi(
+      "- Registered Nurse (Indonesian NPA)\n- Certified IV Therapy Practitioner\n- BLS (Basic Life Support) Certified",
+      "- Registered Nurse (Indonesian NPA)\n- Certified IV Therapy Practitioner\n- BLS (Basic Life Support) Certified"
+    ),
     languages: ["EN", "ID"],
     image: "/images/doctor-4.png",
     initials: "AW",

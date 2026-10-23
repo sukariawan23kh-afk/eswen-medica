@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { translations } from "@/lib/eswen/i18n";
 import { contactInfo } from "@/lib/eswen/data";
 import { ensureArticlesSeeded } from "@/lib/eswen/seed";
+import { SEED_SERVICES } from "@/lib/eswen/seed-full-data";
 
 /**
  * The full default site config — seeds the DB on first run so the public site
@@ -56,78 +57,14 @@ export const DEFAULT_CONFIG = {
   },
 };
 
-type ServiceSeed = {
-  id: string;
-  categoryEn: string; categoryId: string;
-  nameEn: string; nameId: string;
-  descriptionEn: string; descriptionId: string;
-  startingPrice: string; deposit: number;
-  icon: string; image: string; brand: string;
-  order: number;
-};
-
-const SEED_SERVICES: ServiceSeed[] = [
-  {
-    id: "general-medical",
-    categoryEn: "General Medical Services", categoryId: "Layanan Medis Umum",
-    nameEn: "General Medical Consultation", nameId: "Konsultasi Medis Umum",
-    descriptionEn: "Comprehensive general practice consultations, health screenings, and primary medical care delivered by experienced international-standard physicians.",
-    descriptionId: "Konsultasi praktik umum terpadu, skrining kesehatan, dan layanan medis primer oleh dokter berpengalaman berstandar internasional.",
-    startingPrice: "IDR 350.000", deposit: 100000,
-    icon: "Stethoscope", image: "/images/service-medical.png", brand: "medical", order: 1,
-  },
-  {
-    id: "dermatology",
-    categoryEn: "Dermatology", categoryId: "Dermatologi",
-    nameEn: "Dermatology & Skin Health", nameId: "Dermatologi & Kesehatan Kulit",
-    descriptionEn: "Medical-grade diagnosis and treatment of skin conditions — acne, eczema, pigmentation, and skin infections — by board-certified dermatologists.",
-    descriptionId: "Diagnosis dan perawatan medis untuk masalah kulit — jerawat, eksem, pigmentasi, dan infeksi kulit — oleh dokter kulit bersertifikat.",
-    startingPrice: "IDR 500.000", deposit: 120000,
-    icon: "Microscope", image: "/images/service-medical.png", brand: "medical", order: 2,
-  },
-  {
-    id: "wellness-program",
-    categoryEn: "Wellness Program", categoryId: "Program Wellness",
-    nameEn: "Wellness & Vitality Program", nameId: "Program Wellness & Vitalitas",
-    descriptionEn: "Holistic wellness programs, IV therapy, vitamin boosters, and lifestyle consultation to enhance your overall wellbeing.",
-    descriptionId: "Program wellness holistik, terapi IV, booster vitamin, dan konsultasi gaya hidup untuk meningkatkan kesejahteraan menyeluruh.",
-    startingPrice: "IDR 750.000", deposit: 150000,
-    icon: "HeartPulse", image: "/images/service-medical.png", brand: "medical", order: 3,
-  },
-  {
-    id: "consultation",
-    categoryEn: "Consultation", categoryId: "Konsultasi",
-    nameEn: "Specialist Consultation", nameId: "Konsultasi Spesialis",
-    descriptionEn: "Personalized consultations with our specialists to design the right medical treatment plan for your needs and health goals.",
-    descriptionId: "Konsultasi personal dengan spesialis kami untuk merancang rencana perawatan medis yang tepat bagi kebutuhan dan tujuan kesehatan Anda.",
-    startingPrice: "IDR 250.000", deposit: 75000,
-    icon: "ClipboardList", image: "/images/service-medical.png", brand: "medical", order: 4,
-  },
-  {
-    id: "preventive-care",
-    categoryEn: "Preventive Care", categoryId: "Perawatan Preventif",
-    nameEn: "Preventive Care & Screening", nameId: "Perawatan Preventif & Skrining",
-    descriptionEn: "Health check-up packages, early detection screenings, and preventive care programs to keep you healthy and confident.",
-    descriptionId: "Paket medical check-up, skrining deteksi dini, dan program perawatan preventif untuk menjaga Anda tetap sehat dan percaya diri.",
-    startingPrice: "IDR 950.000", deposit: 200000,
-    icon: "ShieldPlus", image: "/images/service-medical.png", brand: "medical", order: 5,
-  },
-  {
-    id: "travel-medicine",
-    categoryEn: "Travel Medicine", categoryId: "Medis Perjalanan",
-    nameEn: "Travel Medicine & Medical Check-up", nameId: "Medis Perjalanan & Medical Check-up",
-    descriptionEn: "Vaccinations, travel health advice, pre-travel check-ups, and medical clearances tailored for expats and international visitors in Bali.",
-    descriptionId: "Vaksinasi, konsultasi kesehatan perjalanan, check-up sebelum bepergian, dan surat keterangan medis khusus untuk ekspat dan tamu internasional di Bali.",
-    startingPrice: "IDR 600.000", deposit: 120000,
-    icon: "Activity", image: "/images/service-medical.png", brand: "medical", order: 6,
-  },
-];
-
 type DoctorSeed = {
   id: string;
   name: string; roleEn: string; roleId: string; category: string;
   specialtyEn: string; specialtyId: string;
   experienceEn: string; experienceId: string;
+  bioEn: string; bioId: string;
+  educationEn: string; educationId: string;
+  certificationsEn: string; certificationsId: string;
   languages: string; image: string; initials: string; order: number;
 };
 
@@ -137,6 +74,18 @@ const SEED_DOCTORS: DoctorSeed[] = [
     name: "Dr. Anastasia Putri", roleEn: "General Practitioner", roleId: "Dokter Umum", category: "doctor",
     specialtyEn: "General Practice & Preventive Medicine", specialtyId: "Praktik Umum & Kedokteran Preventif",
     experienceEn: "12+ years", experienceId: "12+ tahun",
+    bioEn:
+      "Dr. Anastasia Putri is a seasoned general practitioner with 12+ years of practice in family and preventive medicine. She earned her medical degree from the Faculty of Medicine, Universitas Indonesia, and completed her residency in Internal Medicine at RSCM Jakarta. Dr. Anastasia is committed to delivering holistic, personalized healthcare to every patient — both local and international.",
+    bioId:
+      "Dr. Anastasia Putri adalah dokter umum berpengalaman dengan 12+ tahun praktik di bidang kedokteran keluarga dan preventif. Ia menyelesaikan pendidikan dokter di Fakultas Kedokteran Universitas Indonesia dan menyelesaikan residency di RSCM Jakarta. Dr. Anastasia berkomitmen memberikan layanan kesehatan holistik dengan pendekatan personal untuk setiap pasien, baik lokal maupun internasional.",
+    educationEn:
+      "- MD, Faculty of Medicine, Universitas Indonesia (2010)\n- Residency in Internal Medicine, RSCM Jakarta (2014)\n- Fellowship in Preventive Medicine, Singapore (2017)",
+    educationId:
+      "- MD, Fakultas Kedokteran Universitas Indonesia (2010)\n- Residency di Internal Medicine, RSCM Jakarta (2014)\n- Fellowship in Preventive Medicine, Singapore (2017)",
+    certificationsEn:
+      "- Board Certified in Internal Medicine (Indonesian Medical Council)\n- ACLS (Advanced Cardiovascular Life Support) Certified\n- BLS (Basic Life Support) Instructor",
+    certificationsId:
+      "- Board Certified in Internal Medicine (Indonesian Medical Council)\n- ACLS (Advanced Cardiovascular Life Support) Certified\n- BLS (Basic Life Support) Instructor",
     languages: "EN, ID, Japanese", image: "/images/doctor-1.png", initials: "AP", order: 1,
   },
   {
@@ -144,6 +93,18 @@ const SEED_DOCTORS: DoctorSeed[] = [
     name: "Dr. Marcus Tan", roleEn: "Dermatologist", roleId: "Dokter Kulit", category: "doctor",
     specialtyEn: "Dermatology & Skin Health", specialtyId: "Dermatologi & Kesehatan Kulit",
     experienceEn: "15+ years", experienceId: "15+ tahun",
+    bioEn:
+      "Dr. Marcus Tan is a board-certified dermatologist with 15+ years of experience diagnosing and treating skin conditions — acne, eczema, pigmentation, infections — and performing cosmetic dermatology procedures. He combines evidence-based medicine with a gentle, patient-first approach to help patients achieve healthy, confident skin in Bali's tropical climate.",
+    bioId:
+      "Dr. Marcus Tan adalah dokter kulit bersertifikat dengan 15+ tahun pengalaman dalam diagnosis dan perawatan masalah kulit — jerawat, eksem, pigmentasi, infeksi — serta prosedur dermatologi kosmetik. Ia menggabungkan pendekatan berbasis bukti dengan pelayanan yang lembut dan pasien-first untuk membantu pasien mencapai kulit sehat dan percaya diri di iklim tropis Bali.",
+    educationEn:
+      "- MD, Faculty of Medicine, Universitas Gadjah Mada (2005)\n- Residency in Dermatology, Dr. Cipto Mangunkusumo Hospital (2010)\n- Aesthetic Dermatology Fellowship, Bangkok (2013)",
+    educationId:
+      "- MD, Fakultas Kedokteran Universitas Gadjah Mada (2005)\n- Residency di Dermatologi, RS Dr. Cipto Mangunkusumo (2010)\n- Aesthetic Dermatology Fellowship, Bangkok (2013)",
+    certificationsEn:
+      "- Board Certified in Dermatology (Indonesian Medical Council)\n- Member, Indonesian Society of Dermatology and Venereology (PDSCI)\n- Certified in Aesthetic Laser Procedures",
+    certificationsId:
+      "- Board Certified in Dermatology (Indonesian Medical Council)\n- Member, Indonesian Society of Dermatology and Venereology (PDSCI)\n- Certified in Aesthetic Laser Procedures",
     languages: "EN, Chinese, ID", image: "/images/doctor-2.png", initials: "MT", order: 2,
   },
   {
@@ -151,6 +112,18 @@ const SEED_DOCTORS: DoctorSeed[] = [
     name: "Lina Saraswati, RN", roleEn: "Skin Care Therapist", roleId: "Terapis Perawatan Kulit", category: "wellness",
     specialtyEn: "Medical Skin Therapy & Wellness", specialtyId: "Terapi Kulit Medis & Wellness",
     experienceEn: "9+ years", experienceId: "9+ tahun",
+    bioEn:
+      "Lina Saraswati is a certified medical skin therapist with 9+ years of hands-on experience in medical-grade facials, chemical peels, microneedling, and personalized skin-rejuvenation programs. She works closely with our dermatologists to design therapy plans that combine clinical results with a relaxing, spa-like experience for every guest.",
+    bioId:
+      "Lina Saraswati adalah terapis kulit medis bersertifikat dengan 9+ tahun pengalaman langsung dalam facial medis, chemical peel, microneedling, dan program rejuvenasi kulit personal. Ia bekerja sama dengan dokter kulit kami untuk merancang paket terapi yang menggabungkan hasil klinis dengan pengalaman spa yang menenangkan untuk setiap tamu.",
+    educationEn:
+      "- D3 Nursing, Poltekkes Jakarta (2013)\n- Diploma in Aesthetic Skin Therapy, Jakarta (2015)\n- Advanced Course in Medical Aesthetics, Singapore (2019)",
+    educationId:
+      "- D3 Keperawatan, Poltekkes Jakarta (2013)\n- Diploma Aesthetic Skin Therapy, Jakarta (2015)\n- Advanced Course in Medical Aesthetics, Singapore (2019)",
+    certificationsEn:
+      "- Licensed Aesthetic Therapist (Indonesian Ministry of Health)\n- Certified in Chemical Peels & Microneedling\n- Hydrafacial & Dermapen Authorized Practitioner",
+    certificationsId:
+      "- Licensed Aesthetic Therapist (Indonesian Ministry of Health)\n- Certified in Chemical Peels & Microneedling\n- Hydrafacial & Dermapen Authorized Practitioner",
     languages: "EN, ID, Korean", image: "/images/doctor-3.png", initials: "LS", order: 3,
   },
   {
@@ -158,6 +131,18 @@ const SEED_DOCTORS: DoctorSeed[] = [
     name: "Amara Wijaya, RN", roleEn: "Nurse / Therapist", roleId: "Perawat / Terapis", category: "wellness",
     specialtyEn: "IV Therapy & Wellness", specialtyId: "Terapi IV & Wellness",
     experienceEn: "7+ years", experienceId: "7+ tahun",
+    bioEn:
+      "Amara Wijaya is a registered nurse and wellness therapist specializing in IV therapy, vitamin boosters, and lifestyle wellness consultations. With 7+ years of clinical experience, she helps guests feel their best through personalized infusion protocols, immunity drips, and recovery programs designed for Bali's active lifestyle.",
+    bioId:
+      "Amara Wijaya adalah perawat terdaftar dan terapis wellness yang berspesialisasi dalam terapi IV, booster vitamin, dan konsultasi wellness gaya hidup. Dengan 7+ tahun pengalaman klinis, ia membantu tamu merasa lebih sehat melalui protokol infus personal, immunity drip, dan program pemulihan yang dirancang untuk gaya hidup aktif di Bali.",
+    educationEn:
+      "- S.Kep, Faculty of Nursing, Universitas Indonesia (2015)\n- IV Therapy Certification, Jakarta (2017)\n- Wellness Coaching Course, Bali (2020)",
+    educationId:
+      "- S.Kep, Fakultas Ilmu Keperawatan, Universitas Indonesia (2015)\n- IV Therapy Certification, Jakarta (2017)\n- Wellness Coaching Course, Bali (2020)",
+    certificationsEn:
+      "- Registered Nurse (Indonesian NPA)\n- Certified IV Therapy Practitioner\n- BLS (Basic Life Support) Certified",
+    certificationsId:
+      "- Registered Nurse (Indonesian NPA)\n- Certified IV Therapy Practitioner\n- BLS (Basic Life Support) Certified",
     languages: "EN, ID", image: "/images/doctor-4.png", initials: "AW", order: 4,
   },
 ];

@@ -5,16 +5,22 @@ import { Loader2, Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ImageUpload } from "@/components/eswen/admin/image-upload";
+import { MarkdownEditor } from "@/components/eswen/admin/markdown-editor";
 
 type Doc = {
   id: string; name: string; roleEn: string; roleId: string; category: "doctor" | "wellness";
   specialtyEn: string; specialtyId: string; experienceEn: string; experienceId: string;
+  bioEn: string; bioId: string;
+  educationEn: string; educationId: string;
+  certificationsEn: string; certificationsId: string;
   languages: string; image: string; initials: string; order: number; published: boolean;
 };
 
 const EMPTY: Doc = {
   id: "", name: "", roleEn: "", roleId: "", category: "doctor",
   specialtyEn: "", specialtyId: "", experienceEn: "", experienceId: "",
+  bioEn: "", bioId: "", educationEn: "", educationId: "",
+  certificationsEn: "", certificationsId: "",
   languages: "EN, ID", image: "/images/doctor-1.png", initials: "XX",
   order: 0, published: true,
 };
@@ -120,9 +126,9 @@ function DocEditor({ doc, onClose, onSave }: { doc: Doc; onClose: () => void; on
           <div className="grid sm:grid-cols-2 gap-3">
             <F label="Full Name"><input value={f.name} onChange={(e) => set("name", e.target.value)} className="ainput" /></F>
             <F label="Initials"><input value={f.initials} onChange={(e) => set("initials", e.target.value)} maxLength={4} className="ainput" /></F>
-            <F label="Role (ID)"><input value={f.roleId} onChange={(e) => set("roleId", e.target.value)} className="ainput" placeholder="mis. Dokter Umum" /></F>
-            <F label="Specialty (ID)"><input value={f.specialtyId} onChange={(e) => set("specialtyId", e.target.value)} className="ainput" placeholder="mis. Penyakit Dalam" /></F>
-            <F label="Experience (ID)"><input value={f.experienceId} onChange={(e) => set("experienceId", e.target.value)} className="ainput" placeholder="mis. 12 tahun" /></F>
+            <F label="Role (ID)" hint="mis. Dokter Umum"><input value={f.roleId} onChange={(e) => set("roleId", e.target.value)} className="ainput" placeholder="mis. Dokter Umum" /></F>
+            <F label="Specialty (ID)" hint="mis. Penyakit Dalam"><input value={f.specialtyId} onChange={(e) => set("specialtyId", e.target.value)} className="ainput" placeholder="mis. Penyakit Dalam" /></F>
+            <F label="Experience (ID)" hint="mis. 12 tahun"><input value={f.experienceId} onChange={(e) => set("experienceId", e.target.value)} className="ainput" placeholder="mis. 12 tahun" /></F>
             <F label="Languages (comma-sep)"><input value={f.languages} onChange={(e) => set("languages", e.target.value)} className="ainput" /></F>
             <F label="Category">
               <select value={f.category} onChange={(e) => set("category", e.target.value)} className="ainput">
@@ -141,6 +147,35 @@ function DocEditor({ doc, onClose, onSave }: { doc: Doc; onClose: () => void; on
               />
             </F>
           </div>
+
+          {/* Long-form fields — ID only (EN auto-translated on Save) */}
+          <F label="Bio (ID)" hint="markdown OK">
+            <MarkdownEditor
+              value={f.bioId}
+              onChange={(v) => set("bioId", v)}
+              minHeight="160px"
+              placeholder="Bio lengkap dokter dalam Bahasa Indonesia..."
+              hint="Markdown didukung"
+            />
+          </F>
+          <F label="Pendidikan & Pelatihan (ID)" hint="markdown OK">
+            <MarkdownEditor
+              value={f.educationId}
+              onChange={(v) => set("educationId", v)}
+              minHeight="120px"
+              placeholder="mis. MD - Universitas Indonesia (2010), Residency in Internal Medicine - RSCM (2014)"
+              hint="Gunakan list (- ) untuk banyak item"
+            />
+          </F>
+          <F label="Sertifikasi (ID)" hint="markdown OK">
+            <MarkdownEditor
+              value={f.certificationsId}
+              onChange={(v) => set("certificationsId", v)}
+              minHeight="120px"
+              placeholder="mis. Board Certified in Internal Medicine, ACLS Certified"
+              hint="Gunakan list (- ) untuk banyak item"
+            />
+          </F>
           <label className="flex items-center gap-2.5 cursor-pointer rounded-xl border border-eswen-lavender bg-white px-3 py-2.5">
             <input type="checkbox" checked={f.published} onChange={(e) => set("published", e.target.checked)} className="h-4 w-4 accent-[#5B3A91]" />
             <span className="text-sm font-medium text-eswen-deep">Published (show on website)</span>
@@ -158,10 +193,13 @@ function DocEditor({ doc, onClose, onSave }: { doc: Doc; onClose: () => void; on
   );
 }
 
-function F({ label, children }: { label: string; children: React.ReactNode }) {
+function F({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 flex items-center justify-between">
+        <span>{label}</span>
+        {hint && <span className="text-[9px] font-normal normal-case text-muted-foreground/60">{hint}</span>}
+      </span>
       {children}
     </label>
   );

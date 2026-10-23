@@ -9,6 +9,9 @@ generator client {
 }
 
 datasource db {
+  // ⚠️ PRODUCTION: change to "postgres" before deploying to Vercel
+  // (Vercel uses Postgres; SQLite is for local dev only).
+  // Local dev: keep "sqlite" + DATABASE_URL=file:./db/custom.db
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
@@ -54,8 +57,14 @@ model Booking {
   paymentGateway String? // Midtrans | Xendit | Stripe | Manual
   paymentNote   String?  // admin note when confirming a manual/bank-transfer payment (e.g. bank ref, date received)
   confirmedAt   DateTime? // when an admin manually confirmed the deposit was received
+  // Client self-declaration: client clicked "I've Made the Transfer" button on
+  // the booking confirmation step. Status STAYS WAITING_PAYMENT (admin must
+  // still verify receipt in the clinic account), but the client has signaled
+  // that they sent the money. Drives the dynamic "Menunggu Verifikasi" status
+  // label (between "Menunggu Pembayaran" and "Confirmed") so the system no
+  // longer misleadingly shows "Waiting Payment" after the client has paid.
   clientDeclaredTransfer Boolean  @default(false) // client clicked "I've made the transfer" button
-  clientDeclaredAt         DateTime?                 // when client self-declared the transfer
+  clientDeclaredAt       DateTime?                 // when client self-declared the transfer
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -66,22 +75,30 @@ model Booking {
 // Article — admin-managed blog content (editable from the admin panel).
 // The blog section reads published articles from the DB; falls back to the
 // static defaults in data.ts when the table is empty.
+//
+// BILINGUAL: every text field has an EN + ID variant, mirroring the Service
+// model. The admin only inputs the Indonesian version (titleId, excerptId,
+// contentId, categoryId); the English (titleEn, excerptEn, contentEn,
+// categoryEn) is auto-translated on save via translateIdToEn (MyMemory API).
+// The public /api/articles?lang=en|id endpoint returns the matching variant.
 model Article {
   id          String   @id @default(cuid())
-  title       String
+  titleEn     String
+  titleId     String
   slug        String   @unique
-  excerpt     String
-  content     String?  // markdown body (for a future detail view)
-  category    String   @default("Medical")
+  excerptEn   String
+  excerptId   String
+  contentEn   String?  // markdown body (English)
+  contentId   String?  // markdown body (Indonesian — admin input)
+  categoryEn  String   @default("Medical")
+  categoryId  String   @default("Medical")
   imageUrl    String?
-  language    String   @default("en") // "en" | "id"
   readTime    String?  // e.g. "6 min read"
   published   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([published])
-  @@index([language])
 }
 
 // SiteConfig — singleton row holding ALL editable website content as a JSON
@@ -107,7 +124,7 @@ model Service {
   deposit       Int      @default(0)
   icon          String   @default("Stethoscope") // lucide icon name
   image         String   @default("/images/service-medical.png")
-  gallery       String?  // JSON array of additional image URLs, e.g. ["url1","url2"]
+  gallery       String?  // JSON array of image URLs (additional photos)
   brand         String   @default("medical")
   order         Int      @default(0)
   published     Boolean  @default(true)
@@ -153,6 +170,12 @@ model Doctor {
   specialtyId String
   experienceEn String
   experienceId String
+  bioEn              String?  // long-form biography (English, auto-translated)
+  bioId              String?  // long-form biography (Indonesian — admin input)
+  educationEn        String?  // medical school, residencies (English)
+  educationId        String?  // medical school, residencies (Indonesian — admin input)
+  certificationsEn   String?  // board certifications (English)
+  certificationsId   String?  // board certifications (Indonesian — admin input)
   languages   String   @default("EN, ID") // comma-separated
   image       String   @default("/images/doctor-1.png")
   initials    String   @default("XX")

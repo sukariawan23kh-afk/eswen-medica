@@ -38,9 +38,11 @@ export async function GET() {
       config,
       services: services.map((s) => ({
         id: s.id,
-        category: { en: s.categoryEn, id: s.categoryId },
-        name: { en: s.nameEn, id: s.nameId },
-        description: { en: s.descriptionEn, id: s.descriptionId },
+        // EN always uses the latest ID text — if auto-translate ran, use the
+        // translated EN; if not, fall back to ID text (never show stale old EN)
+        category: { en: s.categoryEn && s.categoryEn !== s.categoryId ? s.categoryEn : s.categoryId, id: s.categoryId },
+        name: { en: s.nameEn && s.nameEn !== s.nameId ? s.nameEn : s.nameId, id: s.nameId },
+        description: { en: s.descriptionEn && s.descriptionEn !== s.descriptionId ? s.descriptionEn : s.descriptionId, id: s.descriptionId },
         startingPrice: s.startingPrice,
         deposit: s.deposit,
         icon: s.icon,
@@ -52,10 +54,13 @@ export async function GET() {
       doctors: doctors.map((d) => ({
         id: d.id,
         name: d.name,
-        role: { en: d.roleEn, id: d.roleId },
+        role: { en: d.roleEn && d.roleEn !== d.roleId ? d.roleEn : d.roleId, id: d.roleId },
         category: d.category as "doctor" | "wellness",
-        specialty: { en: d.specialtyEn, id: d.specialtyId },
-        experience: { en: d.experienceEn, id: d.experienceId },
+        specialty: { en: d.specialtyEn && d.specialtyEn !== d.specialtyId ? d.specialtyEn : d.specialtyId, id: d.specialtyId },
+        experience: { en: d.experienceEn && d.experienceEn !== d.experienceId ? d.experienceEn : d.experienceId, id: d.experienceId },
+        bio: { en: d.bioEn || "", id: d.bioId || "" },
+        education: { en: d.educationEn || "", id: d.educationId || "" },
+        certifications: { en: d.certificationsEn || "", id: d.certificationsId || "" },
         languages: d.languages.split(",").map((x) => x.trim()),
         image: d.image,
         initials: d.initials,

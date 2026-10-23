@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
 import { getServiceEnTranslation } from "@/lib/eswen/service-translate";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,12 @@ const UpdateSchema = z.object({
   specialtyId: z.string().min(1).max(100).optional(),
   experienceEn: z.string().max(40).optional(),     // ignored — auto-translated from ID
   experienceId: z.string().max(40).optional(),
+  bioEn: z.string().optional(),                    // ignored — auto-translated from ID
+  bioId: z.string().optional(),
+  educationEn: z.string().optional(),              // ignored — auto-translated from ID
+  educationId: z.string().optional(),
+  certificationsEn: z.string().optional(),          // ignored — auto-translated from ID
+  certificationsId: z.string().optional(),
   languages: z.string().max(120).optional(),
   image: z.string().max(500).optional(),
   initials: z.string().max(4).optional(),
@@ -45,6 +52,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (d.roleId) d.roleEn = await getServiceEnTranslation(id, "name", d.roleId);
     if (d.specialtyId) d.specialtyEn = await getServiceEnTranslation(id, "name", d.specialtyId);
     if (d.experienceId) d.experienceEn = await getServiceEnTranslation(id, "name", d.experienceId);
+    // Long-form fields (bio/education/certifications) are always custom admin text
+    // → never match SEED → use translateIdToEn directly (handles long-text chunking).
+    if (d.bioId) d.bioEn = await translateIdToEn(d.bioId);
+    if (d.educationId) d.educationEn = await translateIdToEn(d.educationId);
+    if (d.certificationsId) d.certificationsEn = await translateIdToEn(d.certificationsId);
     const updated = await db.doctor.update({ where: { id }, data: d });
     return NextResponse.json({ ok: true, doctor: { id: updated.id } });
   } catch (err) {

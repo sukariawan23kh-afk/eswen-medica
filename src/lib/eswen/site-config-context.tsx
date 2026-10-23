@@ -15,7 +15,6 @@ export type CfgService = {
   deposit: number;
   icon: string;
   image: string;
-  gallery: string[];
   brand: string;
   order: number;
 };
@@ -26,6 +25,9 @@ export type CfgDoctor = {
   category: "doctor" | "wellness";
   specialty: { en: string; id: string };
   experience: { en: string; id: string };
+  bio: { en: string; id: string };
+  education: { en: string; id: string };
+  certifications: { en: string; id: string };
   languages: string[];
   image: string;
   initials: string;

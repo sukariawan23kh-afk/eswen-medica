@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
 import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
 import { getServiceEnTranslation } from "@/lib/eswen/service-translate";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +29,12 @@ export async function GET(req: NextRequest) {
         specialtyId: d.specialtyId,
         experienceEn: d.experienceEn,
         experienceId: d.experienceId,
+        bioEn: d.bioEn || "",
+        bioId: d.bioId || "",
+        educationEn: d.educationEn || "",
+        educationId: d.educationId || "",
+        certificationsEn: d.certificationsEn || "",
+        certificationsId: d.certificationsId || "",
         languages: d.languages,
         image: d.image,
         initials: d.initials,
@@ -50,6 +57,12 @@ const CreateSchema = z.object({
   specialtyId: z.string().min(1).max(100),
   experienceEn: z.string().max(40).default(""),      // ignored — auto-translated from ID
   experienceId: z.string().max(40).default(""),
+  bioEn: z.string().default(""),                    // ignored — auto-translated from ID
+  bioId: z.string().default(""),
+  educationEn: z.string().default(""),              // ignored — auto-translated from ID
+  educationId: z.string().default(""),
+  certificationsEn: z.string().default(""),          // ignored — auto-translated from ID
+  certificationsId: z.string().default(""),
   languages: z.string().max(120).default("EN, ID"),
   image: z.string().max(500).default("/images/doctor-1.png"),
   initials: z.string().max(4).default("XX"),
@@ -78,6 +91,11 @@ export async function POST(req: NextRequest) {
     if (d.roleId) d.roleEn = await getServiceEnTranslation(undefined, "name", d.roleId);
     if (d.specialtyId) d.specialtyEn = await getServiceEnTranslation(undefined, "name", d.specialtyId);
     if (d.experienceId) d.experienceEn = await getServiceEnTranslation(undefined, "name", d.experienceId);
+    // Long-form fields (bio/education/certifications) are always custom admin text
+    // → never match SEED → use translateIdToEn directly (handles long-text chunking).
+    if (d.bioId) d.bioEn = await translateIdToEn(d.bioId);
+    if (d.educationId) d.educationEn = await translateIdToEn(d.educationId);
+    if (d.certificationsId) d.certificationsEn = await translateIdToEn(d.certificationsId);
     const created = await db.doctor.create({ data: d });
     return NextResponse.json({ ok: true, doctor: { id: created.id } });
   } catch (err) {

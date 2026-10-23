@@ -5,15 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Globe, Award, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
+import { DoctorDetailModal } from "./doctor-detail-modal";
 import { doctors as staticDoctors, doctorFilters } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT, useDoctors } from "@/lib/eswen/site-config-context";
+import { useT, useDoctors, type CfgDoctor } from "@/lib/eswen/site-config-context";
 import { cn } from "@/lib/utils";
 
 export function DoctorsSection() {
   const { lang } = useLanguage();
   const t = useT();
   const [filter, setFilter] = useState<string>("all");
+  const [selectedDoctor, setSelectedDoctor] = useState<CfgDoctor | null>(null);
   const doctors = useDoctors(staticDoctors);
 
   const filtered =
@@ -106,6 +108,7 @@ export function DoctorsSection() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    onClick={() => setSelectedDoctor(doc)}
                     className="w-full rounded-full bg-eswen-light-lavender text-eswen-deep hover:bg-eswen-deep hover:text-white h-9 text-xs font-semibold group/btn"
                   >
                     {t("doctors_view_profile")}
@@ -128,6 +131,9 @@ export function DoctorsSection() {
           </button>
         </div>
       </div>
+
+      {/* Doctor detail modal */}
+      <DoctorDetailModal doctor={selectedDoctor} onClose={() => setSelectedDoctor(null)} />
     </section>
   );
 }
