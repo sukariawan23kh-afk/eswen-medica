@@ -16,6 +16,9 @@ export const DEFAULT_CONFIG = {
     url: "", // empty = use the default Sparkles mark
     alt: "Eswen Medica",
   },
+  // URL of the image shown in the About section. Empty = use the default
+  // /images/clinic-interior.png. Editable from the admin Site Settings tab.
+  about_image: "",
   brand: {
     name: "ESWEN MEDICA",
     tagline: { en: "Health • Wellness • Confidence", id: "Kesehatan • Wellness • Kepercayaan" },

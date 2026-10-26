@@ -17,10 +17,31 @@ export async function GET() {
     await ensureSiteSeeded();
 
     const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
-    // Merge with defaults so newly-added top-level keys (e.g. `payment`) are
-    // backfilled for configs created before those keys existed.
+    // Deep-merge with defaults so that:
+    //  - newly-added top-level keys (e.g. `payment`, `about_image`) are
+    //    backfilled for configs created before those keys existed;
+    //  - newly-added TRANSLATION keys (e.g. `about_body`, `about_vision_*`,
+    //    `about_mission_*`, `partners_*`) are backfilled for DBs seeded before
+    //    those keys were added to i18n.ts. Without this, the public site
+    //    silently falls back to static i18n.ts (no admin editability) and the
+    //    admin editor never shows a field for the new key.
+    // DB values always take precedence over defaults.
     const stored = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
-    const config = { ...DEFAULT_CONFIG, ...stored, payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) } };
+    const config = {
+      ...DEFAULT_CONFIG,
+      ...stored,
+      about_image: typeof stored.about_image === "string" ? stored.about_image : "",
+      brand: { ...DEFAULT_CONFIG.brand, ...(stored.brand || {}) },
+      contact: { ...DEFAULT_CONFIG.contact, ...(stored.contact || {}) },
+      social: { ...DEFAULT_CONFIG.social, ...(stored.social || {}) },
+      payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) },
+      logo: { ...DEFAULT_CONFIG.logo, ...(stored.logo || {}) },
+      theme: { ...DEFAULT_CONFIG.theme, ...(stored.theme || {}) },
+      translations: {
+        en: { ...DEFAULT_CONFIG.translations.en, ...(stored.translations?.en || {}) },
+        id: { ...DEFAULT_CONFIG.translations.id, ...(stored.translations?.id || {}) },
+      },
+    };
 
     const [services, doctors] = await Promise.all([
       db.service.findMany({

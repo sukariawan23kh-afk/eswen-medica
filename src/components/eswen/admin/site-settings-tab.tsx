@@ -8,6 +8,9 @@ import { ImageUpload } from "@/components/eswen/admin/image-upload";
 
 type Config = {
   logo: { url: string; alt: string };
+  // URL of the image shown in the About section. Empty = use the default
+  // /images/clinic-interior.png. Top-level field (not a translation key).
+  about_image: string;
   brand: { name: string; tagline: { en: string; id: string } };
   contact: {
     address: string; whatsapp: string; phone: string; email: string;
@@ -53,11 +56,32 @@ function groupKeys(keys: string[]): Record<string, string[]> {
   return out;
 }
 
+/**
+ * Friendlier admin-facing labels for the long-form markdown fields in the
+ * About group. Falls back to the raw key name (the existing pattern) for
+ * any key not listed here — so this is purely a UX polish, not a behavior
+ * change.
+ */
+const LABEL_MAP: Record<string, string> = {
+  about_body: "Body Paragraph (ID) — markdown OK",
+  about_vision_title: "Vision Title (ID)",
+  about_vision_body: "Vision Body (ID) — markdown OK",
+  about_mission_title: "Mission Title (ID)",
+  about_mission_body: "Mission Body (ID) — markdown OK",
+};
+
+/** Long-form fields whose textarea should be taller (multi-paragraph). */
+const LONG_FORM_KEYS = new Set([
+  "about_body",
+  "about_vision_body",
+  "about_mission_body",
+]);
+
 export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => void }) {
   const [config, setConfig] = useState<Config | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ logo: true, brand: true, contact: true, social: true, payment: true });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ logo: true, brand: true, about_image: true, contact: true, social: true, payment: true });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -164,6 +188,21 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
         </div>
       </Card>
 
+      {/* About Section Image — top-level field, not a translation key */}
+      <Card title="About Section Image" open={openGroups.about_image} onToggle={() => toggle("about_image")}>
+        <div className="space-y-2">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">The image shown on the left of the About section. Empty = use the default <code className="text-[10px] bg-eswen-light-lavender/50 px-1 py-0.5 rounded">/images/clinic-interior.png</code>. Recommended aspect ratio ~4:3 (the section displays it at <strong>440px tall</strong> with <code className="text-[10px] bg-eswen-light-lavender/50 px-1 py-0.5 rounded">object-cover</code>).</p>
+          <ImageUpload
+            value={config.about_image || ""}
+            onChange={(url) => setConfig({ ...config, about_image: url })}
+            label="About Section Image URL"
+            placeholder="/images/clinic-interior.png (leave empty for default)"
+            recommendedSize="~800×600px (4:3)"
+            previewClass="h-20 w-28"
+          />
+        </div>
+      </Card>
+
       {/* Contact */}
       <Card title="Contact Information" open={openGroups.contact} onToggle={() => toggle("contact")}>
         <div className="grid sm:grid-cols-2 gap-3">
@@ -223,8 +262,12 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
                   <div className="px-4 pb-3 space-y-2.5 bg-eswen-gradient-soft/40">
                     {keys.map((k) => (
                       <div key={k}>
-                        <label className="lbl-tiny">{k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">— EN auto-translated</span></label>
-                        <textarea value={config.translations.id[k] ?? ""} onChange={(e) => setT("id", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" />
+                        <label className="lbl-tiny">{LABEL_MAP[k] || k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">— EN auto-translated</span></label>
+                        <textarea
+                          value={config.translations.id[k] ?? ""}
+                          onChange={(e) => setT("id", k, e.target.value)}
+                          className={cn("ainput resize-y text-xs", LONG_FORM_KEYS.has(k) ? "min-h-[110px]" : "min-h-[40px]")}
+                        />
                       </div>
                     ))}
                   </div>

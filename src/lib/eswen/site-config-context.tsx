@@ -36,6 +36,9 @@ export type CfgDoctor = {
 
 type SiteConfig = {
   logo: { url: string; alt: string };
+  // URL of the image shown in the About section. Empty = use the default
+  // /images/clinic-interior.png. Editable from the admin Site Settings tab.
+  about_image: string;
   brand: { name: string; tagline: { en: string; id: string } };
   contact: {
     address: string;
@@ -127,6 +130,16 @@ export function useDoctors(doctorsFallback: CfgDoctor[]): CfgDoctor[] {
 export function useLogo() {
   const { config } = useSiteConfig();
   return config?.logo ?? { url: "", alt: "Eswen Medica" };
+}
+
+/**
+ * Live, admin-editable About section image. Empty value falls back to the
+ * default clinic-interior.png — this is what the About section uses for the
+ * sticky image on the left column.
+ */
+export function useAboutImage(): string {
+  const { config } = useSiteConfig();
+  return config?.about_image || "/images/clinic-interior.png";
 }
 
 /** Live, admin-editable brand (name + tagline). */
