@@ -33,6 +33,7 @@ export const navLinks: NavLink[] = [
   { labelKey: "nav_doctors", href: "#doctors" },
   { labelKey: "nav_about", href: "#about" },
   { labelKey: "nav_blog", href: "#blog" },
+  { labelKey: "nav_partners", href: "#partners" },
   { labelKey: "nav_contact", href: "#contact" },
 ];
 

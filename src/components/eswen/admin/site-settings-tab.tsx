@@ -63,11 +63,17 @@ function groupKeys(keys: string[]): Record<string, string[]> {
  * change.
  */
 const LABEL_MAP: Record<string, string> = {
-  about_body: "Body Paragraph (ID) — markdown OK",
+  about_eyebrow: "Eyebrow (ID) — small label above title",
+  about_title_1: "Title Part 1 (ID)",
+  about_title_2: "Title Part 2 (ID) — gradient color",
+  about_desc: "Description (ID) — subtitle below title",
+  about_body: "Body Paragraph (ID) — markdown OK, full intro text",
   about_vision_title: "Vision Title (ID)",
   about_vision_body: "Vision Body (ID) — markdown OK",
   about_mission_title: "Mission Title (ID)",
-  about_mission_body: "Mission Body (ID) — markdown OK",
+  about_mission_body: "Mission Body (ID) — markdown OK, supports bullet lists",
+  about_patients: "Patients Stat Label (ID) — e.g. 'Pasien puas dari 40+ negara'",
+  about_rating: "Rating Stat Label (ID) — e.g. '★ 4.9 / 5.0 rating'",
 };
 
 /** Long-form fields whose textarea should be taller (multi-paragraph). */
