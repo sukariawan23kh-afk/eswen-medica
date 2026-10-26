@@ -1,33 +1,8 @@
-# dependencies
-node_modules/
+D:\eswen-medica>:: Generate ADMIN_PASSWORD (24-byte base64, ~32 chars)
+D:\eswen-medica>node -e "console.log(require('crypto').randomBytes(24).toString('base64'))"
+NgCfYIWtmguXnfOdamoc52nFuZ1YHrsG
 
-# next.js
-.next/
-out/
-
-# database
-db/
-*.db
-*.db-journal
-
-# env files (contains secrets — NEVER commit)
-.env
-.env.local
-.env.production
-
-# logs
-*.log
-dev.log
-server.log
-
-# misc
-.DS_Store
-*.pem
-coverage/
-.vercel
-
-# generated images (user uploads)
-public/images/uploads/
-
-.vercel
-.env*
+D:\eswen-medica>
+D:\eswen-medica>:: Generate ADMIN_SECRET (32-byte hex, 64 chars)
+D:\eswen-medica>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+8ff24e4f5cb27aad8d2e05e5edc5d4a1fd3314ce118f8291c9fcf7e94c02df30

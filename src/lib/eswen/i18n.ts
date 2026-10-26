@@ -130,6 +130,7 @@ export const translations = {
     about_eyebrow: "About Eswen",
     about_title_1: "Healthcare,",
     about_title_2: "Designed Around You.",
+    about_desc:
       "Eswen Medica is committed to delivering a professional, comfortable, modern, and accessible care experience — purpose-built for Bali's international community.",
     about_body:
       "Eswen Medica is a premium medical clinic in Bali, Indonesia. We combine modern medical technology with compassionate care to deliver comprehensive healthcare services. Our team of experienced, internationally-trained doctors and medical professionals is dedicated to your health and wellbeing.\n\nLocated in the heart of Kuta, we serve locals, expatriates, and international visitors with the same standard of care you would expect from leading clinics worldwide.",
@@ -408,6 +409,8 @@ export const translations = {
     about_eyebrow: "Tentang Eswen",
     about_title_1: "Kesehatan,",
     about_title_2: "Dirancang untuk Anda.",
+    about_desc:
+      "Eswen Medica berkomitmen memberikan pengalaman layanan yang profesional, nyaman, modern, dan mudah diakses — khusus untuk komunitas internasional di Bali.",
     about_body:
       "Eswen Medica adalah klinik medis premium di Bali, Indonesia. Kami menggabungkan teknologi medis modern dengan perawatan yang penuh kasih untuk memberikan layanan kesehatan yang komprehensif. Tim dokter dan tenaga medis profesional kami yang berpengalaman dan terlatih secara internasional berdedikasi untuk kesehatan dan kesejahteraan Anda.\n\nBerlokasi di jantung Kuta, kami melayani masyarakat lokal, ekspatriat, dan tamu internasional dengan standar pelayanan yang sama seperti yang Anda harapkan dari klinik-klinik terkemuka di dunia.",
     about_vision_title: "Visi Kami",
@@ -570,11 +573,14 @@ export type TranslationKey = keyof typeof translations.en;
 export function useT() {
   const lang = useLanguage((s) => s.lang);
   return (key: TranslationKey): string => {
-    return (translations[lang] as Record<string, string>)[key] ?? key;
+    return (translations[lang] as Record<string, string>)[key] ?? "";
   };
 }
 
-/** Non-hook helper to get a single translation for a specific language. */
+/** Non-hook helper to get a single translation for a specific language.
+ *  Returns "" (empty string) for missing keys — NEVER returns the raw key
+ *  name. This prevents "about_desc" or similar raw keys from showing on the
+ *  website if a key is deleted or missing from the translations object. */
 export function tr(lang: Lang, key: TranslationKey): string {
-  return (translations[lang] as Record<string, string>)[key] ?? key;
+  return (translations[lang] as Record<string, string>)[key] ?? "";
 }
