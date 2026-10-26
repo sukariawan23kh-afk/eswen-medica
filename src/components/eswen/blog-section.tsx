@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Clock, Tag, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
+import { ArticleDetailModal } from "./article-detail-modal";
 import { blogPosts } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT } from "@/lib/eswen/site-config-context";
@@ -16,6 +17,7 @@ type Article = {
   title: string;
   slug: string;
   excerpt: string;
+  content: string;
   category: string;
   imageUrl: string;
   language: string;
@@ -28,6 +30,7 @@ export function BlogSection() {
   const t = useT();
   const [articles, setArticles] = useState<Article[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   // Stable string — `tr(lang, ...)` returns a plain string so this effect only
   // re-runs when the language actually changes.
@@ -54,6 +57,7 @@ export function BlogSection() {
               title: p.title[lang as Lang],
               slug: p.slug,
               excerpt: p.excerpt[lang as Lang],
+              content: "",
               category: p.category[lang as Lang],
               imageUrl: p.image,
               language: p.language,
@@ -71,6 +75,7 @@ export function BlogSection() {
             title: p.title[lang as Lang],
             slug: p.slug,
             excerpt: p.excerpt[lang as Lang],
+            content: "",
             category: p.category[lang as Lang],
             imageUrl: p.image,
             language: p.language,
@@ -113,7 +118,8 @@ export function BlogSection() {
                 initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="group relative flex flex-col overflow-hidden rounded-[1.5rem] border border-eswen-lavender bg-white shadow-eswen-soft hover:shadow-eswen-elevated hover:-translate-y-1 transition-all duration-500"
+                onClick={() => setSelectedArticle(post)}
+                className="group relative flex flex-col overflow-hidden rounded-[1.5rem] border border-eswen-lavender bg-white shadow-eswen-soft hover:shadow-eswen-elevated hover:-translate-y-1 transition-all duration-500 cursor-pointer"
               >
                 <div className="relative h-48 overflow-hidden bg-eswen-light-lavender">
                   <img
@@ -149,7 +155,11 @@ export function BlogSection() {
                     {post.excerpt}
                   </p>
                   <button
-                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-eswen-deep hover:text-eswen-soft-purple transition-colors self-start"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedArticle(post);
+                    }}
+                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-eswen-deep hover:text-eswen-soft-purple transition-colors self-start cursor-pointer"
                     aria-label={`${t("blog_read")} - ${post.title}`}
                   >
                     {t("blog_read")}
@@ -164,6 +174,10 @@ export function BlogSection() {
         <div className="mt-12 flex justify-center">
           <Button
             variant="outline"
+            onClick={() => {
+              const el = document.getElementById("blog");
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
             className="rounded-full border-eswen-lavender-soft text-eswen-deep bg-white hover:bg-eswen-light-lavender hover:border-eswen-soft-purple h-11 px-6 text-sm font-semibold"
           >
             {t("blog_view_all")}
@@ -171,6 +185,11 @@ export function BlogSection() {
           </Button>
         </div>
       </div>
+
+      <ArticleDetailModal
+        article={selectedArticle}
+        onClose={() => setSelectedArticle(null)}
+      />
     </section>
   );
 }
