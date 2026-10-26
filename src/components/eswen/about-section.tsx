@@ -82,7 +82,7 @@ export function AboutSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.5 }}
-            className="mt-6 max-w-3xl prose-eswen text-sm sm:text-[15px] text-foreground/80 leading-relaxed"
+            className="mt-6 prose-eswen text-sm sm:text-[15px] text-foreground/80 leading-relaxed"
           >
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkBreaks]}
