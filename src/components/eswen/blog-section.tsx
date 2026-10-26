@@ -5,25 +5,12 @@ import { motion } from "framer-motion";
 import { ArrowRight, Clock, Tag, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./section-heading";
-import { ArticleDetailModal } from "./article-detail-modal";
+import { ArticleDetailModal, type Article } from "./article-detail-modal";
 import { blogPosts } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT } from "@/lib/eswen/site-config-context";
 import { tr } from "@/lib/eswen/i18n";
 import type { Lang } from "@/lib/eswen/language-store";
-
-type Article = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  category: string;
-  imageUrl: string;
-  language: string;
-  readTime: string;
-  date: string;
-};
 
 export function BlogSection() {
   const { lang } = useLanguage();
@@ -35,6 +22,19 @@ export function BlogSection() {
   // Stable string — `tr(lang, ...)` returns a plain string so this effect only
   // re-runs when the language actually changes.
   const notAvail = tr(lang, "blog_desc");
+
+  // Auto-calculate a read-time estimate ("X menit baca" / "X min read") from
+  // the article body when the API/static data doesn't supply one. Uses 200 wpm
+  // (typical adult reading speed) and at least 1 minute.
+  const ensureReadTime = (a: Article): Article => {
+    if (a.readTime && a.readTime.trim()) return a;
+    const words = (a.content ?? "").trim().split(/\s+/).filter(Boolean).length;
+    const minutes = Math.max(1, Math.ceil(words / 200));
+    return {
+      ...a,
+      readTime: lang === "id" ? `${minutes} menit baca` : `${minutes} min read`,
+    };
+  };
 
   useEffect(() => {
     // Data-fetching effect: setState in the effect body and async callbacks is
@@ -48,11 +48,32 @@ export function BlogSection() {
       .then((data) => {
         if (cancelled) return;
         if (data?.ok && Array.isArray(data.articles) && data.articles.length > 0) {
-          setArticles(data.articles);
+          setArticles(data.articles.map(ensureReadTime));
         } else {
           // Fallback to static defaults (mapped to the public shape)
           setArticles(
-            blogPosts.map((p) => ({
+            blogPosts
+              .map((p) => ({
+                id: p.slug,
+                title: p.title[lang as Lang],
+                slug: p.slug,
+                excerpt: p.excerpt[lang as Lang],
+                content: "",
+                category: p.category[lang as Lang],
+                imageUrl: p.image,
+                language: p.language,
+                readTime: p.readTime[lang as Lang],
+                date: p.date,
+              }))
+              .map(ensureReadTime)
+          );
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setArticles(
+          blogPosts
+            .map((p) => ({
               id: p.slug,
               title: p.title[lang as Lang],
               slug: p.slug,
@@ -64,24 +85,7 @@ export function BlogSection() {
               readTime: p.readTime[lang as Lang],
               date: p.date,
             }))
-          );
-        }
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setArticles(
-          blogPosts.map((p) => ({
-            id: p.slug,
-            title: p.title[lang as Lang],
-            slug: p.slug,
-            excerpt: p.excerpt[lang as Lang],
-            content: "",
-            category: p.category[lang as Lang],
-            imageUrl: p.image,
-            language: p.language,
-            readTime: p.readTime[lang as Lang],
-            date: p.date,
-          }))
+            .map(ensureReadTime)
         );
       })
       .finally(() => {
@@ -189,6 +193,14 @@ export function BlogSection() {
       <ArticleDetailModal
         article={selectedArticle}
         onClose={() => setSelectedArticle(null)}
+        relatedArticles={
+          selectedArticle
+            ? (articles ?? [])
+                .filter((a) => a.id !== selectedArticle.id)
+                .slice(0, 3)
+            : undefined
+        }
+        onSelectRelated={(a) => setSelectedArticle(a)}
       />
     </section>
   );
