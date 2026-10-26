@@ -130,7 +130,6 @@ export const translations = {
     about_eyebrow: "About Eswen",
     about_title_1: "Healthcare,",
     about_title_2: "Designed Around You.",
-    about_desc:
       "Eswen Medica is committed to delivering a professional, comfortable, modern, and accessible care experience — purpose-built for Bali's international community.",
     about_body:
       "Eswen Medica is a premium medical clinic in Bali, Indonesia. We combine modern medical technology with compassionate care to deliver comprehensive healthcare services. Our team of experienced, internationally-trained doctors and medical professionals is dedicated to your health and wellbeing.\n\nLocated in the heart of Kuta, we serve locals, expatriates, and international visitors with the same standard of care you would expect from leading clinics worldwide.",
