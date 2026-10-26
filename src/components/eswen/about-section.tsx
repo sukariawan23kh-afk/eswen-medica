@@ -1,6 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Target, Compass } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { aboutHighlights, whyChooseUs } from "@/lib/eswen/data";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT } from "@/lib/eswen/site-config-context";
@@ -10,19 +14,32 @@ export function AboutSection() {
   const { lang } = useLanguage();
   const t = useT();
 
+  const hasBody = !!t("about_body")?.trim();
+  const hasVision = !!t("about_vision_body")?.trim();
+  const hasMission = !!t("about_mission_body")?.trim();
+
   return (
     <section id="about" className="relative py-20 sm:py-28 bg-white overflow-hidden">
       <div className="pointer-events-none absolute top-20 -left-20 h-72 w-72 rounded-full bg-eswen-light-lavender/50 blur-3xl" />
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Image side */}
+        {/* 2-column grid — image sticky on left, content flows on right.
+            items-start (NOT items-center) so the image stays at the top
+            instead of vertically centering (which left empty gaps when
+            content grew long). The image is lg:sticky so it stays in view
+            while the user scrolls through the long body / vision / mission
+            content on the right. */}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          {/* Image side — sticky on desktop */}
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
-            className="relative"
+            className="relative lg:sticky lg:top-24 self-start"
           >
             <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-eswen-lavender/60 to-eswen-soft-purple/20 blur-2xl" />
+            {/* Fixed-size image — h-[440px] + object-cover ensures the
+                image never stretches or "auto-weights" regardless of how
+                much content is on the right side. */}
             <div className="relative rounded-[1.75rem] overflow-hidden border-4 border-white shadow-eswen-elevated">
               <img
                 src="/images/clinic-interior.png"
@@ -33,7 +50,7 @@ export function AboutSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-eswen-deep/30 via-transparent to-transparent" />
             </div>
 
-            {/* Floating stat */}
+            {/* Floating stat — bottom right */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -44,6 +61,7 @@ export function AboutSection() {
               <p className="text-xs text-muted-foreground mt-1">{t("about_patients")}</p>
             </motion.div>
 
+            {/* Floating rating — top left */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -54,7 +72,7 @@ export function AboutSection() {
             </motion.div>
           </motion.div>
 
-          {/* Content side */}
+          {/* Content side — flexible, can grow long with body/vision/mission */}
           <div>
             <SectionHeading
               eyebrow={t("about_eyebrow")}
@@ -67,12 +85,59 @@ export function AboutSection() {
               description={t("about_desc")}
             />
 
+            {/* Body paragraph (markdown-rendered) — supports long text, lists, etc. */}
+            {hasBody && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.5 }}
+                className="mt-6 prose-eswen text-sm sm:text-[15px] text-foreground/80 leading-relaxed"
+              >
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  components={{
+                    p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
+                    ul: ({ children }) => (
+                      <ul className="list-disc pl-5 my-4 space-y-1.5 marker:text-eswen-soft-purple">
+                        {children}
+                      </ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal pl-5 my-4 space-y-1.5 marker:text-eswen-soft-purple">
+                        {children}
+                      </ol>
+                    ),
+                    li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                    strong: ({ children }) => (
+                      <strong className="font-bold text-eswen-deep">{children}</strong>
+                    ),
+                    em: ({ children }) => <em className="text-eswen-deep/90">{children}</em>,
+                    a: ({ href, children }) => (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-eswen-soft-purple underline underline-offset-2 hover:text-eswen-deep"
+                      >
+                        {children}
+                      </a>
+                    ),
+                  }}
+                >
+                  {t("about_body")}
+                </ReactMarkdown>
+              </motion.div>
+            )}
+
+            {/* Highlights grid */}
             <div className="mt-8 grid sm:grid-cols-2 gap-4">
               {aboutHighlights.map((item, idx) => (
                 <motion.div
                   key={item.title.en}
                   initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   className="group rounded-2xl border border-eswen-lavender bg-white p-5 shadow-eswen-soft hover:shadow-eswen-card hover:-translate-y-0.5 transition-all"
                 >
@@ -84,6 +149,98 @@ export function AboutSection() {
                 </motion.div>
               ))}
             </div>
+
+            {/* Vision & Mission — appears below highlights, supports long markdown content */}
+            {(hasVision || hasMission) && (
+              <div className="mt-10 grid sm:grid-cols-2 gap-5">
+                {/* Vision */}
+                {hasVision && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.5 }}
+                    className="rounded-2xl border border-eswen-lavender bg-gradient-to-br from-eswen-light-lavender/40 to-white p-6 shadow-eswen-soft"
+                  >
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-sm">
+                        <Compass className="h-4 w-4" />
+                      </span>
+                      <h3 className="text-base font-bold text-eswen-deep tracking-tight">
+                        {t("about_vision_title")}
+                      </h3>
+                    </div>
+                    <div className="prose-eswen text-sm text-foreground/80 leading-relaxed">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkBreaks]}
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          ul: ({ children }) => (
+                            <ul className="list-disc pl-5 my-2 space-y-1 marker:text-eswen-soft-purple">
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal pl-5 my-2 space-y-1 marker:text-eswen-soft-purple">
+                              {children}
+                            </ol>
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-bold text-eswen-deep">{children}</strong>
+                          ),
+                        }}
+                      >
+                        {t("about_vision_body")}
+                      </ReactMarkdown>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Mission */}
+                {hasMission && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="rounded-2xl border border-eswen-lavender bg-gradient-to-br from-eswen-light-lavender/40 to-white p-6 shadow-eswen-soft"
+                  >
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-sm">
+                        <Target className="h-4 w-4" />
+                      </span>
+                      <h3 className="text-base font-bold text-eswen-deep tracking-tight">
+                        {t("about_mission_title")}
+                      </h3>
+                    </div>
+                    <div className="prose-eswen text-sm text-foreground/80 leading-relaxed">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkBreaks]}
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          ul: ({ children }) => (
+                            <ul className="list-disc pl-5 my-2 space-y-1.5 marker:text-eswen-soft-purple">
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal pl-5 my-2 space-y-1.5 marker:text-eswen-soft-purple">
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                          strong: ({ children }) => (
+                            <strong className="font-bold text-eswen-deep">{children}</strong>
+                          ),
+                        }}
+                      >
+                        {t("about_mission_body")}
+                      </ReactMarkdown>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

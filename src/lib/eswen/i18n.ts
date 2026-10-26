@@ -12,6 +12,7 @@ export const translations = {
     nav_doctors: "Doctors",
     nav_about: "About Us",
     nav_blog: "Blog",
+    nav_partners: "Partners",
     nav_contact: "Contact",
     nav_book: "Book Appointment",
     nav_tagline: "Health • Wellness • Confidence",
@@ -131,6 +132,14 @@ export const translations = {
     about_title_2: "Designed Around You.",
     about_desc:
       "Eswen Medica is committed to delivering a professional, comfortable, modern, and accessible care experience — purpose-built for Bali's international community.",
+    about_body:
+      "Eswen Medica is a premium medical clinic in Bali, Indonesia. We combine modern medical technology with compassionate care to deliver comprehensive healthcare services. Our team of experienced, internationally-trained doctors and medical professionals is dedicated to your health and wellbeing.\n\nLocated in the heart of Kuta, we serve locals, expatriates, and international visitors with the same standard of care you would expect from leading clinics worldwide.",
+    about_vision_title: "Our Vision",
+    about_vision_body:
+      "To be the leading medical and wellness clinic in Bali, providing accessible, high-quality healthcare that meets international standards for locals, expatriates, and international visitors.",
+    about_mission_title: "Our Mission",
+    about_mission_body:
+      "- Provide comprehensive, patient-centered medical care with compassion and respect\n- Maintain international standards through continuous quality improvement\n- Embrace innovation and technology to enhance patient outcomes\n- Foster a culture of wellness, prevention, and health education\n- Build lasting partnerships with patients, families, and the community",
     about_patients: "Happy patients from 40+ countries",
     about_rating: "★ 4.9 / 5.0 rating",
 
@@ -150,7 +159,18 @@ export const translations = {
     blog_read: "Read Article",
     blog_view_all: "View All Articles",
 
-    // Location
+    // Partners (Insurance)
+    partners_eyebrow: "Partnership",
+    partners_title_1: "Insurance",
+    partners_title_2: "Partners",
+    partners_desc:
+      "Connecting You with Reliable Insurance Providers",
+    partners_body:
+      "Our partnerships include BPJS, BNI Life, MHC, and Admedika. Our partnerships are designed to give you the best health protection and support, ensuring your wellbeing at every step.",
+    partners_bpjs_tag: "National Health Insurance",
+    partners_bnilife_tag: "Life Insurance",
+    partners_mhc_tag: "Healthcare Management",
+    partners_admedika_tag: "Healthcare Administration",
     location_eyebrow: "Visit Us",
     location_title_1: "Visit",
     location_title_2: "Eswen Medica",
@@ -270,6 +290,7 @@ export const translations = {
     nav_doctors: "Dokter",
     nav_about: "Tentang Kami",
     nav_blog: "Blog",
+    nav_partners: "Mitra",
     nav_contact: "Kontak",
     nav_book: "Buat Janji",
     nav_tagline: "Kesehatan • Wellness • Kepercayaan",
@@ -390,6 +411,14 @@ export const translations = {
     about_title_2: "Dirancang untuk Anda.",
     about_desc:
       "Eswen Medica berkomitmen memberikan pengalaman layanan yang profesional, nyaman, modern, dan mudah diakses — khusus untuk komunitas internasional di Bali.",
+    about_body:
+      "Eswen Medica adalah klinik medis premium di Bali, Indonesia. Kami menggabungkan teknologi medis modern dengan perawatan yang penuh kasih untuk memberikan layanan kesehatan yang komprehensif. Tim dokter dan tenaga medis profesional kami yang berpengalaman dan terlatih secara internasional berdedikasi untuk kesehatan dan kesejahteraan Anda.\n\nBerlokasi di jantung Kuta, kami melayani masyarakat lokal, ekspatriat, dan tamu internasional dengan standar pelayanan yang sama seperti yang Anda harapkan dari klinik-klinik terkemuka di dunia.",
+    about_vision_title: "Visi Kami",
+    about_vision_body:
+      "Menjadi klinik medis dan wellness terkemuka di Bali, yang menyediakan layanan kesehatan berkualitas tinggi dan mudah diakses, sesuai standar internasional untuk masyarakat lokal, ekspatriat, dan tamu internasional.",
+    about_mission_title: "Misi Kami",
+    about_mission_body:
+      "- Memberikan layanan medis yang komprehensif dan berpusat pada pasien dengan penuh kasih sayang dan rasa hormat\n- Mempertahankan standar internasional melalui peningkatan kualitas yang berkelanjutan\n- Mengadopsi inovasi dan teknologi untuk meningkatkan hasil perawatan pasien\n- Membangun budaya wellness, pencegahan, dan edukasi kesehatan\n- Membangun kemitraan abadi dengan pasien, keluarga, dan masyarakat",
     about_patients: "Pasien puas dari 40+ negara",
     about_rating: "★ 4.9 / 5.0 rating",
 
@@ -408,6 +437,19 @@ export const translations = {
       "Konten tepercaya dan bermanfaat untuk ekspat, turis, dan masyarakat lokal — dalam bahasa Inggris dan Indonesia.",
     blog_read: "Baca Artikel",
     blog_view_all: "Lihat Semua Artikel",
+
+    // Partners (Insurance)
+    partners_eyebrow: "Kemitraan",
+    partners_title_1: "Mitra",
+    partners_title_2: "Asuransi",
+    partners_desc:
+      "Menghubungkan Anda dengan Penyedia Asuransi yang Andal",
+    partners_body:
+      "Kemitraan kami mencakup BPJS, BNI Life, MHC, dan Admedika. Kemitraan kami dirancang untuk memberi Anda perlindungan dan dukungan kesehatan terbaik, memastikan kesejahteraan Anda di setiap langkah.",
+    partners_bpjs_tag: "Asuransi Kesehatan Nasional",
+    partners_bnilife_tag: "Asuransi Jiwa",
+    partners_mhc_tag: "Manajemen Kesehatan",
+    partners_admedika_tag: "Administrasi Kesehatan",
 
     // Location
     location_eyebrow: "Kunjungi Kami",
