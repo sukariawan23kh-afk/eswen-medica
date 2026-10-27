@@ -7,7 +7,6 @@ import { PatientJourneySection } from "@/components/eswen/patient-journey-sectio
 import { DoctorsSection } from "@/components/eswen/doctors-section";
 import { AboutSection, WhyChooseUsSection } from "@/components/eswen/about-section";
 import { BlogSection } from "@/components/eswen/blog-section";
-import { PartnersSection } from "@/components/eswen/partners-section";
 import { LocationSection } from "@/components/eswen/location-section";
 import { Footer } from "@/components/eswen/footer";
 import { AIAssistant } from "@/components/eswen/ai-assistant";
@@ -15,6 +14,7 @@ import { WhatsAppButton } from "@/components/eswen/whatsapp-button";
 import { BookingDialog } from "@/components/eswen/booking-dialog";
 import { AdminPanel } from "@/components/eswen/admin-panel";
 import { OfferPopup } from "@/components/eswen/offer-popup";
+import { FaviconUpdater } from "@/components/eswen/favicon-updater";
 
 export default function Home() {
   return (
@@ -30,7 +30,6 @@ export default function Home() {
         <AboutSection />
         <WhyChooseUsSection />
         <BlogSection />
-        <PartnersSection />
         <LocationSection />
       </main>
       <Footer />
@@ -39,6 +38,7 @@ export default function Home() {
       <BookingDialog />
       <AdminPanel />
       <OfferPopup />
+      <FaviconUpdater />
     </div>
   );
 }
