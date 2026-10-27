@@ -8,6 +8,8 @@ import { DoctorsSection } from "@/components/eswen/doctors-section";
 import { AboutSection, WhyChooseUsSection } from "@/components/eswen/about-section";
 import { BlogSection } from "@/components/eswen/blog-section";
 import { PartnersSection } from "@/components/eswen/partners-section";
+import { ApotekSection } from "@/components/eswen/apotek-section";
+import { ApotekOverlayProvider } from "@/components/eswen/apotek-overlay-provider";
 import { LocationSection } from "@/components/eswen/location-section";
 import { Footer } from "@/components/eswen/footer";
 import { AIAssistant } from "@/components/eswen/ai-assistant";
@@ -32,6 +34,7 @@ export default function Home() {
         <WhyChooseUsSection />
         <BlogSection />
         <PartnersSection />
+        <ApotekSection />
         <LocationSection />
       </main>
       <Footer />
@@ -41,6 +44,11 @@ export default function Home() {
       <AdminPanel />
       <OfferPopup />
       <FaviconUpdater />
+      {/* Apotek e-commerce overlay — opened from the navbar "Apotek" link
+          OR the ApotekSection "Lihat Semua Produk" button via the global
+          apotek-overlay store. Rendered at the page root so the overlay
+          mounts once and works regardless of which caller opened it. */}
+      <ApotekOverlayProvider />
     </div>
   );
 }

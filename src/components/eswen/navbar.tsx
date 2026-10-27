@@ -9,6 +9,7 @@ import { useMounted } from "@/hooks/use-mounted";
 import { useLanguage } from "@/lib/eswen/language-store";
 import { useT } from "@/lib/eswen/site-config-context";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
+import { useApotekOverlay } from "@/lib/eswen/apotek-overlay-store";
 import { BrandLogo } from "@/components/eswen/brand-logo";
 import { navLinks } from "@/lib/eswen/data";
 
@@ -19,6 +20,7 @@ export function Navbar() {
   const { lang, setLang } = useLanguage();
   const t = useT();
   const { openDialog } = useBookingDialog();
+  const { openStore: openApotekStore } = useApotekOverlay();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -29,6 +31,12 @@ export function Navbar() {
 
   const handleNav = (href: string) => {
     setOpen(false);
+    // "Apotek" is now an e-commerce overlay, not a page section — open the
+    // overlay instead of scrolling to a section anchor.
+    if (href === "#apotek") {
+      openApotekStore();
+      return;
+    }
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -51,13 +59,13 @@ export function Navbar() {
             <BrandLogo />
           </button>
 
-          {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          {/* Desktop Nav — compact (px-2.5, gap-0, text-xs) to fit 9 items */}
+          <nav className="hidden lg:flex items-center gap-0">
             {navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleNav(link.href)}
-                className="px-3.5 py-2 text-sm font-medium text-foreground/80 hover:text-eswen-deep hover:bg-eswen-light-lavender/60 rounded-full transition-all"
+                className="px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:text-eswen-deep hover:bg-eswen-light-lavender/60 rounded-full transition-all whitespace-nowrap"
               >
                 {t(link.labelKey as Parameters<typeof t>[0])}
               </button>
