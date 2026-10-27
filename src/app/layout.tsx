@@ -15,70 +15,89 @@ const jakarta = Plus_Jakarta_Sans({
 
 const siteUrl = "https://eswenmedica.id";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    default: "Eswen Medica — Health • Wellness • Confidence | Premium Medical Clinic in Bali",
-    template: "%s | Eswen Medica",
-  },
-  description:
-    "Eswen Medica is a premium medical clinic in Bali offering comprehensive healthcare, dermatology, wellness, and preventive care for international guests, expats, and locals. Smart booking, secure deposit, AI triage assistant, and trusted specialists.",
-  keywords: [
-    "Medical Clinic Bali",
-    "Health Clinic Bali",
-    "Dermatology Bali",
-    "Skin Clinic Bali",
-    "Medical Check-up Bali",
-    "Travel Medicine Bali",
-    "Doctor Bali",
-    "General Practitioner Bali",
-    "Preventive Care Bali",
-    "Medical Tourism Bali",
-    "Eswen Medica",
-    "Bali expat clinic",
-  ],
-  authors: [{ name: "Eswen Medica" }],
-  creator: "Eswen Medica",
-  publisher: "Eswen Medica",
-  alternates: {
-    canonical: siteUrl,
-    languages: {
-      en: siteUrl,
-      id: `${siteUrl}/id`,
+/**
+ * Dynamic metadata — reads the logo URL from the DB (server-side) so the
+ * favicon (browser tab icon) follows the admin-configured logo. Falls back
+ * to /logo.svg if the logo URL is empty or the DB is unreachable.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  let logoUrl = "/logo.svg";
+  try {
+    const { db } = await import("@/lib/db");
+    const { ensureSiteSeeded } = await import("@/lib/eswen/seed-full");
+    await ensureSiteSeeded();
+    const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
+    if (cfgRow) {
+      const stored = JSON.parse(cfgRow.config);
+      if (stored.logo?.url) logoUrl = stored.logo.url;
+    }
+  } catch { /* fallback to default /logo.svg */ }
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: "Eswen Medica — Health • Wellness • Confidence | Premium Medical Clinic in Bali",
+      template: "%s | Eswen Medica",
     },
-  },
-  openGraph: {
-    title: "Eswen Medica — Health • Wellness • Confidence",
     description:
-      "Premium medical and wellness care in Bali, delivered by trusted professionals with modern technology and international standards.",
-    url: siteUrl,
-    siteName: "Eswen Medica",
-    locale: "en_US",
-    alternateLocale: "id_ID",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Eswen Medica — Health • Wellness • Confidence",
-    description:
-      "Premium medical and wellness care in Bali, delivered by trusted professionals with international standards.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+      "Eswen Medica is a premium medical clinic in Bali offering comprehensive healthcare, dermatology, wellness, and preventive care for international guests, expats, and locals. Smart booking, secure deposit, AI triage assistant, and trusted specialists.",
+    keywords: [
+      "Medical Clinic Bali",
+      "Health Clinic Bali",
+      "Dermatology Bali",
+      "Skin Clinic Bali",
+      "Medical Check-up Bali",
+      "Travel Medicine Bali",
+      "Doctor Bali",
+      "General Practitioner Bali",
+      "Preventive Care Bali",
+      "Medical Tourism Bali",
+      "Eswen Medica",
+      "Bali expat clinic",
+    ],
+    authors: [{ name: "Eswen Medica" }],
+    creator: "Eswen Medica",
+    publisher: "Eswen Medica",
+    alternates: {
+      canonical: siteUrl,
+      languages: {
+        en: siteUrl,
+        id: `${siteUrl}/id`,
+      },
+    },
+    openGraph: {
+      title: "Eswen Medica — Health • Wellness • Confidence",
+      description:
+        "Premium medical and wellness care in Bali, delivered by trusted professionals with modern technology and international standards.",
+      url: siteUrl,
+      siteName: "Eswen Medica",
+      locale: "en_US",
+      alternateLocale: "id_ID",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Eswen Medica — Health • Wellness • Confidence",
+      description:
+        "Premium medical and wellness care in Bali, delivered by trusted professionals with international standards.",
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
     },
-  },
-  icons: {
-    icon: "/logo.svg",
-  },
-  category: "health",
-};
+    icons: {
+      icon: logoUrl,
+    },
+    category: "health",
+  };
+}
 
 export default async function RootLayout({
   children,

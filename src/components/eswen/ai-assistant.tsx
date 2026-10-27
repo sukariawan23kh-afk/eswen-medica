@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/eswen/language-store";
-import { useT } from "@/lib/eswen/site-config-context";
+import { useT, useLogo } from "@/lib/eswen/site-config-context";
 import { tr } from "@/lib/eswen/i18n";
 import type { Lang } from "@/lib/eswen/language-store";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
@@ -39,6 +39,7 @@ const SUGGESTIONS: Record<Lang, string[]> = {
 export function AIAssistant() {
   const { lang, setLang } = useLanguage();
   const t = useT();
+  const logo = useLogo();
   const { openDialog } = useBookingDialog();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -147,7 +148,7 @@ export function AIAssistant() {
             aria-label="Open Eswen AI Assistant"
           >
             <span className="absolute inset-0 rounded-full animate-eswen-pulse-ring" />
-            <Sparkles className="h-6 w-6 relative" />
+            {logo.url ? <img src={logo.url} alt={logo.alt} className="h-6 w-6 relative rounded-full object-cover" /> : <Sparkles className="h-6 w-6 relative" />}
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[8px] font-bold text-white border-2 border-white">
               ●
             </span>
@@ -169,7 +170,7 @@ export function AIAssistant() {
             {/* Header */}
             <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
-                <Sparkles className="h-5 w-5" />
+                {logo.url ? <img src={logo.url} alt={logo.alt} className="h-5 w-5 rounded-full object-cover" /> : <Sparkles className="h-5 w-5" />}
               </span>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm leading-tight">Eswen AI Assistant</p>
@@ -307,7 +308,7 @@ function Bubble({ msg }: { msg: Msg }) {
     >
       {!isUser && (
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-sm">
-          <Sparkles className="h-3.5 w-3.5" />
+          {logo.url ? <img src={logo.url} alt={logo.alt} className="h-3.5 w-3.5 rounded-full object-cover" /> : <Sparkles className="h-3.5 w-3.5" />}
         </span>
       )}
       <div
