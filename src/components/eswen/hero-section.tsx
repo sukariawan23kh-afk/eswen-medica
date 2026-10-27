@@ -4,12 +4,13 @@ import { motion } from "framer-motion";
 import { CalendarHeart, ArrowRight, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { heroTrustPoints } from "@/lib/eswen/data";
-import { useT } from "@/lib/eswen/site-config-context";
+import { useT, useHeroImage } from "@/lib/eswen/site-config-context";
 import type { TranslationKey } from "@/lib/eswen/i18n";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 
 export function HeroSection() {
   const t = useT();
+  const heroImage = useHeroImage();
   const { openDialog } = useBookingDialog();
   const scrollTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -119,7 +120,7 @@ export function HeroSection() {
               <div className="absolute -inset-4 sm:-inset-6 rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-eswen-lavender/60 via-white/40 to-eswen-soft-purple/30 blur-2xl" />
               <div className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-eswen-elevated border-4 border-white animate-eswen-float">
                 <img
-                  src="/images/hero-model.png"
+                  src={heroImage}
                   alt="Premium portrait at Eswen Medica medical clinic in Bali"
                   className="w-full h-[420px] sm:h-[500px] lg:h-[560px] object-cover"
                   loading="eager"

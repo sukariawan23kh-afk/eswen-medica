@@ -15,30 +15,14 @@ export async function GET(req: NextRequest) {
   try {
     await ensureSiteSeeded();
     const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
-    // Deep-merge with defaults so that:
-    //  - newly-added top-level keys (e.g. `payment`, `about_image`) are
-    //    backfilled for configs created before those keys existed;
-    //  - newly-added TRANSLATION keys (e.g. `about_body`, `about_vision_*`,
-    //    `about_mission_*`, `partners_*`) are backfilled for DBs seeded before
-    //    those keys were added to i18n.ts. Without this, the admin editor
-    //    never shows a field for the new key (and the public site falls back
-    //    to static i18n.ts copy).
-    // DB values always take precedence over defaults.
+    // Merge with defaults so newly-added top-level keys (e.g. `payment`) are
+    // backfilled for configs created before those keys existed — prevents the
+    // editor from crashing on undefined fields.
     const stored = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
     const config = {
       ...DEFAULT_CONFIG,
       ...stored,
-      about_image: typeof stored.about_image === "string" ? stored.about_image : "",
-      brand: { ...DEFAULT_CONFIG.brand, ...(stored.brand || {}) },
-      contact: { ...DEFAULT_CONFIG.contact, ...(stored.contact || {}) },
-      social: { ...DEFAULT_CONFIG.social, ...(stored.social || {}) },
       payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) },
-      logo: { ...DEFAULT_CONFIG.logo, ...(stored.logo || {}) },
-      theme: { ...DEFAULT_CONFIG.theme, ...(stored.theme || {}) },
-      translations: {
-        en: { ...DEFAULT_CONFIG.translations.en, ...(stored.translations?.en || {}) },
-        id: { ...DEFAULT_CONFIG.translations.id, ...(stored.translations?.id || {}) },
-      },
     };
     return NextResponse.json({ ok: true, config });
   } catch (err) {
@@ -66,23 +50,10 @@ type ConfigShape = {
 async function getOldConfig(): Promise<ConfigShape> {
   const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
   const stored = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
-  // Same deep-merge as the GET handlers — preserves newly-added keys from
-  // DEFAULT_CONFIG (e.g. translation keys added after the DB was first seeded)
-  // so the reconcile step in PUT compares against the correct baseline.
   return {
     ...DEFAULT_CONFIG,
     ...stored,
-    about_image: typeof stored.about_image === "string" ? stored.about_image : "",
-    brand: { ...DEFAULT_CONFIG.brand, ...(stored.brand || {}) },
-    contact: { ...DEFAULT_CONFIG.contact, ...(stored.contact || {}) },
-    social: { ...DEFAULT_CONFIG.social, ...(stored.social || {}) },
     payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) },
-    logo: { ...DEFAULT_CONFIG.logo, ...(stored.logo || {}) },
-    theme: { ...DEFAULT_CONFIG.theme, ...(stored.theme || {}) },
-    translations: {
-      en: { ...DEFAULT_CONFIG.translations.en, ...(stored.translations?.en || {}) },
-      id: { ...DEFAULT_CONFIG.translations.id, ...(stored.translations?.id || {}) },
-    },
   } as ConfigShape;
 }
 

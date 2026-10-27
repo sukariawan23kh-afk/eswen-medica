@@ -8,8 +8,7 @@ import { ImageUpload } from "@/components/eswen/admin/image-upload";
 
 type Config = {
   logo: { url: string; alt: string };
-  // URL of the image shown in the About section. Empty = use the default
-  // /images/clinic-interior.png. Top-level field (not a translation key).
+  hero_image: string;
   about_image: string;
   brand: { name: string; tagline: { en: string; id: string } };
   contact: {
@@ -56,38 +55,11 @@ function groupKeys(keys: string[]): Record<string, string[]> {
   return out;
 }
 
-/**
- * Friendlier admin-facing labels for the long-form markdown fields in the
- * About group. Falls back to the raw key name (the existing pattern) for
- * any key not listed here — so this is purely a UX polish, not a behavior
- * change.
- */
-const LABEL_MAP: Record<string, string> = {
-  about_eyebrow: "Eyebrow (ID) — small label above title",
-  about_title_1: "Title Part 1 (ID)",
-  about_title_2: "Title Part 2 (ID) — gradient color",
-  about_desc: "Description (ID) — subtitle below title",
-  about_body: "Body Paragraph (ID) — markdown OK, full intro text",
-  about_vision_title: "Vision Title (ID)",
-  about_vision_body: "Vision Body (ID) — markdown OK",
-  about_mission_title: "Mission Title (ID)",
-  about_mission_body: "Mission Body (ID) — markdown OK, supports bullet lists",
-  about_patients: "Patients Stat Label (ID) — e.g. 'Pasien puas dari 40+ negara'",
-  about_rating: "Rating Stat Label (ID) — e.g. '★ 4.9 / 5.0 rating'",
-};
-
-/** Long-form fields whose textarea should be taller (multi-paragraph). */
-const LONG_FORM_KEYS = new Set([
-  "about_body",
-  "about_vision_body",
-  "about_mission_body",
-]);
-
 export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => void }) {
   const [config, setConfig] = useState<Config | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ logo: true, brand: true, about_image: true, contact: true, social: true, payment: true });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ logo: true, hero_image: true, about_image: true, contact: true, social: true, payment: true });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -194,16 +166,29 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
         </div>
       </Card>
 
-      {/* About Section Image — top-level field, not a translation key */}
-      <Card title="About Section Image" open={openGroups.about_image} onToggle={() => toggle("about_image")}>
+      {/* Hero Section Image */}
+      <Card title="Hero Section Image (Beranda)" open={openGroups.hero_image} onToggle={() => toggle("hero_image")}>
         <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground leading-relaxed">The image shown on the left of the About section. Empty = use the default <code className="text-[10px] bg-eswen-light-lavender/50 px-1 py-0.5 rounded">/images/clinic-interior.png</code>. Recommended aspect ratio ~4:3 (the section displays it at <strong>440px tall</strong> with <code className="text-[10px] bg-eswen-light-lavender/50 px-1 py-0.5 rounded">object-cover</code>).</p>
+          <span className="lbl">Hero Image URL <span className="text-[9px] font-normal normal-case text-muted-foreground/70">— leave empty for default</span></span>
           <ImageUpload
-            value={config.about_image || ""}
+            value={config.hero_image}
+            onChange={(url) => setConfig({ ...config, hero_image: url })}
+            placeholder="/images/hero-model.png (leave empty for default)"
+            recommendedSize="~800×1000px (portrait 4:5)"
+            previewClass="h-24 w-20"
+          />
+        </div>
+      </Card>
+
+      {/* About Section Image */}
+      <Card title="About Section Image (Tentang Kami)" open={openGroups.about_image} onToggle={() => toggle("about_image")}>
+        <div className="space-y-2">
+          <span className="lbl">About Image URL <span className="text-[9px] font-normal normal-case text-muted-foreground/70">— leave empty for default</span></span>
+          <ImageUpload
+            value={config.about_image}
             onChange={(url) => setConfig({ ...config, about_image: url })}
-            label="About Section Image URL"
             placeholder="/images/clinic-interior.png (leave empty for default)"
-            recommendedSize="~800×600px (4:3)"
+            recommendedSize="~800×600px (landscape 4:3)"
             previewClass="h-20 w-28"
           />
         </div>
@@ -268,12 +253,8 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
                   <div className="px-4 pb-3 space-y-2.5 bg-eswen-gradient-soft/40">
                     {keys.map((k) => (
                       <div key={k}>
-                        <label className="lbl-tiny">{LABEL_MAP[k] || k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">— EN auto-translated</span></label>
-                        <textarea
-                          value={config.translations.id[k] ?? ""}
-                          onChange={(e) => setT("id", k, e.target.value)}
-                          className={cn("ainput resize-y text-xs", LONG_FORM_KEYS.has(k) ? "min-h-[110px]" : "min-h-[40px]")}
-                        />
+                        <label className="lbl-tiny">{k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">— EN auto-translated</span></label>
+                        <textarea value={config.translations.id[k] ?? ""} onChange={(e) => setT("id", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" />
                       </div>
                     ))}
                   </div>
