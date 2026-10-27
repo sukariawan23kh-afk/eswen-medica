@@ -299,6 +299,7 @@ export function AIAssistant() {
 }
 
 function Bubble({ msg }: { msg: Msg }) {
+  const logo = useLogo();
   const isUser = msg.role === "user";
   return (
     <motion.div
