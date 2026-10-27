@@ -69,11 +69,27 @@ type Ctx = {
 
 const SiteConfigContext = createContext<Ctx>({ config: null, services: [], doctors: [], loaded: false });
 
-/** Provide the editable site config to the whole tree. Fetches once on mount. */
-export function SiteConfigProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<Ctx>({ config: null, services: [], doctors: [], loaded: false });
+/** Provide the editable site config to the whole tree. Fetches once on mount.
+ *  If `initialConfig` is passed (from server-side layout fetch), uses it
+ *  immediately as the starting state — eliminating the SSR flash where
+ *  old static fallback data shows briefly before the client fetch resolves. */
+export function SiteConfigProvider({
+  children,
+  initialConfig,
+}: {
+  children: ReactNode;
+  initialConfig?: Ctx | null;
+}) {
+  const [state, setState] = useState<Ctx>(
+    initialConfig
+      ? { ...initialConfig, loaded: true }
+      : { config: null, services: [], doctors: [], loaded: false }
+  );
 
   useEffect(() => {
+    // If we already have initialConfig from SSR, still re-fetch for freshness
+    // (admin might have changed something). But the initial render is already
+    // correct — no flash.
     let cancelled = false;
     fetch("/api/site-config", { cache: "no-store" })
       .then((r) => r.json())

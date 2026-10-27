@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { LangSync } from "@/components/eswen/lang-sync";
 import { SiteConfigProvider } from "@/lib/eswen/site-config-context";
+import { getSiteConfigData } from "@/lib/eswen/get-site-config";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -79,11 +80,28 @@ export const metadata: Metadata = {
   category: "health",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Server-side fetch — runs at request time, result is available for SSR.
+  // This eliminates the "old data flash" where static fallback from data.ts
+  // shows briefly before the client-side fetch resolves.
+  let initialConfig = null;
+  try {
+    const data = await getSiteConfigData();
+    if (data?.ok) {
+      initialConfig = {
+        config: data.config,
+        services: data.services ?? [],
+        doctors: data.doctors ?? [],
+      };
+    }
+  } catch {
+    // DB fetch failed — client will fetch via useEffect (flash may occur)
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -131,7 +149,7 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} font-sans antialiased bg-background text-foreground`}
       >
-        <SiteConfigProvider>
+        <SiteConfigProvider initialConfig={initialConfig}>
           <LangSync />
           {children}
         </SiteConfigProvider>
