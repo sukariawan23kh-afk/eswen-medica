@@ -19,6 +19,7 @@ import {
   Download,
   Clock,
   Building2,
+  Pill,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ import { ServicesTab } from "@/components/eswen/admin/services-tab";
 import { DoctorsTab } from "@/components/eswen/admin/doctors-tab";
 import { OffersTab } from "@/components/eswen/admin/offers-tab";
 import { ArticlesTab } from "@/components/eswen/admin/articles-tab";
+import { ApotekTab } from "@/components/eswen/admin/apotek-tab";
 import { usePayment } from "@/lib/eswen/site-config-context";
 
 /* ---------- types ---------- */
@@ -205,7 +207,7 @@ export function AdminPanel() {
   const T = A(lang);
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState<boolean | null>(null); // null = checking
-  const [tab, setTab] = useState<"settings" | "services" | "doctors" | "articles" | "bookings" | "offers">("settings");
+  const [tab, setTab] = useState<"settings" | "services" | "doctors" | "articles" | "bookings" | "offers" | "apotek">("settings");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -509,6 +511,9 @@ export function AdminPanel() {
               <TabBtn active={tab === "articles"} onClick={() => setTab("articles")} icon={<FileText className="h-4 w-4" />}>
                 {T.tabArticles}
               </TabBtn>
+              <TabBtn active={tab === "apotek"} onClick={() => setTab("apotek")} icon={<Pill className="h-4 w-4" />}>
+                Apotek
+              </TabBtn>
               <TabBtn active={tab === "bookings"} onClick={() => setTab("bookings")} icon={<CalendarClock className="h-4 w-4" />}>
                 {T.tabBookings}
                 <span className="ml-1.5 rounded-full bg-eswen-light-lavender text-eswen-deep text-[10px] font-bold px-1.5 py-0.5">
@@ -522,6 +527,7 @@ export function AdminPanel() {
             {tab === "doctors" && <DoctorsTab showToast={showToast} />}
             {tab === "offers" && <OffersTab showToast={showToast} />}
             {tab === "articles" && <ArticlesTab showToast={showToast} />}
+            {tab === "apotek" && <ApotekTab showToast={showToast} />}
             {tab === "bookings" && (
               <BookingsTab T={T} bookings={bookings} onUpdateStatus={updateBookingStatus} onApprove={approvePayment} />
             )}

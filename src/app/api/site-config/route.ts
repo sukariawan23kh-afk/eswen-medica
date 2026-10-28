@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
+import { ensureApotekSeeded } from "@/lib/eswen/seed-apotek";
 import { DEFAULT_CONFIG } from "@/lib/eswen/seed-full";
 
 export const runtime = "nodejs";
@@ -15,6 +16,9 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     await ensureSiteSeeded();
+    // Also ensure the apotek catalog is seeded so the count + categories
+    // are available on the very first site-config fetch.
+    await ensureApotekSeeded();
 
     const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
     // Merge with defaults so newly-added top-level keys (e.g. `payment`,
@@ -37,7 +41,7 @@ export async function GET() {
       },
     };
 
-    const [services, doctors] = await Promise.all([
+    const [services, doctors, apotekCategories, apotekProductsCount] = await Promise.all([
       db.service.findMany({
         where: { published: true },
         orderBy: { order: "asc" },
@@ -46,6 +50,20 @@ export async function GET() {
         where: { published: true },
         orderBy: { order: "asc" },
       }),
+      // Lightweight apotek summary — just enough for the storefront to
+      // show a category count + product count. Full product data is
+      // fetched on demand by /api/apotek/products.
+      db.productCategory.findMany({
+        where: { active: true },
+        orderBy: { order: "asc" },
+        select: {
+          id: true,
+          nameId: true,
+          nameEn: true,
+          order: true,
+        },
+      }),
+      db.product.count({ where: { active: true } }),
     ]);
 
     return NextResponse.json({
@@ -81,6 +99,19 @@ export async function GET() {
         initials: d.initials,
         order: d.order,
       })),
+      // Lightweight apotek summary — category list (with bilingual names)
+      // + total active product count. The storefront uses this to render
+      // the sidebar categories immediately; product details are loaded
+      // on demand from /api/apotek/products.
+      apotekCategories: apotekCategories.map((c) => ({
+        id: c.id,
+        name: {
+          en: c.nameEn && c.nameEn.trim() ? c.nameEn : c.nameId,
+          id: c.nameId,
+        },
+        order: c.order,
+      })),
+      apotekProductsCount: apotekProductsCount,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";

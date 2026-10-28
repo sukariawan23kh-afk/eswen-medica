@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { contactInfo } from "@/lib/eswen/data";
+import { useContact } from "@/lib/eswen/site-config-context";
 
 export function WhatsAppButton() {
-  const wa = contactInfo.whatsapp.replace(/[^0-9]/g, "");
+  const contact = useContact();
+  const wa = contact.whatsapp.replace(/[^0-9]/g, "");
   return (
     <motion.a
       href={`https://wa.me/${wa}?text=${encodeURIComponent(

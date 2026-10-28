@@ -5,4 +5,7 @@ NgCfYIWtmguXnfOdamoc52nFuZ1YHrsG
 D:\eswen-medica>
 D:\eswen-medica>:: Generate ADMIN_SECRET (32-byte hex, 64 chars)
 D:\eswen-medica>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-8ff24e4f5cb27aad8d2e05e5edc5d4a1fd3314ce118f8291c9fcf7e94c02df30
+8ff24e4f5cb27aad8d2e05e5edc5d4a1fd3314ce118f8291c9fcf7e94c02df30node_modules/ 
+.next/ 
+.env.local 
+.vercel/ 

@@ -284,12 +284,18 @@ function Stat({
   );
 }
 
+/**
+ * Render markdown content (bio, education, certifications) with consistent
+ * typography. Uses remark-gfm (tables, strikethrough, task lists) +
+ * remark-breaks (single newlines → <br>).
+ */
 function MarkdownContent({ content }: { content: string }) {
   return (
     <div className="prose-eswen text-sm text-foreground/80 leading-relaxed">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
+          // Custom renderers to keep the medical aesthetic + tight spacing
           p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
           ul: ({ children }) => (
             <ul className="list-disc pl-4 space-y-1 mb-2 last:mb-0 marker:text-eswen-soft-purple">

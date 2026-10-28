@@ -186,3 +186,51 @@ model Doctor {
 
   @@index([published])
 }
+
+// ProductCategory — admin-editable pharmacy categories (e.g., "Batuk Pilek", "Alergi").
+// Bilingual: nameId is admin input (Indonesian), nameEn is auto-translated via
+// MyMemory on save. The public /api/apotek/categories endpoint returns both
+// variants so the Apotek store overlay can render the active language.
+model ProductCategory {
+  id        String   @id @default(cuid())
+  nameId    String              // category name (Indonesian — admin input)
+  nameEn    String   @default("")  // auto-translated via MyMemory on save
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  products  Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([active])
+}
+
+// Product — admin-editable pharmacy products with stock management.
+// Bilingual across every text field (name, shortDesc, fullDesc, dosage,
+// usage, precautions) — admin only inputs the ID variants, EN is
+// auto-translated on save via translateIdToEn. `stock` drives the
+// "Stok Habis" (0) and "Stok Menipis" (<5) badges on the storefront.
+model Product {
+  id              String   @id @default(cuid())
+  categoryId      String
+  category        ProductCategory @relation(fields: [categoryId], references: [id])
+  nameId          String              // product name (Indonesian — admin input)
+  nameEn          String   @default("")  // auto-translated
+  shortDescId     String   @default("")  // short description for card
+  shortDescEn     String   @default("")
+  fullDescId      String?               // full medical description (markdown) — for detail view
+  fullDescEn      String?
+  dosageId        String?               // dosage info (markdown)
+  dosageEn        String?
+  usageId         String?               // usage instructions
+  usageEn         String?
+  precautionsId   String?               // warnings/precautions (markdown)
+  precautionsEn   String?
+  price           String   @default("Rp 0")  // e.g., "Rp 8.294" or "IDR 28.500"
+  image           String   @default("/images/service-medical.png")
+  stock           Int      @default(0)    // ⬅️ STOCK quantity
+  active          Boolean  @default(true) // if false, hidden from store
+  order           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([categoryId])
+  @@index([active])
+}

@@ -203,6 +203,22 @@ export const translations = {
     apotek_detail_category: "Category",
     apotek_detail_buy_wa: "Buy Now via WhatsApp",
 
+    // Apotek Store — Stock badges
+    apotek_stock: "Stock",
+    apotek_stock_empty: "Out of Stock",
+    apotek_stock_low: "Low Stock",
+    apotek_stock_available: "Available",
+
+    // Apotek — Admin CMS tab
+    apotek_admin_tab: "Pharmacy",
+    apotek_admin_categories: "Product Categories",
+    apotek_admin_products: "Products",
+    apotek_admin_add_product: "Add Product",
+    apotek_admin_add_category: "Add Category",
+    apotek_admin_stock: "Stock Quantity",
+    apotek_admin_price: "Price",
+    apotek_admin_category: "Category",
+
     // Location
     location_eyebrow: "Visit Us",
     location_title_1: "Visit",
@@ -514,6 +530,22 @@ export const translations = {
     apotek_detail_price: "Harga",
     apotek_detail_category: "Kategori",
     apotek_detail_buy_wa: "Beli Sekarang via WhatsApp",
+
+    // Apotek Store — Stock badges
+    apotek_stock: "Stok",
+    apotek_stock_empty: "Stok Habis",
+    apotek_stock_low: "Stok Menipis",
+    apotek_stock_available: "Tersedia",
+
+    // Apotek — Admin CMS tab
+    apotek_admin_tab: "Apotek",
+    apotek_admin_categories: "Kategori Produk",
+    apotek_admin_products: "Produk",
+    apotek_admin_add_product: "Tambah Produk",
+    apotek_admin_add_category: "Tambah Kategori",
+    apotek_admin_stock: "Jumlah Stok",
+    apotek_admin_price: "Harga",
+    apotek_admin_category: "Kategori",
 
     // Location
     location_eyebrow: "Kunjungi Kami",
