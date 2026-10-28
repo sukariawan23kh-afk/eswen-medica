@@ -39,12 +39,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
   try {
     const d = parsed.data as z.infer<typeof UpdateSchema> & { nameId?: string };
-    // Re-translate EN when ID text changes (always reflects current ID).
+    // FAST SAVE: copy ID → EN directly (no MyMemory API call).
     if (d.nameId) {
-      d.nameEn = await translateIdToEn(d.nameId);
-    } else {
-      // Never let stale EN persist if caller explicitly clears ID.
-      delete d.nameEn;
+      d.nameEn = d.nameId;
     }
     const updated = await db.productCategory.update({
       where: { id },

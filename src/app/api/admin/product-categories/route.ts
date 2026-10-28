@@ -72,12 +72,11 @@ export async function POST(req: NextRequest) {
   }
   try {
     const d = parsed.data;
-    // Auto-translate EN from the ID input (admin only inputs Indonesian).
-    const nameEn = await translateIdToEn(d.nameId);
+    // FAST SAVE: copy ID → EN directly (no MyMemory API call).
     const created = await db.productCategory.create({
       data: {
         nameId: d.nameId,
-        nameEn: nameEn || d.nameId, // fallback to ID if translation fails
+        nameEn: d.nameId,
         order: d.order,
         active: d.active,
       },
