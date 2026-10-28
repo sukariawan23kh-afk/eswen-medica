@@ -7,6 +7,7 @@ import { translateIdToEn } from "@/lib/eswen/auto-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 /**
  * GET /api/admin/products
@@ -119,35 +120,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Auto-translate EN from ID for every text field. Runs in parallel
-    // (independent API calls) for speed.
-    const [
-      nameEnT, shortDescEnT, fullDescEnT,
-      dosageEnT, usageEnT, precautionsEnT,
-    ] = await Promise.all([
-      translateIdToEn(d.nameId),
-      d.shortDescId ? translateIdToEn(d.shortDescId) : Promise.resolve(""),
-      d.fullDescId ? translateIdToEn(d.fullDescId) : Promise.resolve(""),
-      d.dosageId ? translateIdToEn(d.dosageId) : Promise.resolve(""),
-      d.usageId ? translateIdToEn(d.usageId) : Promise.resolve(""),
-      d.precautionsId ? translateIdToEn(d.precautionsId) : Promise.resolve(""),
-    ]);
-
+    // FAST SAVE: copy ID → EN directly (no MyMemory API call).
+    // EN translation is done later via /api/admin/apotek-retranslate endpoint
+    // to avoid Vercel function timeout (10s free tier) when 6+ fields
+    // each take 1-3 seconds to translate.
     const created = await db.product.create({
       data: {
         categoryId: d.categoryId,
         nameId: d.nameId,
-        nameEn: nameEnT || d.nameId,
+        nameEn: d.nameId,           // copy ID as EN fallback
         shortDescId: d.shortDescId,
-        shortDescEn: shortDescEnT || d.shortDescId,
+        shortDescEn: d.shortDescId,  // copy ID as EN fallback
         fullDescId: d.fullDescId || null,
-        fullDescEn: fullDescEnT || null,
+        fullDescEn: d.fullDescId || null,
         dosageId: d.dosageId || null,
-        dosageEn: dosageEnT || null,
+        dosageEn: d.dosageId || null,
         usageId: d.usageId || null,
-        usageEn: usageEnT || null,
+        usageEn: d.usageId || null,
         precautionsId: d.precautionsId || null,
-        precautionsEn: precautionsEnT || null,
+        precautionsEn: d.precautionsId || null,
         price: d.price,
         image: d.image,
         stock: d.stock,

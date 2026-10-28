@@ -70,46 +70,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
-    // Re-translate EN for each ID field that's present in the request body.
-    // Run in parallel for speed. If the field isn't in the request, the EN
-    // field is left untouched (preserves existing translation, avoids
-    // unnecessary MyMemory calls on partial updates like stock-only edits).
-    const translations: Promise<void>[] = [];
-    if (d.nameId !== undefined) {
-      translations.push(translateIdToEn(d.nameId).then((v) => { d.nameEn = v || d.nameId; }));
-    }
-    if (d.shortDescId !== undefined) {
-      translations.push(translateIdToEn(d.shortDescId).then((v) => { d.shortDescEn = v || d.shortDescId; }));
-    }
-    if (d.fullDescId !== undefined) {
-      translations.push(
-        d.fullDescId
-          ? translateIdToEn(d.fullDescId).then((v) => { d.fullDescEn = v; })
-          : Promise.resolve().then(() => { d.fullDescEn = null; })
-      );
-    }
-    if (d.dosageId !== undefined) {
-      translations.push(
-        d.dosageId
-          ? translateIdToEn(d.dosageId).then((v) => { d.dosageEn = v; })
-          : Promise.resolve().then(() => { d.dosageEn = null; })
-      );
-    }
-    if (d.usageId !== undefined) {
-      translations.push(
-        d.usageId
-          ? translateIdToEn(d.usageId).then((v) => { d.usageEn = v; })
-          : Promise.resolve().then(() => { d.usageEn = null; })
-      );
-    }
-    if (d.precautionsId !== undefined) {
-      translations.push(
-        d.precautionsId
-          ? translateIdToEn(d.precautionsId).then((v) => { d.precautionsEn = v; })
-          : Promise.resolve().then(() => { d.precautionsEn = null; })
-      );
-    }
-    await Promise.all(translations);
+    // FAST SAVE: copy ID → EN directly (no MyMemory API call).
+    // EN translation is done later via /api/admin/apotek-retranslate endpoint.
+    if (d.nameId !== undefined) d.nameEn = d.nameId;
+    if (d.shortDescId !== undefined) d.shortDescEn = d.shortDescId;
+    if (d.fullDescId !== undefined) d.fullDescEn = d.fullDescId || null;
+    if (d.dosageId !== undefined) d.dosageEn = d.dosageId || null;
+    if (d.usageId !== undefined) d.usageEn = d.usageId || null;
+    if (d.precautionsId !== undefined) d.precautionsEn = d.precautionsId || null;
 
     const updated = await db.product.update({ where: { id }, data: d });
     return NextResponse.json({ ok: true, product: { id: updated.id } });
