@@ -193,6 +193,16 @@ export const translations = {
     apotek_store_brand_medical: "ESWEN MEDICA",
     apotek_store_brand_apotek: "APOTEK ESWEN",
 
+    // Apotek Store — Product detail view
+    apotek_detail_back: "Back",
+    apotek_detail_description: "Description",
+    apotek_detail_dosage: "Dosage",
+    apotek_detail_usage: "Usage Instructions",
+    apotek_detail_precautions: "Precautions",
+    apotek_detail_price: "Price",
+    apotek_detail_category: "Category",
+    apotek_detail_buy_wa: "Buy Now via WhatsApp",
+
     // Location
     location_eyebrow: "Visit Us",
     location_title_1: "Visit",
@@ -494,6 +504,16 @@ export const translations = {
     apotek_store_view_all: "Lihat Semua Produk",
     apotek_store_brand_medical: "ESWEN MEDICA",
     apotek_store_brand_apotek: "APOTEK ESWEN",
+
+    // Apotek Store — Product detail view
+    apotek_detail_back: "Kembali",
+    apotek_detail_description: "Deskripsi",
+    apotek_detail_dosage: "Dosis",
+    apotek_detail_usage: "Petunjuk Penggunaan",
+    apotek_detail_precautions: "Perhatian",
+    apotek_detail_price: "Harga",
+    apotek_detail_category: "Kategori",
+    apotek_detail_buy_wa: "Beli Sekarang via WhatsApp",
 
     // Location
     location_eyebrow: "Kunjungi Kami",
