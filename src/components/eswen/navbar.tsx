@@ -65,7 +65,7 @@ export function Navbar() {
               <button
                 key={link.href}
                 onClick={() => handleNav(link.href)}
-                className="px-2.5 py-1.5 text-xs font-medium text-foreground/60 hover:text-eswen-deep hover:bg-eswen-light-lavender hover:shadow-sm rounded-full transition-all duration-200 whitespace-nowrap"
+                className="px-2.5 py-1.5 text-xs font-medium text-foreground/50 hover:text-eswen-deep hover:bg-eswen-light-lavender hover:shadow-sm rounded-full transition-all duration-200 whitespace-nowrap"
               >
                 {t(link.labelKey as Parameters<typeof t>[0])}
               </button>
@@ -126,7 +126,7 @@ export function Navbar() {
                       <button
                         key={link.href}
                         onClick={() => handleNav(link.href)}
-                        className="flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground/60 hover:text-eswen-deep hover:bg-eswen-light-lavender hover:shadow-sm rounded-2xl transition-all duration-200"
+                        className="flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground/60 hover:text-eswen-deep hover:bg-eswen-deep hover:shadow-sm rounded-2xl transition-all duration-200"
                       >
                         {t(link.labelKey as Parameters<typeof t>[0])}
                       </button>
@@ -166,7 +166,7 @@ export function Navbar() {
                 className="lg:hidden rounded-full h-10 w-10 border border-eswen-lavender bg-white/70"
                 aria-label="Open menu"
               >
-                <Menu className="h-5 w-5 text-eswen-deep" />
+                <Menu className="h-5 w-5 text-white" />
               </Button>
             )}
           </div>
