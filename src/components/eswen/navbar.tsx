@@ -59,13 +59,13 @@ export function Navbar() {
             <BrandLogo />
           </button>
 
-          {/* Desktop Nav — compact (px-2.5, gap-0, text-xs) to fit 9 items */}
+          {/* Desktop Nav — compact + prominent hover */}
           <nav className="hidden lg:flex items-center gap-0">
             {navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleNav(link.href)}
-                className="px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:text-eswen-deep hover:bg-eswen-light-lavender/60 rounded-full transition-all whitespace-nowrap"
+                className="px-2.5 py-1.5 text-xs font-medium text-foreground/60 hover:text-eswen-deep hover:bg-eswen-light-lavender hover:shadow-sm rounded-full transition-all duration-200 whitespace-nowrap"
               >
                 {t(link.labelKey as Parameters<typeof t>[0])}
               </button>
@@ -126,7 +126,7 @@ export function Navbar() {
                       <button
                         key={link.href}
                         onClick={() => handleNav(link.href)}
-                        className="flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground/80 hover:text-eswen-deep hover:bg-eswen-light-lavender/60 rounded-2xl transition-all"
+                        className="flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground/60 hover:text-eswen-deep hover:bg-eswen-light-lavender hover:shadow-sm rounded-2xl transition-all duration-200"
                       >
                         {t(link.labelKey as Parameters<typeof t>[0])}
                       </button>
