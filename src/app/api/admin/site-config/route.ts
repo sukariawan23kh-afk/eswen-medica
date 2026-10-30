@@ -140,11 +140,7 @@ export async function PUT(req: NextRequest) {
       create: { id: "singleton", config: configStr },
       update: { config: configStr },
     });
-    return NextResponse.json({
-      ok: true,
-      translated: translatedCount,
-      skipped: skippedCount,
-    });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ ok: false, error: "Failed to save.", debug: msg }, { status: 500 });
