@@ -347,7 +347,7 @@ export const translations = {
 
     // Hero
     hero_badge: "Klinik Premium di Bali · Standar Internasional",
-    hero_h1_l1: "Perawatan",
+    hero_h1_l1: "Peduli",
     hero_h1_l2: "Melampaui Layanan",
     hero_h1_l3: "",
     hero_h1_l4: "",
