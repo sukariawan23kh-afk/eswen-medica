@@ -29,17 +29,19 @@ export function BrandLogo({
 
   return (
     <span className={cn("flex items-center gap-2.5", className)}>
-      <span className={cn("relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft", markSize)}>
-        {logo.url ? (
-          <img
-            src={logo.url}
-            alt={logo.alt}
-            className="h-full w-full object-contain rounded-2xl p-1"
-          />
-        ) : (
+      {logo.url ? (
+        // Custom logo: display as-is, NO box/rounded/bg — clearer JPG/PNG
+        <img
+          src={logo.url}
+          alt={logo.alt}
+          className="h-9 sm:h-11 w-auto object-contain max-w-[160px]"
+        />
+      ) : (
+        // Default: Sparkles icon in gradient box (only when no logo set)
+        <span className={cn("relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft", markSize)}>
           <Sparkles className={iconSize} strokeWidth={2.2} />
-        )}
-      </span>
+        </span>
+      )}
       {showTagline && (
         <span className="flex flex-col leading-none text-left">
           <span className="font-extrabold text-base tracking-tight text-eswen-deep">
