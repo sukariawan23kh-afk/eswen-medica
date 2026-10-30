@@ -16,14 +16,14 @@ export const translations = {
     nav_apotek: "Apotek",
     nav_contact: "Contact",
     nav_book: "Book Appointment",
-    nav_tagline: "Health • Wellness • Confidence",
+    nav_tagline: "Care Beyond Service",
 
     // Hero
     hero_badge: "Premium Clinic in Bali · International Standard",
-    hero_h1_l1: "Your Health,",
-    hero_h1_l2: "Our Priority.",
-    hero_h1_l3: "Your Wellbeing,",
-    hero_h1_l4: "Our Expertise.",
+    hero_h1_l1: "Care",
+    hero_h1_l2: "Beyond Service",
+    hero_h1_l3: "",
+    hero_h1_l4: "",
     hero_sub:
       "Comprehensive medical and wellness care in Bali, delivered by trusted professionals with modern technology and international standards.",
     hero_cta_book: "Book Appointment",
@@ -343,14 +343,14 @@ export const translations = {
     nav_apotek: "Apotek",
     nav_contact: "Kontak",
     nav_book: "Buat Janji",
-    nav_tagline: "Kesehatan • Wellness • Kepercayaan",
+    nav_tagline: "Care Beyond Service",
 
     // Hero
     hero_badge: "Klinik Premium di Bali · Standar Internasional",
-    hero_h1_l1: "Kesehatan Anda,",
-    hero_h1_l2: "Prioritas Kami.",
-    hero_h1_l3: "Kesejahteraan Anda,",
-    hero_h1_l4: "Keahlian Kami.",
+    hero_h1_l1: "Perawatan",
+    hero_h1_l2: "Melampaui Layanan",
+    hero_h1_l3: "",
+    hero_h1_l4: "",
     hero_sub:
       "Layanan medis dan kesejahteraan terpadu di Bali, diberikan oleh profesional tepercaya dengan teknologi modern dan standar internasional.",
     hero_cta_book: "Buat Janji",
