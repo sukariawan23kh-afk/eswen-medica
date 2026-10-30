@@ -251,12 +251,21 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
                 </button>
                 {open && (
                   <div className="px-4 pb-3 space-y-2.5 bg-eswen-gradient-soft/40">
-                    {keys.map((k) => (
+                    {keys.map((k) => {
+                      const bothLang = k === "hero_h1_l1" || k === "hero_h1_l2";
+                      return (
                       <div key={k}>
-                        <label className="lbl-tiny">{k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">— EN auto-translated</span></label>
-                        <textarea value={config.translations.id[k] ?? ""} onChange={(e) => setT("id", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" />
+                        <label className="lbl-tiny">{k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">{bothLang ? "— ID + EN manual input" : "— EN auto-translated"}</span></label>
+                        <textarea value={config.translations.id[k] ?? ""} onChange={(e) => setT("id", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" placeholder="Bahasa Indonesia..." />
+                        {bothLang && (
+                          <>
+                            <label className="lbl-tiny mt-1.5 block">↳ EN (manual)</label>
+                            <textarea value={config.translations.en[k] ?? ""} onChange={(e) => setT("en", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" placeholder="English..." />
+                          </>
+                        )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

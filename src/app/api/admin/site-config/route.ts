@@ -1,123 +1,197 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
-import { ensureApotekSeeded } from "@/lib/eswen/seed-apotek";
-import { DEFAULT_CONFIG } from "@/lib/eswen/seed-full";
+import { isAdmin } from "@/lib/eswen/admin-auth";
+import { ensureSiteSeeded, DEFAULT_CONFIG } from "@/lib/eswen/seed-full";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
-/**
- * GET /api/site-config
- * Public endpoint. Returns the full editable site config (logo, brand,
- * translations, contact, social, theme) + published services + published
- * doctors. This is what powers the entire editable website.
- */
-export async function GET() {
+/** GET /api/admin/site-config — returns the full config for the editor. */
+export async function GET(req: NextRequest) {
+  if (!isAdmin(req)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
+  }
   try {
     await ensureSiteSeeded();
-    // Also ensure the apotek catalog is seeded so the count + categories
-    // are available on the very first site-config fetch.
-    await ensureApotekSeeded();
-
     const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
-    // Merge with defaults so newly-added top-level keys (e.g. `payment`,
-    // `hero_image`, `about_image`) are backfilled for configs created before
-    // those keys existed.
+    // Merge with defaults so newly-added top-level keys (e.g. `payment`) are
+    // backfilled for configs created before those keys existed — prevents the
+    // editor from crashing on undefined fields.
     const stored = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
     const config = {
       ...DEFAULT_CONFIG,
       ...stored,
-      hero_image: stored.hero_image ?? "",
-      about_image: stored.about_image ?? "",
-      logo: { ...DEFAULT_CONFIG.logo, ...(stored.logo || {}) },
-      brand: { ...DEFAULT_CONFIG.brand, ...(stored.brand || {}) },
-      contact: { ...DEFAULT_CONFIG.contact, ...(stored.contact || {}) },
-      social: { ...DEFAULT_CONFIG.social, ...(stored.social || {}) },
       payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) },
-      translations: {
-        en: { ...DEFAULT_CONFIG.translations.en, ...(stored.translations?.en || {}) },
-        id: { ...DEFAULT_CONFIG.translations.id, ...(stored.translations?.id || {}) },
-      },
     };
+    return NextResponse.json({ ok: true, config });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ ok: false, error: "Failed.", debug: msg }, { status: 500 });
+  }
+}
 
-    const [services, doctors, apotekCategories, apotekProductsCount] = await Promise.all([
-      db.service.findMany({
-        where: { published: true },
-        orderBy: { order: "asc" },
-      }),
-      db.doctor.findMany({
-        where: { published: true },
-        orderBy: { order: "asc" },
-      }),
-      // Lightweight apotek summary — just enough for the storefront to
-      // show a category count + product count. Full product data is
-      // fetched on demand by /api/apotek/products.
-      db.productCategory.findMany({
-        where: { active: true },
-        orderBy: { order: "asc" },
-        select: {
-          id: true,
-          nameId: true,
-          nameEn: true,
-          order: true,
-        },
-      }),
-      db.product.count({ where: { active: true } }),
-    ]);
+/**
+ * Shape we expect to receive from the admin editor. The admin only inputs
+ * Indonesian — EN fields are auto-translated below by overriding them from
+ * their ID counterparts (only when the ID value actually changed since the
+ * last save, to conserve the MyMemory daily quota of 1000 req/day).
+ */
+type Translations = Record<string, string>;
+type ConfigShape = {
+  brand?: { tagline?: { en?: string; id?: string } };
+  contact?: { hours?: { en?: string; id?: string } };
+  payment?: { instructionsEn?: string; instructionsId?: string };
+  translations?: { en?: Translations; id?: Translations };
+  [k: string]: unknown;
+};
 
+/** Read the previously-saved config from the DB (or fall back to defaults). */
+async function getOldConfig(): Promise<ConfigShape> {
+  const cfgRow = await db.siteConfig.findUnique({ where: { id: "singleton" } });
+  const stored = cfgRow ? JSON.parse(cfgRow.config) : DEFAULT_CONFIG;
+  return {
+    ...DEFAULT_CONFIG,
+    ...stored,
+    payment: { ...DEFAULT_CONFIG.payment, ...(stored.payment || {}) },
+  } as ConfigShape;
+}
+
+/**
+ * Translate ID → EN with a per-request in-memory cache so that if the same
+ * Indonesian string appears twice in one Save All (e.g. a duplicated value
+ * across two keys), we only call the MyMemory API once.
+ */
+async function makeTranslator() {
+  const cache = new Map<string, string>();
+  return async (id: string): Promise<string> => {
+    const trimmed = (id ?? "").trim();
+    if (trimmed.length === 0) return "";
+    const cached = cache.get(trimmed);
+    if (cached !== undefined) return cached;
+    const en = await translateIdToEn(trimmed);
+    cache.set(trimmed, en);
+    return en;
+  };
+}
+
+/**
+ * Re-translate EN from ID for any pair where the ID value changed since the
+ * last save. If the ID is unchanged, the existing EN value is preserved (no
+ * MyMemory call) — this is what protects the daily quota under repeated
+ * saves. Always re-translates when there was no previous EN value.
+ */
+async function reconcilePair(
+  newId: string,
+  oldId: string | undefined,
+  oldEn: string | undefined,
+  translate: (s: string) => Promise<string>,
+): Promise<string> {
+  const id = (newId ?? "").trim();
+  if (id.length === 0) return "";
+  // Unchanged ID → keep the existing EN translation (skip API call).
+  if (oldId !== undefined && id === oldId && oldEn && oldEn.trim().length > 0) {
+    return oldEn;
+  }
+  return translate(id);
+}
+
+/** PUT /api/admin/site-config — replace the whole config JSON. */
+export async function PUT(req: NextRequest) {
+  if (!isAdmin(req)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
+  }
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ ok: false, error: "Invalid JSON." }, { status: 400 });
+  }
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ ok: false, error: "Config object required." }, { status: 400 });
+  }
+  try {
+    const incoming = body as ConfigShape;
+    const old = await getOldConfig();
+    const translate = await makeTranslator();
+
+    // 1) Translations block — override every EN from ID, but skip the API
+    //    call for keys whose ID value is unchanged since the last save.
+    //    EXCEPTION: hero_h1_l1 + hero_h1_l2 are manually input in BOTH
+    //    languages by the admin (no auto-translate) — save EN as-is.
+    const BOTH_LANG_KEYS = new Set(["hero_h1_l1", "hero_h1_l2"]);
+    const newIdMap: Translations = incoming.translations?.id ?? {};
+    const oldIdMap: Translations = old.translations?.id ?? {};
+    const oldEnMap: Translations = old.translations?.en ?? {};
+    const newEnMap: Translations = { ...(incoming.translations?.en ?? {}) };
+    let translatedCount = 0;
+    let skippedCount = 0;
+    for (const key of Object.keys(newIdMap)) {
+      if (BOTH_LANG_KEYS.has(key)) {
+        // Manual EN input — save as-is, don't translate
+        newEnMap[key] = newEnMap[key] ?? newIdMap[key] ?? "";
+        skippedCount++;
+        continue;
+      }
+      const idVal = newIdMap[key] ?? "";
+      const enVal = await reconcilePair(
+        idVal,
+        oldIdMap[key],
+        oldEnMap[key],
+        translate,
+      );
+      newEnMap[key] = enVal;
+      if (idVal && idVal.trim().length > 0) {
+        if (oldIdMap[key] !== undefined && idVal === oldIdMap[key] && oldEnMap[key]) {
+          skippedCount++;
+        } else {
+          translatedCount++;
+        }
+      }
+    }
+    if (incoming.translations) {
+      incoming.translations.en = newEnMap;
+    }
+
+    // 2) Brand tagline — copy ID → EN directly (no MyMemory, instant save).
+    //    Motto/tagline is usually the same in both languages (brand statement).
+    if (incoming.brand?.tagline) {
+      incoming.brand.tagline.en = incoming.brand.tagline.id ?? "";
+    }
+
+    // 3) Contact hours — copy ID → EN directly (instant save).
+    if (incoming.contact?.hours) {
+      incoming.contact.hours.en = incoming.contact.hours.id ?? "";
+    }
+
+    // 4) Payment instructions — ID only, EN auto-translated.
+    if (incoming.payment) {
+      const oldInstrId = old.payment?.instructionsId;
+      const oldInstrEn = old.payment?.instructionsEn;
+      incoming.payment.instructionsEn = await reconcilePair(
+        incoming.payment.instructionsId ?? "",
+        oldInstrId,
+        oldInstrEn,
+        translate,
+      );
+    }
+
+    const configStr = JSON.stringify(incoming);
+    // Validate it parses back
+    JSON.parse(configStr);
+    await db.siteConfig.upsert({
+      where: { id: "singleton" },
+      create: { id: "singleton", config: configStr },
+      update: { config: configStr },
+    });
     return NextResponse.json({
       ok: true,
-      config,
-      services: services.map((s) => ({
-        id: s.id,
-        // EN always uses the latest ID text — if auto-translate ran, use the
-        // translated EN; if not, fall back to ID text (never show stale old EN)
-        category: { en: s.categoryEn && s.categoryEn !== s.categoryId ? s.categoryEn : s.categoryId, id: s.categoryId },
-        name: { en: s.nameEn && s.nameEn !== s.nameId ? s.nameEn : s.nameId, id: s.nameId },
-        description: { en: s.descriptionEn && s.descriptionEn !== s.descriptionId ? s.descriptionEn : s.descriptionId, id: s.descriptionId },
-        startingPrice: s.startingPrice,
-        deposit: s.deposit,
-        icon: s.icon,
-        image: s.image,
-        gallery: s.gallery ? JSON.parse(s.gallery) : [],
-        brand: s.brand,
-        order: s.order,
-      })),
-      doctors: doctors.map((d) => ({
-        id: d.id,
-        name: d.name,
-        role: { en: d.roleEn && d.roleEn !== d.roleId ? d.roleEn : d.roleId, id: d.roleId },
-        category: d.category as "doctor" | "wellness",
-        specialty: { en: d.specialtyEn && d.specialtyEn !== d.specialtyId ? d.specialtyEn : d.specialtyId, id: d.specialtyId },
-        experience: { en: d.experienceEn && d.experienceEn !== d.experienceId ? d.experienceEn : d.experienceId, id: d.experienceId },
-        bio: { en: d.bioEn || "", id: d.bioId || "" },
-        education: { en: d.educationEn || "", id: d.educationId || "" },
-        certifications: { en: d.certificationsEn || "", id: d.certificationsId || "" },
-        languages: d.languages.split(",").map((x) => x.trim()),
-        image: d.image,
-        initials: d.initials,
-        order: d.order,
-      })),
-      // Lightweight apotek summary — category list (with bilingual names)
-      // + total active product count. The storefront uses this to render
-      // the sidebar categories immediately; product details are loaded
-      // on demand from /api/apotek/products.
-      apotekCategories: apotekCategories.map((c) => ({
-        id: c.id,
-        name: {
-          en: c.nameEn && c.nameEn.trim() ? c.nameEn : c.nameId,
-          id: c.nameId,
-        },
-        order: c.order,
-      })),
-      apotekProductsCount: apotekProductsCount,
+      translated: translatedCount,
+      skipped: skippedCount,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json(
-      { ok: false, error: "Failed to load site config.", debug: msg },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: "Failed to save.", debug: msg }, { status: 500 });
   }
 }
