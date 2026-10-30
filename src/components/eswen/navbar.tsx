@@ -76,14 +76,14 @@ export function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Language switcher — toggles the global language store */}
-            <div className="hidden sm:flex items-center rounded-full border border-eswen-lavender bg-white/60 p-0.5 text-xs font-semibold">
+            {/* Language switcher — always visible (mobile + desktop) */}
+            <div className="flex items-center rounded-full border border-eswen-lavender bg-white/60 p-0.5 text-xs font-semibold">
               {(["en", "id"] as const).map((l) => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
                   className={cn(
-                    "px-2.5 py-1 rounded-full transition-all uppercase",
+                    "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full transition-all uppercase",
                     lang === l
                       ? "bg-eswen-deep text-white shadow-sm"
                       : "text-muted-foreground hover:text-eswen-deep"
@@ -98,7 +98,7 @@ export function Navbar() {
 
             <Button
               onClick={() => openDialog()}
-              className="hidden sm:inline-flex rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft hover:shadow-eswen-card hover:-translate-y-0.5 transition-all px-5 text-sm h-10"
+              className="inline-flex rounded-full bg-gradient-to-r from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft hover:shadow-eswen-card hover:-translate-y-0.5 transition-all px-4 sm:px-5 text-xs sm:text-sm h-9 sm:h-10"
             >
               <CalendarHeart className="h-4 w-4" />
               {t("nav_book")}

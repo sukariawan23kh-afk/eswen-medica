@@ -29,25 +29,23 @@ export function BrandLogo({
 
   return (
     <span className={cn("flex items-center gap-2.5", className)}>
-      {logo.url ? (
-        // Custom logo: display as-is, no box/rounded/bg — clearer for JPG/PNG
-        <img
-          src={logo.url}
-          alt={logo.alt}
-          className="h-10 sm:h-12 w-auto object-contain max-w-[180px]"
-        />
-      ) : (
-        // Default: Sparkles icon in gradient box (only when no logo set)
-        <span className={cn("relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft", markSize)}>
+      <span className={cn("relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-soft", markSize)}>
+        {logo.url ? (
+          <img
+            src={logo.url}
+            alt={logo.alt}
+            className="h-full w-full object-contain rounded-2xl p-1"
+          />
+        ) : (
           <Sparkles className={iconSize} strokeWidth={2.2} />
-        </span>
-      )}
+        )}
+      </span>
       {showTagline && (
         <span className="flex flex-col leading-none text-left">
           <span className="font-extrabold text-base tracking-tight text-eswen-deep">
             {brand.name}
           </span>
-          <span className="text-[10px] tracking-[0.2em] text-muted-foreground font-medium uppercase mt-0.5 hidden sm:block">
+          <span className="text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground font-medium uppercase mt-0.5">
             {brand.tagline[lang]}
           </span>
         </span>
