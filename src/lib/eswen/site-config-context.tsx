@@ -87,9 +87,12 @@ export function SiteConfigProvider({
   );
 
   useEffect(() => {
-    // If we already have initialConfig from SSR, still re-fetch for freshness
-    // (admin might have changed something). But the initial render is already
-    // correct — no flash.
+    // If SSR already provided the config (initialConfig), SKIP the
+    // client-side re-fetch entirely. This eliminates the "shadow" flash
+    // where old data briefly appears before the new data from the re-fetch.
+    // The user gets fresh data on the next full page load (hard refresh).
+    if (initialConfig) return;
+
     let cancelled = false;
     fetch("/api/site-config", { cache: "no-store" })
       .then((r) => r.json())
