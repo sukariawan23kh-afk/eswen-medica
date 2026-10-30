@@ -67,10 +67,6 @@ export function HeroSection() {
               {t("hero_h1_l1")}
               <br />
               <span className="text-eswen-gradient">{t("hero_h1_l2")}</span>
-              <br />
-              {t("hero_h1_l3")}
-              <br />
-              <span className="text-eswen-gradient">{t("hero_h1_l4")}</span>
             </motion.h1>
 
             <motion.p
