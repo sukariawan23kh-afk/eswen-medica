@@ -144,28 +144,15 @@ export async function PUT(req: NextRequest) {
       incoming.translations.en = newEnMap;
     }
 
-    // 2) Brand tagline — ID only, EN auto-translated.
+    // 2) Brand tagline — copy ID → EN directly (no MyMemory, instant save).
+    //    Motto/tagline is usually the same in both languages (brand statement).
     if (incoming.brand?.tagline) {
-      const oldTagId = old.brand?.tagline?.id;
-      const oldTagEn = old.brand?.tagline?.en;
-      incoming.brand.tagline.en = await reconcilePair(
-        incoming.brand.tagline.id ?? "",
-        oldTagId,
-        oldTagEn,
-        translate,
-      );
+      incoming.brand.tagline.en = incoming.brand.tagline.id ?? "";
     }
 
-    // 3) Contact hours — ID only, EN auto-translated.
+    // 3) Contact hours — copy ID → EN directly (instant save).
     if (incoming.contact?.hours) {
-      const oldHrId = old.contact?.hours?.id;
-      const oldHrEn = old.contact?.hours?.en;
-      incoming.contact.hours.en = await reconcilePair(
-        incoming.contact.hours.id ?? "",
-        oldHrId,
-        oldHrEn,
-        translate,
-      );
+      incoming.contact.hours.en = incoming.contact.hours.id ?? "";
     }
 
     // 4) Payment instructions — ID only, EN auto-translated.
