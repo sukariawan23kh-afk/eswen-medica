@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: "Eswen Medica — Health • Wellness • Confidence | Premium Medical Clinic in Bali",
+      default: "Eswen Medica — Care Beyond Service | Premium Medical Clinic in Bali",
       template: "%s | Eswen Medica",
     },
     description:
@@ -66,7 +66,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: "Eswen Medica — Health • Wellness • Confidence",
+      title: "Eswen Medica — Care Beyond Service",
       description:
         "Premium medical and wellness care in Bali, delivered by trusted professionals with modern technology and international standards.",
       url: siteUrl,
@@ -77,7 +77,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: "Eswen Medica — Health • Wellness • Confidence",
+      title: "Eswen Medica — Care Beyond Service",
       description:
         "Premium medical and wellness care in Bali, delivered by trusted professionals with international standards.",
     },
