@@ -35,7 +35,6 @@ export async function ensureApotekSeeded() {
   const catCount = await db.productCategory.count();
   if (catCount === 0) {
     await db.productCategory.createMany({
-skipDuplicates: true,
       data: APOTEK_CATEGORIES.map((c, i) => ({
         nameId: c.id,
         nameEn: c.en, // pre-translated (hand-written) in apotek-data.ts
@@ -87,7 +86,7 @@ skipDuplicates: true,
     }).filter((r): r is NonNullable<typeof r> => r !== null);
 
     if (rows.length > 0) {
-        await db.product.createMany({ data: rows, skipDuplicates: true });
+      await db.product.createMany({ data: rows });
     }
   }
 }

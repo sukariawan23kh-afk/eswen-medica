@@ -20,7 +20,7 @@ export const DEFAULT_CONFIG = {
   about_image: "",  // empty = use default /images/clinic-interior.png
   brand: {
     name: "ESWEN MEDICA",
-    tagline: { en: "Health • Wellness • Confidence", id: "Kesehatan • Wellness • Kepercayaan" },
+    tagline: { en: "Care Beyond Service", id: "Care Beyond Service" },
   },
   contact: {
     address: contactInfo.address,
