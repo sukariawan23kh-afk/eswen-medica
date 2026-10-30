@@ -6,7 +6,6 @@ import { translateIdToEn } from "@/lib/eswen/auto-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
 
 /** GET /api/admin/site-config — returns the full config for the editor. */
 export async function GET(req: NextRequest) {
@@ -113,68 +112,24 @@ export async function PUT(req: NextRequest) {
   }
   try {
     const incoming = body as ConfigShape;
-    const old = await getOldConfig();
-    const translate = await makeTranslator();
+    // INSTANT SAVE — no MyMemory API calls at all.
+    // Admin inputs ID text. EN values are preserved as-is from admin's
+    // input (manual EN for hero_h1_l1/l2) or from existing DB values.
+    // Use /api/admin/retranslate-all for bulk EN translation later.
 
-    // 1) Translations block — override every EN from ID, but skip the API
-    //    call for keys whose ID value is unchanged since the last save.
-    //    EXCEPTION: hero_h1_l1 + hero_h1_l2 are manually input in BOTH
-    //    languages by the admin (no auto-translate) — save EN as-is.
-    const BOTH_LANG_KEYS = new Set(["hero_h1_l1", "hero_h1_l2"]);
-    const newIdMap: Translations = incoming.translations?.id ?? {};
-    const oldIdMap: Translations = old.translations?.id ?? {};
-    const oldEnMap: Translations = old.translations?.en ?? {};
-    const newEnMap: Translations = { ...(incoming.translations?.en ?? {}) };
-    let translatedCount = 0;
-    let skippedCount = 0;
-    for (const key of Object.keys(newIdMap)) {
-      if (BOTH_LANG_KEYS.has(key)) {
-        // Manual EN input — save as-is, don't translate
-        newEnMap[key] = newEnMap[key] ?? newIdMap[key] ?? "";
-        skippedCount++;
-        continue;
-      }
-      const idVal = newIdMap[key] ?? "";
-      const enVal = await reconcilePair(
-        idVal,
-        oldIdMap[key],
-        oldEnMap[key],
-        translate,
-      );
-      newEnMap[key] = enVal;
-      if (idVal && idVal.trim().length > 0) {
-        if (oldIdMap[key] !== undefined && idVal === oldIdMap[key] && oldEnMap[key]) {
-          skippedCount++;
-        } else {
-          translatedCount++;
-        }
-      }
-    }
-    if (incoming.translations) {
-      incoming.translations.en = newEnMap;
-    }
-
-    // 2) Brand tagline — copy ID → EN directly (no MyMemory, instant save).
-    //    Motto/tagline is usually the same in both languages (brand statement).
+    // 2) Brand tagline — copy ID → EN.
     if (incoming.brand?.tagline) {
       incoming.brand.tagline.en = incoming.brand.tagline.id ?? "";
     }
 
-    // 3) Contact hours — copy ID → EN directly (instant save).
+    // 3) Contact hours — copy ID → EN.
     if (incoming.contact?.hours) {
       incoming.contact.hours.en = incoming.contact.hours.id ?? "";
     }
 
-    // 4) Payment instructions — ID only, EN auto-translated.
+    // 4) Payment instructions — copy ID → EN.
     if (incoming.payment) {
-      const oldInstrId = old.payment?.instructionsId;
-      const oldInstrEn = old.payment?.instructionsEn;
-      incoming.payment.instructionsEn = await reconcilePair(
-        incoming.payment.instructionsId ?? "",
-        oldInstrId,
-        oldInstrEn,
-        translate,
-      );
+      incoming.payment.instructionsEn = incoming.payment.instructionsId ?? "";
     }
 
     const configStr = JSON.stringify(incoming);
