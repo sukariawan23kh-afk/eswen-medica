@@ -45,7 +45,9 @@ export function Navbar() {
     <header
       className={cn(
         "fixed top-0 inset-x-0 z-50 transition-all duration-500",
-        scrolled ? "glass-eswen shadow-eswen-soft py-2.5" : "bg-transparent py-4"
+        scrolled
+          ? "bg-white/95 backdrop-blur-md shadow-[0_2px_20px_-5px_rgba(91,58,145,0.15)] border-b border-eswen-lavender/40 py-2.5"
+          : "bg-white/80 backdrop-blur-sm border-b border-eswen-lavender/20 py-3"
       )}
     >
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

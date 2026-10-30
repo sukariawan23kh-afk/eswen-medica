@@ -144,11 +144,11 @@ export function AIAssistant() {
             exit={{ opacity: 0, scale: 0.6, y: 20 }}
             transition={{ type: "spring", stiffness: 260, damping: 22 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-eswen-deep to-eswen-soft-purple text-white shadow-eswen-elevated hover:scale-105 transition-transform"
+            className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-white/95 backdrop-blur-md border-2 border-eswen-lavender shadow-[0_4px_20px_-2px_rgba(91,58,145,0.2)] hover:scale-105 transition-transform"
             aria-label="Open Eswen AI Assistant"
           >
             <span className="absolute inset-0 rounded-full animate-eswen-pulse-ring" />
-            {logo.url ? <img src={logo.url} alt={logo.alt} className="h-6 w-6 relative rounded-full object-cover" /> : <Sparkles className="h-6 w-6 relative" />}
+            {logo.url ? <img src={logo.url} alt={logo.alt} className="h-7 w-7 relative rounded-md object-contain" /> : <Sparkles className="h-6 w-6 relative text-eswen-deep" />}
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[8px] font-bold text-white border-2 border-white">
               ●
             </span>
