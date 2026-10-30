@@ -36,7 +36,8 @@ export type CfgDoctor = {
 
 type SiteConfig = {
   logo: { url: string; alt: string };
-  hero_image: string;   // Hero section image URL (empty = use default /images/hero-model.png)
+  hero_image: string;   // Hero section main image URL (empty = use default /images/hero-model.png)
+  hero_gallery: string[]; // Hero section gallery images (additional photos, auto-play slideshow)
   about_image: string;  // About section image URL (empty = use default /images/clinic-interior.png)
   brand: { name: string; tagline: { en: string; id: string } };
   contact: {
@@ -87,12 +88,9 @@ export function SiteConfigProvider({
   );
 
   useEffect(() => {
-    // If SSR already provided the config (initialConfig), SKIP the
-    // client-side re-fetch entirely. This eliminates the "shadow" flash
-    // where old data briefly appears before the new data from the re-fetch.
-    // The user gets fresh data on the next full page load (hard refresh).
-    if (initialConfig) return;
-
+    // If we already have initialConfig from SSR, still re-fetch for freshness
+    // (admin might have changed something). But the initial render is already
+    // correct — no flash.
     let cancelled = false;
     fetch("/api/site-config", { cache: "no-store" })
       .then((r) => r.json())
@@ -154,6 +152,12 @@ export function useLogo() {
 export function useHeroImage() {
   const { config } = useSiteConfig();
   return config?.hero_image || "/images/hero-model.png";
+}
+
+/** Live, admin-editable Hero gallery images. Returns array of URLs (may be empty). */
+export function useHeroGallery() {
+  const { config } = useSiteConfig();
+  return config?.hero_gallery ?? [];
 }
 
 /** Live, admin-editable About section image. Empty = use default /images/clinic-interior.png. */

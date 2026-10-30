@@ -17,10 +17,11 @@ export const DEFAULT_CONFIG = {
     alt: "Eswen Medica",
   },
   hero_image: "",   // empty = use default /images/hero-model.png
+  hero_gallery: [], // empty = no gallery, just main image
   about_image: "",  // empty = use default /images/clinic-interior.png
   brand: {
     name: "ESWEN MEDICA",
-    tagline: { en: "Care Beyond Service", id: "Care Beyond Service" },
+    tagline: { en: "Health • Wellness • Confidence", id: "Kesehatan • Wellness • Kepercayaan" },
   },
   contact: {
     address: contactInfo.address,

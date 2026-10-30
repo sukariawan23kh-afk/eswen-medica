@@ -29,6 +29,7 @@ export async function GET() {
       ...DEFAULT_CONFIG,
       ...stored,
       hero_image: stored.hero_image ?? "",
+      hero_gallery: stored.hero_gallery ?? [],
       about_image: stored.about_image ?? "",
       logo: { ...DEFAULT_CONFIG.logo, ...(stored.logo || {}) },
       brand: { ...DEFAULT_CONFIG.brand, ...(stored.brand || {}) },

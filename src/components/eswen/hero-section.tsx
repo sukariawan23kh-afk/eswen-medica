@@ -1,17 +1,32 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CalendarHeart, ArrowRight, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { heroTrustPoints } from "@/lib/eswen/data";
-import { useT, useHeroImage } from "@/lib/eswen/site-config-context";
+import { useT, useHeroImage, useHeroGallery } from "@/lib/eswen/site-config-context";
 import type { TranslationKey } from "@/lib/eswen/i18n";
 import { useBookingDialog } from "@/lib/eswen/booking-store";
 
 export function HeroSection() {
   const t = useT();
   const heroImage = useHeroImage();
+  const heroGallery = useHeroGallery();
   const { openDialog } = useBookingDialog();
+
+  // Build image list: main hero image + gallery images
+  const allImages = [heroImage, ...heroGallery.filter(Boolean)];
+  const [currentImg, setCurrentImg] = useState(0);
+
+  // Auto-play slideshow every 4 seconds (only if more than 1 image)
+  useEffect(() => {
+    if (allImages.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentImg((prev) => (prev + 1) % allImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [allImages.length]);
   const scrollTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -52,6 +67,10 @@ export function HeroSection() {
               {t("hero_h1_l1")}
               <br />
               <span className="text-eswen-gradient">{t("hero_h1_l2")}</span>
+              <br />
+              {t("hero_h1_l3")}
+              <br />
+              <span className="text-eswen-gradient">{t("hero_h1_l4")}</span>
             </motion.h1>
 
             <motion.p
@@ -115,13 +134,36 @@ export function HeroSection() {
               {/* Soft frame */}
               <div className="absolute -inset-4 sm:-inset-6 rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-eswen-lavender/60 via-white/40 to-eswen-soft-purple/30 blur-2xl" />
               <div className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-eswen-elevated border-4 border-white animate-eswen-float">
-                <img
-                  src={heroImage}
-                  alt="Premium portrait at Eswen Medica medical clinic in Bali"
-                  className="w-full h-[420px] sm:h-[500px] lg:h-[560px] object-cover"
-                  loading="eager"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-eswen-deep/20 via-transparent to-transparent" />
+                {/* Slideshow: main image + gallery images */}
+                {allImages.map((img, idx) => (
+                  <motion.img
+                    key={img + idx}
+                    src={img}
+                    alt={`Eswen Medica Bali — ${idx + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading={idx === 0 ? "eager" : "lazy"}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: idx === currentImg ? 1 : 0 }}
+                    transition={{ duration: 1.2, ease: "easeInOut" }}
+                  />
+                ))}
+                {/* Placeholder to maintain height */}
+                <div className="w-full h-[420px] sm:h-[500px] lg:h-[560px]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-eswen-deep/20 via-transparent to-transparent pointer-events-none" />
+
+                {/* Gallery dots indicator (only if more than 1 image) */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                    {allImages.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentImg(i)}
+                        className={`h-2 rounded-full transition-all ${i === currentImg ? "w-6 bg-white" : "w-2 bg-white/50"}`}
+                        aria-label={`Go to image ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Floating cards */}

@@ -5,10 +5,12 @@ import { Loader2, Save, ChevronDown, Image as ImageIcon, Check } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ImageUpload } from "@/components/eswen/admin/image-upload";
+import { GalleryUpload } from "@/components/eswen/admin/gallery-upload";
 
 type Config = {
   logo: { url: string; alt: string };
   hero_image: string;
+  hero_gallery: string[];
   about_image: string;
   brand: { name: string; tagline: { en: string; id: string } };
   contact: {
@@ -166,17 +168,28 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
         </div>
       </Card>
 
-      {/* Hero Section Image */}
-      <Card title="Hero Section Image (Beranda)" open={openGroups.hero_image} onToggle={() => toggle("hero_image")}>
-        <div className="space-y-2">
-          <span className="lbl">Hero Image URL <span className="text-[9px] font-normal normal-case text-muted-foreground/70">— leave empty for default</span></span>
-          <ImageUpload
-            value={config.hero_image}
-            onChange={(url) => setConfig({ ...config, hero_image: url })}
-            placeholder="/images/hero-model.png (leave empty for default)"
-            recommendedSize="~800×1000px (portrait 4:5)"
-            previewClass="h-24 w-20"
-          />
+      {/* Hero Section Image + Gallery */}
+      <Card title="Hero Section Image + Gallery (Beranda)" open={openGroups.hero_image} onToggle={() => toggle("hero_image")}>
+        <div className="space-y-3">
+          <div>
+            <span className="lbl">Main Hero Image <span className="text-[9px] font-normal normal-case text-muted-foreground/70">— leave empty for default</span></span>
+            <ImageUpload
+              value={config.hero_image}
+              onChange={(url) => setConfig({ ...config, hero_image: url })}
+              placeholder="/images/hero-model.png (leave empty for default)"
+              recommendedSize="~800×1000px (portrait 4:5)"
+              previewClass="h-24 w-20"
+            />
+          </div>
+          <div>
+            <span className="lbl">Gallery Photos <span className="text-[9px] font-normal normal-case text-muted-foreground/70">— additional photos (auto-play slideshow every 4s)</span></span>
+            <GalleryUpload
+              images={config.hero_gallery || []}
+              onChange={(urls) => setConfig({ ...config, hero_gallery: urls })}
+              label="Hero Gallery Photos"
+              recommendedSize="~800×1000px (portrait 4:5)"
+            />
+          </div>
         </div>
       </Card>
 
@@ -251,21 +264,12 @@ export function SiteSettingsTab({ showToast }: { showToast: (msg: string) => voi
                 </button>
                 {open && (
                   <div className="px-4 pb-3 space-y-2.5 bg-eswen-gradient-soft/40">
-                    {keys.map((k) => {
-                      const bothLang = k === "hero_h1_l1" || k === "hero_h1_l2";
-                      return (
+                    {keys.map((k) => (
                       <div key={k}>
-                        <label className="lbl-tiny">{k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">{bothLang ? "— ID + EN manual input" : "— EN auto-translated"}</span></label>
-                        <textarea value={config.translations.id[k] ?? ""} onChange={(e) => setT("id", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" placeholder="Bahasa Indonesia..." />
-                        {bothLang && (
-                          <>
-                            <label className="lbl-tiny mt-1.5 block">↳ EN (manual)</label>
-                            <textarea value={config.translations.en[k] ?? ""} onChange={(e) => setT("en", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" placeholder="English..." />
-                          </>
-                        )}
+                        <label className="lbl-tiny">{k} <span className="text-[9px] normal-case text-muted-foreground/70 font-normal">— EN auto-translated</span></label>
+                        <textarea value={config.translations.id[k] ?? ""} onChange={(e) => setT("id", k, e.target.value)} className="ainput min-h-[40px] resize-y text-xs" />
                       </div>
-                      );
-                    })}
+                    ))}
                   </div>
                 )}
               </div>
