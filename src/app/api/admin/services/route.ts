@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 import { ensureSiteSeeded } from "@/lib/eswen/seed-full";
-import { getServiceEnTranslation } from "@/lib/eswen/service-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** GET /api/admin/services — all services (incl. unpublished), ordered. */
 export async function GET(req: NextRequest) {
   if (!isAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
@@ -41,23 +42,26 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/** Parse the gallery JSON string safely. Always returns a string[] . */
 function safeParseGallery(raw: string): string[] {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       return parsed.filter((x) => typeof x === "string" && x.length > 0);
     }
-  } catch {}
+  } catch {
+    /* ignore malformed JSON */
+  }
   return [];
 }
 
 const CreateSchema = z.object({
-  categoryEn: z.string().max(80).default(""),
+  categoryEn: z.string().max(80).default(""),     // optional — auto-translated from ID
   categoryId: z.string().min(1).max(80),
-  nameEn: z.string().max(200).default(""),
+  nameEn: z.string().max(200).default(""),          // optional — auto-translated from ID
   nameId: z.string().min(2).max(200),
-  descriptionEn: z.string().max(2000).default(""),
-  descriptionId: z.string().min(5).max(2000),
+  descriptionEn: z.string().max(1000).default(""),   // optional — auto-translated from ID
+  descriptionId: z.string().min(5).max(1000),
   startingPrice: z.string().max(40).default("IDR 0"),
   deposit: z.number().int().min(0).max(10000000).default(0),
   icon: z.string().max(60).default("Stethoscope"),
@@ -68,6 +72,7 @@ const CreateSchema = z.object({
   published: z.boolean().default(true),
 });
 
+/** POST /api/admin/services — create a service. */
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
@@ -82,10 +87,11 @@ export async function POST(req: NextRequest) {
   }
   try {
     const d = parsed.data;
-    // Smart translate: uses SEED for default services, auto-translate for others
-    if (d.nameId) d.nameEn = await getServiceEnTranslation(undefined, "name", d.nameId);
-    if (d.descriptionId) d.descriptionEn = await getServiceEnTranslation(undefined, "description", d.descriptionId);
-    if (d.categoryId) d.categoryEn = await getServiceEnTranslation(undefined, "category", d.categoryId);
+    // ALWAYS translate EN from ID (admin only inputs Indonesian)
+    // FAST SAVE: copy ID → EN directly (preserves markdown formatting).
+    if (d.nameId) d.nameEn = d.nameId;
+    if (d.descriptionId) d.descriptionEn = d.descriptionId;
+    if (d.categoryId) d.categoryEn = d.categoryId;
     const { gallery, ...rest } = d;
     const created = await db.service.create({
       data: {

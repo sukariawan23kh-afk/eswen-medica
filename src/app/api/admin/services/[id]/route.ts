@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/eswen/admin-auth";
-import { getServiceEnTranslation } from "@/lib/eswen/service-translate";
+import { translateIdToEn } from "@/lib/eswen/auto-translate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const UpdateSchema = z.object({
-  categoryEn: z.string().max(80).optional(),
+  categoryEn: z.string().max(80).optional(),        // optional — auto-translated from ID
   categoryId: z.string().max(80).optional(),
-  nameEn: z.string().max(200).optional(),
+  nameEn: z.string().max(200).optional(),            // optional — auto-translated from ID
   nameId: z.string().max(200).optional(),
-  descriptionEn: z.string().max(2000).optional(),
-  descriptionId: z.string().max(2000).optional(),
+  descriptionEn: z.string().max(1000).optional(),     // optional — auto-translated from ID
+  descriptionId: z.string().max(1000).optional(),
   startingPrice: z.string().max(40).optional(),
   deposit: z.number().int().min(0).max(10000000).optional(),
   icon: z.string().max(60).optional(),
@@ -39,10 +39,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
   try {
     const d = parsed.data;
-    // Smart translate: uses SEED for default services (id matches), auto-translate for others
-    if (d.nameId) d.nameEn = await getServiceEnTranslation(id, "name", d.nameId);
-    if (d.descriptionId) d.descriptionEn = await getServiceEnTranslation(id, "description", d.descriptionId);
-    if (d.categoryId) d.categoryEn = await getServiceEnTranslation(id, "category", d.categoryId);
+    // FAST SAVE: copy ID → EN directly (preserves markdown formatting).
+    // No MyMemory — prevents timeout + markdown corruption.
+    if (d.nameId !== undefined) d.nameEn = d.nameId;
+    if (d.descriptionId !== undefined) d.descriptionEn = d.descriptionId;
+    if (d.categoryId !== undefined) d.categoryEn = d.categoryId;
     const { gallery, ...rest } = d;
     const data: Record<string, unknown> = { ...rest };
     if (gallery !== undefined) {
